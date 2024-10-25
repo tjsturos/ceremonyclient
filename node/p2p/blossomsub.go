@@ -70,7 +70,7 @@ var BITMASK_ALL = []byte{
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 }
 
-var ANNOUNCE_PREFIX = "quilibrium-2.0.0-dusk-"
+var ANNOUNCE_PREFIX = "quilibrium-2.0.2-dusk-"
 
 func getPeerID(p2pConfig *config.P2PConfig) peer.ID {
 	peerPrivKey, err := hex.DecodeString(p2pConfig.PeerPrivKey)

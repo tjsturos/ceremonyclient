@@ -6,15 +6,15 @@ import (
 )
 
 func GetMinimumVersionCutoff() time.Time {
-	return time.Date(2024, time.October, 12, 11, 0, 0, 0, time.UTC)
+	return time.Date(2024, time.October, 24, 11, 0, 0, 0, time.UTC)
 }
 
 func GetMinimumVersion() []byte {
-	return []byte{0x02, 0x00, 0x01}
+	return []byte{0x02, 0x00, 0x02}
 }
 
 func GetVersion() []byte {
-	return []byte{0x02, 0x00, 0x01}
+	return []byte{0x02, 0x00, 0x02}
 }
 
 func GetVersionString() string {
@@ -40,5 +40,5 @@ func GetPatchNumber() byte {
 }
 
 func GetRCNumber() byte {
-	return 0x04
+	return 0x00
 }
