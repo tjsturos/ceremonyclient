@@ -57,14 +57,14 @@ func (e *DataClockConsensusEngine) runLoop() {
 
 			select {
 			case dataFrame := <-dataFrameCh:
+				e.logger.Info(
+					"current frame head",
+					zap.Uint64("frame_number", dataFrame.FrameNumber),
+				)
 				if latestFrame != nil &&
 					dataFrame.FrameNumber > latestFrame.FrameNumber {
 					latestFrame = dataFrame
 				}
-				e.logger.Info(
-					"current frame head",
-					zap.Uint64("frame_number", latestFrame.FrameNumber),
-				)
 
 				if e.latestFrameReceived < latestFrame.FrameNumber {
 					e.latestFrameReceived = latestFrame.FrameNumber
@@ -166,6 +166,11 @@ func (e *DataClockConsensusEngine) runLoop() {
 				if err != nil {
 					panic(err)
 				}
+
+				e.logger.Info(
+					"current frame head",
+					zap.Uint64("frame_number", dataFrame.FrameNumber),
+				)
 
 				if latestFrame == nil ||
 					latestFrame.FrameNumber < dataFrame.FrameNumber {

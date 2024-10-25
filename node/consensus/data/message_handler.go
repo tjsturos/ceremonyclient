@@ -181,6 +181,8 @@ func (e *DataClockConsensusEngine) handleRebroadcast(
 			continue
 		}
 
+		e.logger.Info("receiving synchronization data")
+
 		if err := e.handleClockFrame(peerID, address, frame); err != nil {
 			return errors.Wrap(err, "handle rebroadcast")
 		}
