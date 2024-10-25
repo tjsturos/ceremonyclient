@@ -521,10 +521,6 @@ func (d *DataTimeReel) processPending(
 	lastSelector := lastReceived.selector
 
 	for _, f := range frameNumbers {
-		if f < d.head.FrameNumber {
-			delete(d.pending, f)
-		}
-
 		if f == d.head.FrameNumber+1 {
 			nextPending := d.pending[f]
 			// d.logger.Debug(

@@ -256,7 +256,9 @@ func (e *DataClockConsensusEngine) handleMint(
 				return nil, errors.Wrap(application.ErrInvalidStateTransition, "handle mint")
 			}
 			if pre.Difficulty == 0 {
-				_, pr, err := e.coinStore.GetPreCoinProofsForOwner(t.Proofs[0][32:])
+				_, pr, err := e.coinStore.GetPreCoinProofsForOwner(
+					altAddr.FillBytes(make([]byte, 32)),
+				)
 				if err != nil && !errors.Is(err, store.ErrNotFound) {
 					return nil, errors.Wrap(application.ErrInvalidStateTransition, "handle mint")
 				}

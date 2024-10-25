@@ -86,6 +86,17 @@ func (e *DataClockConsensusEngine) runPreMidnightProofWorker() {
 
 	resume := make([]byte, 32)
 	for {
+		_, prfs, err := e.coinStore.GetPreCoinProofsForOwner(addr)
+		if err != nil && !errors.Is(err, store.ErrNotFound) {
+			e.logger.Error("error while fetching pre-coin proofs", zap.Error(err))
+			return
+		}
+
+		if len(prfs) != 0 {
+			e.logger.Info("already completed pre-midnight mint")
+			return
+		}
+
 		cc, err := e.pubSub.GetDirectChannel([]byte(peerId), "worker")
 		if err != nil {
 			e.logger.Info(

@@ -287,7 +287,6 @@ func (e *DataClockConsensusEngine) rebroadcastLoop() {
 					e.logger.Info("shutting down rebroadcaster")
 					return
 				}
-				i++
 				frame, _, err := e.clockStore.GetDataClockFrame(e.filter, i, false)
 				if err != nil {
 					e.logger.Error("error while iterating", zap.Error(err))
