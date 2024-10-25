@@ -93,24 +93,24 @@ type DataClockConsensusEngine struct {
 	currentReceivingSyncPeersMx sync.Mutex
 	currentReceivingSyncPeers   int
 
-	frameChan                      chan *protobufs.ClockFrame
-	executionEngines               map[string]execution.ExecutionEngine
-	filter                         []byte
-	input                          []byte
-	parentSelector                 []byte
-	syncingStatus                  SyncStatusType
-	syncingTarget                  []byte
-	previousHead                   *protobufs.ClockFrame
-	engineMx                       sync.Mutex
-	dependencyMapMx                sync.Mutex
-	stagedTransactions             *protobufs.TokenRequests
-	stagedTransactionsMx           sync.Mutex
-	peerMapMx                      sync.RWMutex
-	peerAnnounceMapMx              sync.Mutex
-	proverTrieJoinRequests         map[string]string
-	proverTrieLeaveRequests        map[string]string
-	proverTriePauseRequests        map[string]string
-	proverTrieResumeRequests       map[string]string
+	frameChan            chan *protobufs.ClockFrame
+	executionEngines     map[string]execution.ExecutionEngine
+	filter               []byte
+	input                []byte
+	parentSelector       []byte
+	syncingStatus        SyncStatusType
+	syncingTarget        []byte
+	previousHead         *protobufs.ClockFrame
+	engineMx             sync.Mutex
+	dependencyMapMx      sync.Mutex
+	stagedTransactions   *protobufs.TokenRequests
+	stagedTransactionsMx sync.Mutex
+	peerMapMx            sync.RWMutex
+	peerAnnounceMapMx    sync.Mutex
+	// proverTrieJoinRequests         map[string]string
+	// proverTrieLeaveRequests        map[string]string
+	// proverTriePauseRequests        map[string]string
+	// proverTrieResumeRequests       map[string]string
 	proverTrieRequestsMx           sync.Mutex
 	lastKeyBundleAnnouncementFrame uint64
 	peerSeniority                  *peerSeniority
@@ -304,26 +304,10 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 	e.pubSub.Subscribe(e.filter, e.handleMessage)
 
 	go func() {
-		server := grpc.NewServer(
-			grpc.MaxSendMsgSize(600*1024*1024),
-			grpc.MaxRecvMsgSize(600*1024*1024),
-		)
-		protobufs.RegisterDataServiceServer(server, e)
-
-		if err := e.pubSub.StartDirectChannelListener(
-			e.pubSub.GetPeerID(),
-			"",
-			server,
-		); err != nil {
-			panic(err)
-		}
-	}()
-
-	go func() {
 		if e.dataTimeReel.GetFrameProverTries()[0].Contains(e.provingKeyAddress) {
 			server := grpc.NewServer(
-				grpc.MaxSendMsgSize(600*1024*1024),
-				grpc.MaxRecvMsgSize(600*1024*1024),
+				grpc.MaxSendMsgSize(1*1024*1024),
+				grpc.MaxRecvMsgSize(1*1024*1024),
 			)
 			protobufs.RegisterDataServiceServer(server, e)
 
@@ -436,6 +420,7 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 	}()
 
 	go e.runLoop()
+	go e.rebroadcastLoop()
 
 	go func() {
 		errChan <- nil
@@ -666,7 +651,7 @@ func (e *DataClockConsensusEngine) GetDifficulty() uint32 {
 func (e *DataClockConsensusEngine) GetFrame() *protobufs.ClockFrame {
 	frame, err := e.dataTimeReel.Head()
 	if err != nil {
-		panic(err)
+		return nil
 	}
 
 	return frame

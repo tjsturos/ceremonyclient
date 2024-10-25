@@ -32,55 +32,50 @@ func (e *DataClockConsensusEngine) publishProof(
 		"publishing frame and aggregations",
 		zap.Uint64("frame_number", frame.FrameNumber),
 	)
-	head, err := e.dataTimeReel.Head()
+
+	timestamp := time.Now().UnixMilli()
+	msg := binary.BigEndian.AppendUint64([]byte{}, frame.FrameNumber)
+	msg = append(msg, config.GetVersion()...)
+	msg = binary.BigEndian.AppendUint64(msg, uint64(timestamp))
+	sig, err := e.pubSub.SignMessage(msg)
 	if err != nil {
 		panic(err)
 	}
 
-	peers, max, err := e.GetMostAheadPeer(head.FrameNumber)
-	if err != nil || len(peers) == 0 || head.FrameNumber > max {
-		timestamp := time.Now().UnixMilli()
-		msg := binary.BigEndian.AppendUint64([]byte{}, frame.FrameNumber)
-		msg = append(msg, config.GetVersion()...)
-		msg = binary.BigEndian.AppendUint64(msg, uint64(timestamp))
-		sig, err := e.pubSub.SignMessage(msg)
-		if err != nil {
-			panic(err)
-		}
-
-		e.peerMapMx.Lock()
-		e.peerMap[string(e.pubSub.GetPeerID())] = &peerInfo{
-			peerId:    e.pubSub.GetPeerID(),
-			multiaddr: "",
-			maxFrame:  frame.FrameNumber,
-			version:   config.GetVersion(),
-			signature: sig,
-			publicKey: e.pubSub.GetPublicKey(),
-			timestamp: timestamp,
-			totalDistance: e.dataTimeReel.GetTotalDistance().FillBytes(
-				make([]byte, 256),
-			),
-		}
-		list := &protobufs.DataPeerListAnnounce{
-			PeerList: []*protobufs.DataPeer{},
-		}
-		list.PeerList = append(list.PeerList, &protobufs.DataPeer{
-			PeerId:    e.pubSub.GetPeerID(),
-			Multiaddr: "",
-			MaxFrame:  frame.FrameNumber,
-			Version:   config.GetVersion(),
-			Signature: sig,
-			PublicKey: e.pubSub.GetPublicKey(),
-			Timestamp: timestamp,
-			TotalDistance: e.dataTimeReel.GetTotalDistance().FillBytes(
-				make([]byte, 256),
-			),
-		})
-		e.peerMapMx.Unlock()
-		if err := e.publishMessage(e.filter, list); err != nil {
-			e.logger.Debug("error publishing message", zap.Error(err))
-		}
+	e.peerMapMx.Lock()
+	e.peerMap[string(e.pubSub.GetPeerID())] = &peerInfo{
+		peerId:    e.pubSub.GetPeerID(),
+		multiaddr: "",
+		maxFrame:  frame.FrameNumber,
+		version:   config.GetVersion(),
+		signature: sig,
+		publicKey: e.pubSub.GetPublicKey(),
+		timestamp: timestamp,
+		totalDistance: e.dataTimeReel.GetTotalDistance().FillBytes(
+			make([]byte, 256),
+		),
 	}
+	list := &protobufs.DataPeerListAnnounce{
+		PeerList: []*protobufs.DataPeer{},
+	}
+	list.PeerList = append(list.PeerList, &protobufs.DataPeer{
+		PeerId:    e.pubSub.GetPeerID(),
+		Multiaddr: "",
+		MaxFrame:  frame.FrameNumber,
+		Version:   config.GetVersion(),
+		Signature: sig,
+		PublicKey: e.pubSub.GetPublicKey(),
+		Timestamp: timestamp,
+		TotalDistance: e.dataTimeReel.GetTotalDistance().FillBytes(
+			make([]byte, 256),
+		),
+	})
+	e.peerMapMx.Unlock()
+	if err := e.publishMessage(e.filter, list); err != nil {
+		e.logger.Debug("error publishing message", zap.Error(err))
+	}
+
+	e.publishMessage(e.filter, frame)
 
 	return nil
 }

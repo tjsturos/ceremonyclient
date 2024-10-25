@@ -138,6 +138,7 @@ func (d *DataTimeReel) Start() error {
 		d.headDistance, err = d.GetDistance(frame)
 	}
 
+	d.running = true
 	go d.runLoop()
 
 	return nil
@@ -185,7 +186,7 @@ func (d *DataTimeReel) Insert(frame *protobufs.ClockFrame, isSync bool) error {
 
 	d.storePending(selector, parent, distance, frame)
 
-	if isSync {
+	if d.head.FrameNumber < frame.FrameNumber {
 		go func() {
 			d.frames <- &pendingFrame{
 				selector:       selector,
@@ -288,7 +289,6 @@ func (d *DataTimeReel) createGenesisFrame() (
 
 // Main data consensus loop
 func (d *DataTimeReel) runLoop() {
-	d.running = true
 	for {
 		select {
 		case frame := <-d.frames:
@@ -329,21 +329,9 @@ func (d *DataTimeReel) runLoop() {
 					continue
 				}
 
-				headSelector, err := d.head.GetSelector()
-				if err != nil {
-					panic(err)
-				}
-
 				// If the frame has a gap from the head or is not descendent, mark it as
 				// pending:
 				if rawFrame.FrameNumber-d.head.FrameNumber != 1 {
-					d.logger.Debug(
-						"frame has has gap, fork choice",
-						zap.Bool("has_gap", rawFrame.FrameNumber-d.head.FrameNumber != 1),
-						zap.String("parent_selector", parent.Text(16)),
-						zap.String("head_selector", headSelector.Text(16)),
-					)
-
 					d.processPending(d.head, frame)
 					continue
 				}
@@ -359,58 +347,68 @@ func (d *DataTimeReel) runLoop() {
 					continue
 				}
 
-				distance, err := d.GetDistance(rawFrame)
-				if err != nil {
-					panic(err)
-				}
-				d.logger.Debug(
-					"frame is same height",
-					zap.String("head_distance", d.headDistance.Text(16)),
-					zap.String("distance", distance.Text(16)),
-				)
+				// temp: remove fork choice until prover ring testing
+				// distance, err := d.GetDistance(rawFrame)
+				// if err != nil {
+				// 	panic(err)
+				// }
+				// d.logger.Debug(
+				// 	"frame is same height",
+				// 	zap.String("head_distance", d.headDistance.Text(16)),
+				// 	zap.String("distance", distance.Text(16)),
+				// )
 
-				// Optimization: if competing frames share a parent we can short-circuit
-				// fork choice
-				if bytes.Equal(d.head.ParentSelector, rawFrame.ParentSelector) &&
-					distance.Cmp(d.headDistance) < 0 {
-					d.logger.Debug(
-						"frame shares parent, has shorter distance, short circuit",
-					)
-					d.totalDistance.Sub(d.totalDistance, d.headDistance)
-					d.setHead(rawFrame, distance)
-					d.processPending(d.head, frame)
-					continue
-				}
+				// // Optimization: if competing frames share a parent we can short-circuit
+				// // fork choice
+				// if bytes.Equal(d.head.ParentSelector, rawFrame.ParentSelector) &&
+				// 	distance.Cmp(d.headDistance) < 0 {
+				// 	d.logger.Debug(
+				// 		"frame shares parent, has shorter distance, short circuit",
+				// 	)
+				// 	d.totalDistance.Sub(d.totalDistance, d.headDistance)
+				// 	d.setHead(rawFrame, distance)
+				// 	d.processPending(d.head, frame)
+				// 	continue
+				// }
 
 				// Choose fork
-				d.forkChoice(rawFrame, distance)
+				// d.forkChoice(rawFrame, distance)
 				d.processPending(d.head, frame)
 			} else {
-				d.logger.Debug("frame is lower height")
+				// d.logger.Debug("frame is lower height")
 
-				existing, _, err := d.clockStore.GetDataClockFrame(
-					d.filter,
-					rawFrame.FrameNumber,
-					true,
-				)
-				if err != nil {
-					// if this returns an error it's either not found (which shouldn't
-					// happen without corruption) or pebble is borked, either way, panic
-					panic(err)
-				}
+				// existing, _, err := d.clockStore.GetDataClockFrame(
+				// 	d.filter,
+				// 	rawFrame.FrameNumber,
+				// 	true,
+				// )
+				// if err != nil {
+				// 	// if this returns an error it's either not found (which shouldn't
+				// 	// happen without corruption) or pebble is borked, either way, panic
+				// 	panic(err)
+				// }
 
-				// It's a fork, but it's behind. We need to stash it until it catches
-				// up (or dies off)
-				if !bytes.Equal(existing.Output, rawFrame.Output) {
-					d.logger.Debug("is fork, add pending")
-					parent, selector, err := rawFrame.GetParentAndSelector()
-					if err != nil {
-						panic(err)
-					}
+				// if !bytes.Equal(existing.Output, rawFrame.Output) {
+				// 	parent, selector, err := rawFrame.GetParentAndSelector()
+				// 	if err != nil {
+				// 		panic(err)
+				// 	}
 
-					d.addPending(selector, parent, frame.frameNumber)
-					d.processPending(d.head, frame)
-				}
+				// 	if bytes.Equal(existing.ParentSelector, rawFrame.ParentSelector) {
+				// 		ld := d.getTotalDistance(existing)
+				// 		rd := d.getTotalDistance(rawFrame)
+				// 		if rd.Cmp(ld) < 0 {
+				// 			d.forkChoice(rawFrame, rd)
+				// 			d.processPending(d.head, frame)
+				// 		} else {
+				// 			d.addPending(selector, parent, frame.frameNumber)
+				// 			d.processPending(d.head, frame)
+				// 		}
+				// 	} else {
+				// 		d.addPending(selector, parent, frame.frameNumber)
+				// 		d.processPending(d.head, frame)
+				// 	}
+				// }
 			}
 		case <-d.done:
 			return
@@ -423,13 +421,13 @@ func (d *DataTimeReel) addPending(
 	parent *big.Int,
 	frameNumber uint64,
 ) {
-	d.logger.Debug(
-		"add pending",
-		zap.Uint64("head_frame_number", d.head.FrameNumber),
-		zap.Uint64("add_frame_number", frameNumber),
-		zap.String("selector", selector.Text(16)),
-		zap.String("parent", parent.Text(16)),
-	)
+	// d.logger.Debug(
+	// 	"add pending",
+	// 	zap.Uint64("head_frame_number", d.head.FrameNumber),
+	// 	zap.Uint64("add_frame_number", frameNumber),
+	// 	zap.String("selector", selector.Text(16)),
+	// 	zap.String("parent", parent.Text(16)),
+	// )
 
 	if d.head.FrameNumber <= frameNumber {
 		if _, ok := d.pending[frameNumber]; !ok {
@@ -446,10 +444,10 @@ func (d *DataTimeReel) addPending(
 	}
 
 	if d.head.FrameNumber <= frameNumber {
-		d.logger.Debug(
-			"accumulate in pending",
-			zap.Int("pending_neighbors", len(d.pending[frameNumber])),
-		)
+		// d.logger.Debug(
+		// 	"accumulate in pending",
+		// 	zap.Int("pending_neighbors", len(d.pending[frameNumber])),
+		// )
 
 		d.pending[frameNumber] = append(
 			d.pending[frameNumber],
@@ -506,21 +504,18 @@ func (d *DataTimeReel) processPending(
 	frame *protobufs.ClockFrame,
 	lastReceived *pendingFrame,
 ) {
-	d.logger.Debug(
-		"process pending",
-		zap.Int("pending_frame_numbers", len(d.pending)),
-	)
+	// d.logger.Debug(
+	// 	"process pending",
+	// 	zap.Uint64("head_frame", frame.FrameNumber),
+	// 	zap.Uint64("last_received_frame", lastReceived.frameNumber),
+	// 	zap.Int("pending_frame_numbers", len(d.pending)),
+	// )
 	frameNumbers := []uint64{}
 	for f := range d.pending {
 		frameNumbers = append(frameNumbers, f)
-		d.logger.Debug(
-			"pending per frame number",
-			zap.Uint64("pending_frame_number", f),
-			zap.Int("pending_frames", len(d.pending[f])),
-		)
 	}
 	sort.Slice(frameNumbers, func(i, j int) bool {
-		return frameNumbers[i] > frameNumbers[j]
+		return frameNumbers[i] < frameNumbers[j]
 	})
 
 	lastSelector := lastReceived.selector
@@ -530,38 +525,33 @@ func (d *DataTimeReel) processPending(
 			delete(d.pending, f)
 		}
 
-		nextPending := d.pending[f]
-		d.logger.Debug(
-			"checking frame set",
-			zap.Uint64("pending_frame_number", f),
-			zap.Uint64("frame_number", frame.FrameNumber),
-		)
-		if f < frame.FrameNumber {
-			d.logger.Debug(
-				"purging frame set",
-				zap.Uint64("pending_frame_number", f),
-				zap.Uint64("frame_number", frame.FrameNumber),
-			)
-			delete(d.pending, f)
-			continue
-		}
-		// Pull the next
-		for len(nextPending) != 0 {
-			d.logger.Debug("try process next")
-			next := nextPending[0]
-			d.pending[f] = d.pending[f][1:]
-			if f == lastReceived.frameNumber && next.selector.Cmp(lastSelector) == 0 {
-				d.pending[f] = append(d.pending[f], next)
-				if len(d.pending[f]) == 1 {
-					nextPending = nil
+		if f == d.head.FrameNumber+1 {
+			nextPending := d.pending[f]
+			// d.logger.Debug(
+			// 	"checking frame set",
+			// 	zap.Uint64("pending_frame_number", f),
+			// 	zap.Uint64("frame_number", frame.FrameNumber),
+			// )
+			// Pull the next
+			for len(nextPending) != 0 {
+				d.logger.Debug("try process next")
+				next := nextPending[0]
+				d.pending[f] = d.pending[f][1:]
+				if f == lastReceived.frameNumber && next.selector.Cmp(lastSelector) == 0 {
+					d.pending[f] = append(d.pending[f], next)
+					if len(d.pending[f]) == 1 {
+						nextPending = nil
+					}
+					continue
 				}
-				continue
+
+				go func() {
+					d.frames <- next
+				}()
+				break
 			}
 
-			go func() {
-				d.frames <- next
-			}()
-			return
+			delete(d.pending, f)
 		}
 	}
 }

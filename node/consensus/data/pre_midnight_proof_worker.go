@@ -61,26 +61,31 @@ func (e *DataClockConsensusEngine) runPreMidnightProofWorker() {
 		panic(errors.Wrap(err, "error getting peer id"))
 	}
 
-outer:
 	for {
-		frame, err := e.dataTimeReel.Head()
 		tries := e.GetFrameProverTries()
 
-		e.peerMapMx.RLock()
-		wait := false
-		for _, v := range e.peerMap {
-			if v.maxFrame-10 > frame.FrameNumber {
-				wait = true
-			}
-		}
-		e.peerMapMx.RUnlock()
-
-		if len(tries) == 0 || wait {
-			e.logger.Info("waiting for more peer info to appear")
+		if len(tries) == 0 {
+			e.logger.Info("waiting for more frame info to appear")
 			time.Sleep(10 * time.Second)
 			continue
 		}
 
+		_, prfs, err := e.coinStore.GetPreCoinProofsForOwner(addr)
+		if err != nil && !errors.Is(err, store.ErrNotFound) {
+			e.logger.Error("error while fetching pre-coin proofs", zap.Error(err))
+			return
+		}
+
+		if len(prfs) != 0 {
+			e.logger.Info("already completed pre-midnight mint")
+			return
+		}
+
+		break
+	}
+
+	resume := make([]byte, 32)
+	for {
 		cc, err := e.pubSub.GetDirectChannel([]byte(peerId), "worker")
 		if err != nil {
 			e.logger.Info(
@@ -93,38 +98,37 @@ outer:
 
 		client := protobufs.NewDataServiceClient(cc)
 
-		status, err := client.GetPreMidnightMintStatus(
-			context.Background(),
-			&protobufs.PreMidnightMintStatusRequest{
-				Owner: addr,
-			},
-			grpc.MaxCallRecvMsgSize(600*1024*1024),
-		)
-		if err != nil || status == nil {
-			e.logger.Error(
-				"got error response, waiting...",
-				zap.Error(err),
+		if bytes.Equal(resume, make([]byte, 32)) {
+			status, err := client.GetPreMidnightMintStatus(
+				context.Background(),
+				&protobufs.PreMidnightMintStatusRequest{
+					Owner: addr,
+				},
+				grpc.MaxCallSendMsgSize(1*1024*1024),
+				grpc.MaxCallRecvMsgSize(1*1024*1024),
 			)
-			time.Sleep(10 * time.Second)
-			cc.Close()
-			continue
-		}
+			if err != nil || status == nil {
+				e.logger.Error(
+					"got error response, waiting...",
+					zap.Error(err),
+				)
+				time.Sleep(10 * time.Second)
+				cc.Close()
+				continue
+			}
 
-		resume := status.Address
+			resume = status.Address
+
+			if status.Increment != 0 {
+				increment = status.Increment - 1
+			} else {
+				increment = 0
+			}
+		}
 
 		proofs := [][]byte{
 			[]byte("pre-dusk"),
 			resume,
-		}
-
-		if status.Increment != 0 {
-			increment = status.Increment - 1
-		}
-
-		if status.Increment == 0 && !bytes.Equal(status.Address, make([]byte, 32)) {
-			e.logger.Info("already completed pre-midnight mint")
-			cc.Close()
-			return
 		}
 
 		batchCount := 0
@@ -186,9 +190,9 @@ outer:
 						"got error response, waiting...",
 						zap.Error(err),
 					)
-					time.Sleep(10 * time.Second)
 					cc.Close()
-					continue outer
+					time.Sleep(10 * time.Second)
+					break
 				}
 
 				resume = resp.Address
@@ -202,7 +206,11 @@ outer:
 					e.logger.Info("pre-midnight proofs submitted, returning")
 					cc.Close()
 					return
+				} else {
+					increment = uint32(i) - 1
 				}
+
+				break
 			}
 		}
 		cc.Close()
