@@ -535,6 +535,7 @@ func (d *DataTimeReel) processPending(
 			panic(err)
 		}
 
+		found := false
 		for _, rawFrame := range rawFrames {
 			if !bytes.Equal(rawFrame.ParentSelector, selector) {
 				continue
@@ -559,6 +560,11 @@ func (d *DataTimeReel) processPending(
 
 			// Otherwise set it as the next and process all pending
 			d.setHead(rawFrame, distance)
+			found = true
+			break
+		}
+
+		if !found {
 			break
 		}
 	}
