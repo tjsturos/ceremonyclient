@@ -512,6 +512,12 @@ func (d *DataTimeReel) processPending(
 
 	for {
 		next := d.head.FrameNumber + 1
+		sel, err := d.head.GetSelector()
+		if err != nil {
+			panic(err)
+		}
+
+		selector := sel.FillBytes(make([]byte, 32))
 		// d.logger.Debug(
 		// 	"checking frame set",
 		// 	zap.Uint64("pending_frame_number", f),
@@ -530,6 +536,10 @@ func (d *DataTimeReel) processPending(
 		}
 
 		for _, rawFrame := range rawFrames {
+			if !bytes.Equal(rawFrame.ParentSelector, selector) {
+				continue
+			}
+
 			d.logger.Debug(
 				"processing frame",
 				zap.Uint64("frame_number", rawFrame.FrameNumber),
