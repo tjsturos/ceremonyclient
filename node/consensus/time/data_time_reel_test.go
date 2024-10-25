@@ -3,6 +3,7 @@ package time_test
 import (
 	"bytes"
 	"fmt"
+	"math/rand"
 	"strings"
 	"sync"
 	"testing"
@@ -368,6 +369,10 @@ func TestDataTimeReel(t *testing.T) {
 		)
 		conflictFrames = append(conflictFrames, frame)
 	}
+
+	rand.Shuffle(100, func(i, j int) {
+		insertFrames[i], insertFrames[j] = insertFrames[j], insertFrames[i]
+	})
 
 	// todo: restore with prover rings
 	// for i := 99; i >= 0; i-- {

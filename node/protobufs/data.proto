@@ -92,6 +92,7 @@ message FrameRebroadcast {
   uint64 from = 1;
   uint64 to = 2;
   repeated quilibrium.node.clock.pb.ClockFrame clock_frames = 3;
+  bytes random = 4;
 }
 
 service DataService {

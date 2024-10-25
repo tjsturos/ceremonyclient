@@ -2,6 +2,7 @@ package data
 
 import (
 	"bytes"
+	"crypto/rand"
 	"time"
 
 	"go.uber.org/zap"
@@ -328,10 +329,13 @@ func (e *DataClockConsensusEngine) rebroadcastLoop() {
 					zap.Uint64("from", frames[0].FrameNumber),
 					zap.Uint64("to", frames[len(frames)-1].FrameNumber),
 				)
+				b := make([]byte, 24)
+				rand.Read(b)
 				e.publishMessage(e.filter, &protobufs.FrameRebroadcast{
 					From:        frames[0].FrameNumber,
 					To:          frames[len(frames)-1].FrameNumber,
 					ClockFrames: frames,
+					Random:      b,
 				})
 				time.Sleep(10 * time.Second)
 			}

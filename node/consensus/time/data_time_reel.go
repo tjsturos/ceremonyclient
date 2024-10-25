@@ -3,6 +3,7 @@ package time
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
 	"math/big"
 	"sort"
 	"sync"
@@ -521,7 +522,12 @@ func (d *DataTimeReel) processPending(
 	lastSelector := lastReceived.selector
 
 	for _, f := range frameNumbers {
-		if f == d.head.FrameNumber+1 {
+		if d.head.FrameNumber > f {
+			continue
+		}
+
+		nextF := d.head.FrameNumber + 1
+		if f == nextF {
 			nextPending := d.pending[f]
 			// d.logger.Debug(
 			// 	"checking frame set",
@@ -541,13 +547,41 @@ func (d *DataTimeReel) processPending(
 					continue
 				}
 
-				go func() {
-					d.frames <- next
-				}()
+				//// todo: revise for prover rings
+				rawFrame, err := d.clockStore.GetStagedDataClockFrame(
+					d.filter,
+					next.frameNumber,
+					next.selector.FillBytes(make([]byte, 32)),
+					false,
+				)
+				if err != nil {
+					panic(err)
+				}
+				d.logger.Debug(
+					"processing frame",
+					zap.Uint64("frame_number", rawFrame.FrameNumber),
+					zap.String("output_tag", hex.EncodeToString(rawFrame.Output[:64])),
+					zap.Uint64("head_number", d.head.FrameNumber),
+					zap.String("head_output_tag", hex.EncodeToString(d.head.Output[:64])),
+				)
+
+				distance, err := d.GetDistance(rawFrame)
+				if err != nil {
+					if !errors.Is(err, store.ErrNotFound) {
+						panic(err)
+					}
+
+					continue
+				}
+				fmt.Println(f)
+				// Otherwise set it as the next and process all pending
+				d.setHead(rawFrame, distance)
 				break
 			}
 
 			delete(d.pending, f)
+		} else {
+			break
 		}
 	}
 }
