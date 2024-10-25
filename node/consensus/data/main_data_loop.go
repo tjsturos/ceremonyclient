@@ -279,7 +279,7 @@ func (e *DataClockConsensusEngine) rebroadcastLoop() {
 			}
 
 			iter, err := e.clockStore.RangeDataClockFrames(e.filter, 1, 60840)
-			i := 0
+			i := uint64(0)
 			frames := []*protobufs.ClockFrame{}
 			sent := false
 			for iter.First(); iter.Valid(); iter.Next() {
@@ -289,7 +289,7 @@ func (e *DataClockConsensusEngine) rebroadcastLoop() {
 					return
 				}
 				i++
-				frame, err := iter.Value()
+				frame, _, err := e.clockStore.GetDataClockFrame(e.filter, i, false)
 				if err != nil {
 					e.logger.Error("error while iterating", zap.Error(err))
 				}
@@ -312,6 +312,7 @@ func (e *DataClockConsensusEngine) rebroadcastLoop() {
 					frames = []*protobufs.ClockFrame{}
 				}
 			}
+			iter.Close()
 
 			if !sent && len(frames) != 0 {
 				e.logger.Info(
