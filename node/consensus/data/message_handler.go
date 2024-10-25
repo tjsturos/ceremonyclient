@@ -225,11 +225,6 @@ func (e *DataClockConsensusEngine) handleClockFrame(
 		return errors.Wrap(err, "handle clock frame data")
 	}
 
-	if err := e.inclusionProver.VerifyFrame(frame); err != nil {
-		e.logger.Error("could not verify clock frame", zap.Error(err))
-		return errors.Wrap(err, "handle clock frame data")
-	}
-
 	e.logger.Info(
 		"clock frame was valid",
 		zap.Binary("address", address),
