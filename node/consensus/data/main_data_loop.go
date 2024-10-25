@@ -281,7 +281,7 @@ func (e *DataClockConsensusEngine) rebroadcastLoop() {
 			max, _, err := e.clockStore.GetLatestDataClockFrame(e.filter)
 			frames := []*protobufs.ClockFrame{}
 			sent := false
-			for i := uint64(0); i <= max.FrameNumber; i++ {
+			for i := uint64(0); i < max.FrameNumber; i++ {
 				if e.state == consensus.EngineStateStopped ||
 					e.state == consensus.EngineStateStopping {
 					e.logger.Info("shutting down rebroadcaster")
@@ -291,6 +291,7 @@ func (e *DataClockConsensusEngine) rebroadcastLoop() {
 				frame, _, err := e.clockStore.GetDataClockFrame(e.filter, i, false)
 				if err != nil {
 					e.logger.Error("error while iterating", zap.Error(err))
+					break
 				}
 
 				frames = append(frames, frame)
