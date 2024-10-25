@@ -132,7 +132,7 @@ func (e *DataClockConsensusEngine) runPreMidnightProofWorker() {
 
 			if status.Increment != 0 {
 				increment = status.Increment - 1
-			} else {
+			} else if !bytes.Equal(status.Address, make([]byte, 32)) {
 				increment = 0
 			}
 		}

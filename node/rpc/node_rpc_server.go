@@ -23,7 +23,6 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-	"source.quilibrium.com/quilibrium/monorepo/node/consensus/data"
 	"source.quilibrium.com/quilibrium/monorepo/node/consensus/master"
 	"source.quilibrium.com/quilibrium/monorepo/node/execution"
 	"source.quilibrium.com/quilibrium/monorepo/node/keys"
@@ -43,7 +42,6 @@ type RPCServer struct {
 	keyManager       keys.KeyManager
 	pubSub           p2p.PubSub
 	masterClock      *master.MasterClockConsensusEngine
-	dataClock        *data.DataClockConsensusEngine
 	executionEngines []execution.ExecutionEngine
 }
 
@@ -163,7 +161,7 @@ func (r *RPCServer) GetNodeInfo(
 	}
 	peerScore := r.pubSub.GetPeerScore(r.pubSub.GetPeerID())
 
-	head := r.dataClock.GetFrame()
+	head := r.executionEngines[0].GetFrame()
 	frame := uint64(0)
 	if head != nil {
 		frame = head.FrameNumber

@@ -60,6 +60,10 @@ func (e *DataClockConsensusEngine) runLoop() {
 					dataFrame.FrameNumber > latestFrame.FrameNumber {
 					latestFrame = dataFrame
 				}
+				e.logger.Info(
+					"current frame head",
+					zap.Uint64("frame_number", latestFrame.FrameNumber),
+				)
 
 				if e.latestFrameReceived < latestFrame.FrameNumber {
 					e.latestFrameReceived = latestFrame.FrameNumber

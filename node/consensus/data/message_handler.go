@@ -207,7 +207,7 @@ func (e *DataClockConsensusEngine) handleClockFrame(
 
 	trie := e.GetFrameProverTries()[0]
 	if !trie.Contains(addr.Bytes()) {
-		e.logger.Info(
+		e.logger.Debug(
 			"prover not in trie at frame, address may be in fork",
 			zap.Binary("address", address),
 			zap.Binary("filter", frame.Filter),
@@ -216,7 +216,7 @@ func (e *DataClockConsensusEngine) handleClockFrame(
 		return nil
 	}
 
-	e.logger.Info(
+	e.logger.Debug(
 		"got clock frame",
 		zap.Binary("address", address),
 		zap.Binary("filter", frame.Filter),
@@ -225,11 +225,11 @@ func (e *DataClockConsensusEngine) handleClockFrame(
 	)
 
 	if err := e.frameProver.VerifyDataClockFrame(frame); err != nil {
-		e.logger.Error("could not verify clock frame", zap.Error(err))
+		e.logger.Debug("could not verify clock frame", zap.Error(err))
 		return errors.Wrap(err, "handle clock frame data")
 	}
 
-	e.logger.Info(
+	e.logger.Debug(
 		"clock frame was valid",
 		zap.Binary("address", address),
 		zap.Binary("filter", frame.Filter),

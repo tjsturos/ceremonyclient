@@ -661,7 +661,8 @@ func printNodeInfo(cfg *config.Config) {
 
 	conn, err := app.ConnectToNode(cfg)
 	if err != nil {
-		panic(err)
+		fmt.Println("Could not connect to node. If it is still booting, please wait.")
+		os.Exit(1)
 	}
 	defer conn.Close()
 
