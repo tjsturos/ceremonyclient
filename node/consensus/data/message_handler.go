@@ -194,6 +194,10 @@ func (e *DataClockConsensusEngine) handleClockFrame(
 	address []byte,
 	frame *protobufs.ClockFrame,
 ) error {
+	if frame == nil {
+		return errors.Wrap(errors.New("frame is nil"), "handle clock frame")
+	}
+
 	addr, err := poseidon.HashBytes(
 		frame.GetPublicKeySignatureEd448().PublicKey.KeyValue,
 	)
