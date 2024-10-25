@@ -324,7 +324,7 @@ func (e *DataClockConsensusEngine) rebroadcastLoop() {
 					To:          frames[len(frames)-1].FrameNumber,
 					ClockFrames: frames,
 				})
-				time.Sleep(1 * time.Second)
+				time.Sleep(10 * time.Second)
 			}
 		}
 	}
