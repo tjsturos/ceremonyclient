@@ -201,6 +201,7 @@ func (e *DataClockConsensusEngine) runPreMidnightProofWorker() {
 						"got error response, waiting...",
 						zap.Error(err),
 					)
+					resume = make([]byte, 32)
 					cc.Close()
 					time.Sleep(10 * time.Second)
 					break
