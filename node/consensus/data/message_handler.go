@@ -201,16 +201,15 @@ func (e *DataClockConsensusEngine) handleClockFrame(
 		return errors.Wrap(err, "handle clock frame data")
 	}
 
-	for _, trie := range e.GetFrameProverTries()[:1] {
-		if trie.Contains(addr.Bytes()) {
-			e.logger.Info(
-				"prover not in trie at frame, address may be in fork",
-				zap.Binary("address", address),
-				zap.Binary("filter", frame.Filter),
-				zap.Uint64("frame_number", frame.FrameNumber),
-			)
-			return nil
-		}
+	trie := e.GetFrameProverTries()[0]
+	if !trie.Contains(addr.Bytes()) {
+		e.logger.Info(
+			"prover not in trie at frame, address may be in fork",
+			zap.Binary("address", address),
+			zap.Binary("filter", frame.Filter),
+			zap.Uint64("frame_number", frame.FrameNumber),
+		)
+		return nil
 	}
 
 	e.logger.Info(

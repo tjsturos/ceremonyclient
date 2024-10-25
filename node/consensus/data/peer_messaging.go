@@ -101,6 +101,7 @@ func (e *DataClockConsensusEngine) HandlePreMidnightMint(
 ) (*protobufs.PreMidnightMintResponse, error) {
 	addr, err := e.handleMint(t)
 	if err != nil {
+		e.logger.Error("error while handling pre-midnight mint", zap.Error(err))
 		return nil, err
 	}
 
@@ -221,6 +222,11 @@ func (e *DataClockConsensusEngine) handleMint(
 	if err != nil {
 		return nil, errors.Wrap(application.ErrInvalidStateTransition, "handle mint")
 	}
+
+	e.logger.Debug(
+		"got pre-midnight mint request",
+		zap.String("peer", peerId.String()),
+	)
 
 	if len(t.Proofs) >= 3 &&
 		len(t.Proofs) < 204 &&

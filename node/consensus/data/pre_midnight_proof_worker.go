@@ -64,8 +64,8 @@ func (e *DataClockConsensusEngine) runPreMidnightProofWorker() {
 	for {
 		tries := e.GetFrameProverTries()
 
-		if len(tries) == 0 {
-			e.logger.Info("waiting for more frame info to appear")
+		if len(tries) == 0 || e.pubSub.GetNetworkPeersCount() < 3 {
+			e.logger.Info("waiting for more peer info to appear")
 			time.Sleep(10 * time.Second)
 			continue
 		}
