@@ -80,6 +80,56 @@ func (e *DataClockConsensusEngine) publishProof(
 	return nil
 }
 
+func (e *DataClockConsensusEngine) insertMessage(
+	filter []byte,
+	message proto.Message,
+) error {
+	any := &anypb.Any{}
+	if err := any.MarshalFrom(message); err != nil {
+		return errors.Wrap(err, "publish message")
+	}
+
+	any.TypeUrl = strings.Replace(
+		any.TypeUrl,
+		"type.googleapis.com",
+		"types.quilibrium.com",
+		1,
+	)
+
+	payload, err := proto.Marshal(any)
+	if err != nil {
+		return errors.Wrap(err, "publish message")
+	}
+
+	h, err := poseidon.HashBytes(payload)
+	if err != nil {
+		return errors.Wrap(err, "publish message")
+	}
+
+	msg := &protobufs.Message{
+		Hash:    h.Bytes(),
+		Address: e.provingKeyAddress,
+		Payload: payload,
+	}
+	data, err := proto.Marshal(msg)
+	if err != nil {
+		return errors.Wrap(err, "publish message")
+	}
+
+	m := &pb.Message{
+		Data:    data,
+		Bitmask: filter,
+		From:    e.pubSub.GetPeerID(),
+		Seqno:   nil,
+	}
+
+	go func() {
+		e.messageProcessorCh <- m
+	}()
+
+	return nil
+}
+
 func (e *DataClockConsensusEngine) publishMessage(
 	filter []byte,
 	message proto.Message,

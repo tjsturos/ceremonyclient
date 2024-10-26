@@ -322,7 +322,7 @@ func (e *DataClockConsensusEngine) rebroadcastLoop() {
 						To:          frames[len(frames)-1].FrameNumber,
 						ClockFrames: frames,
 					})
-					time.Sleep(10 * time.Second)
+					time.Sleep(60 * time.Second)
 					sent = true
 					frames = []*protobufs.ClockFrame{}
 				}
@@ -342,7 +342,7 @@ func (e *DataClockConsensusEngine) rebroadcastLoop() {
 					ClockFrames: frames,
 					Random:      b,
 				})
-				time.Sleep(10 * time.Second)
+				time.Sleep(60 * time.Second)
 			}
 		}
 	}

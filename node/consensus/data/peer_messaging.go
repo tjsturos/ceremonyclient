@@ -513,11 +513,8 @@ func (e *DataClockConsensusEngine) handleMint(
 				txn.Abort()
 				return nil, errors.Wrap(err, "handle mint")
 			}
-			e.stagedTransactionsMx.Lock()
-			if e.stagedTransactions == nil {
-				e.stagedTransactions = &protobufs.TokenRequests{}
-			}
-			e.stagedTransactions.Requests = append(e.stagedTransactions.Requests,
+			err = e.insertMessage(
+				e.filter,
 				&protobufs.TokenRequest{
 					Request: &protobufs.TokenRequest_Mint{
 						Mint: &protobufs.MintCoinRequest{
@@ -530,8 +527,12 @@ func (e *DataClockConsensusEngine) handleMint(
 							},
 						},
 					},
-				})
-			e.stagedTransactionsMx.Unlock()
+				},
+			)
+			if err != nil {
+				txn.Abort()
+				return nil, errors.Wrap(err, "handle mint")
+			}
 		}
 
 		if len(deletes) == 1 {
