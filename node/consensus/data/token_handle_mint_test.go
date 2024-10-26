@@ -68,9 +68,10 @@ func (pubsub) GetNetworkInfo() *protobufs.NetworkInfoResponse {
 func (p pubsub) SignMessage(msg []byte) ([]byte, error) {
 	return p.privkey.Sign(rand.Reader, msg, gocrypto.Hash(0))
 }
-func (p pubsub) GetPublicKey() []byte                  { return p.pubkey }
-func (pubsub) GetPeerScore(peerId []byte) int64        { return 0 }
-func (pubsub) SetPeerScore(peerId []byte, score int64) {}
+func (p pubsub) GetPublicKey() []byte                       { return p.pubkey }
+func (pubsub) GetPeerScore(peerId []byte) int64             { return 0 }
+func (pubsub) SetPeerScore(peerId []byte, score int64)      {}
+func (pubsub) AddPeerScore(peerId []byte, scoreDelta int64) {}
 
 type outputs struct {
 	difficulty  uint32

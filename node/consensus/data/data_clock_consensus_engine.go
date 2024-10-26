@@ -337,7 +337,7 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 
 			if frame.FrameNumber >= nextFrame.FrameNumber ||
 				nextFrame.FrameNumber == 0 {
-				time.Sleep(30 * time.Second)
+				time.Sleep(60 * time.Second)
 				continue
 			}
 
@@ -592,24 +592,24 @@ func (e *DataClockConsensusEngine) Stop(force bool) <-chan error {
 	e.state = consensus.EngineStateStopping
 	errChan := make(chan error)
 
-	msg := []byte("pause")
-	msg = binary.BigEndian.AppendUint64(msg, e.GetFrame().FrameNumber)
-	msg = append(msg, e.filter...)
-	sig, err := e.pubSub.SignMessage(msg)
-	if err != nil {
-		panic(err)
-	}
+	// msg := []byte("pause")
+	// msg = binary.BigEndian.AppendUint64(msg, e.GetFrame().FrameNumber)
+	// msg = append(msg, e.filter...)
+	// sig, err := e.pubSub.SignMessage(msg)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	e.publishMessage(e.filter, &protobufs.AnnounceProverPause{
-		Filter:      e.filter,
-		FrameNumber: e.GetFrame().FrameNumber,
-		PublicKeySignatureEd448: &protobufs.Ed448Signature{
-			PublicKey: &protobufs.Ed448PublicKey{
-				KeyValue: e.pubSub.GetPublicKey(),
-			},
-			Signature: sig,
-		},
-	})
+	// e.publishMessage(e.filter, &protobufs.AnnounceProverPause{
+	// 	Filter:      e.filter,
+	// 	FrameNumber: e.GetFrame().FrameNumber,
+	// 	PublicKeySignatureEd448: &protobufs.Ed448Signature{
+	// 		PublicKey: &protobufs.Ed448PublicKey{
+	// 			KeyValue: e.pubSub.GetPublicKey(),
+	// 		},
+	// 		Signature: sig,
+	// 	},
+	// })
 
 	wg := sync.WaitGroup{}
 	wg.Add(len(e.executionEngines))

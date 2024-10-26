@@ -25,6 +25,7 @@ func (e *DataClockConsensusEngine) runMessageHandler() {
 			msg := &protobufs.Message{}
 
 			if err := proto.Unmarshal(message.Data, msg); err != nil {
+				e.logger.Debug("bad message")
 				continue
 			}
 
@@ -84,6 +85,7 @@ func (e *DataClockConsensusEngine) runMessageHandler() {
 				e.logger.Error("error while unmarshaling", zap.Error(err))
 				continue
 			}
+			e.logger.Debug("message type", zap.String("type", any.TypeUrl))
 
 			go func() {
 				switch any.TypeUrl {
@@ -112,34 +114,38 @@ func (e *DataClockConsensusEngine) runMessageHandler() {
 					); err != nil {
 						return
 					}
-					// case protobufs.AnnounceProverJoinType:
-					// 	if err := e.handleDataAnnounceProverJoin(
-					// 		message.From,
-					// 		msg.Address,
-					// 		any,
-					// 	); err != nil {
-					// 		return
-					// 	}
-					// case protobufs.AnnounceProverLeaveType:
-					// 	if !e.IsInProverTrie(peer.peerId) {
-					// 		return
-					// 	}
-					// 	if err := e.handleDataAnnounceProverLeave(
-					// 		message.From,
-					// 		msg.Address,
-					// 		any,
-					// 	); err != nil {
-					// 		return
-					// 	}
-					// case protobufs.AnnounceProverPauseType:
-					// 	if err := e.handleDataAnnounceProverPause(
-					// 		message.From,
-					// 		msg.Address,
-					// 		any,
-					// 	); err != nil {
-					// 		return
-					// 	}
-					// case protobufs.AnnounceProverResumeType:
+				// case protobufs.AnnounceProverJoinType:
+				// 	if err := e.handleDataAnnounceProverJoin(
+				// 		message.From,
+				// 		msg.Address,
+				// 		any,
+				// 	); err != nil {
+				// 		return
+				// 	}
+				// case protobufs.AnnounceProverLeaveType:
+				// 	if !e.IsInProverTrie(peer.peerId) {
+				// 		return
+				// 	}
+				// 	if err := e.handleDataAnnounceProverLeave(
+				// 		message.From,
+				// 		msg.Address,
+				// 		any,
+				// 	); err != nil {
+				// 		return
+				// 	}
+				case protobufs.AnnounceProverPauseType:
+					// stop spamming
+					e.pubSub.AddPeerScore(message.From, -1000)
+				// 	if err := e.handleDataAnnounceProverPause(
+				// 		message.From,
+				// 		msg.Address,
+				// 		any,
+				// 	); err != nil {
+				// 		return
+				// 	}
+				case protobufs.AnnounceProverResumeType:
+					// stop spamming
+					e.pubSub.AddPeerScore(message.From, -1000)
 					// 	if err := e.handleDataAnnounceProverResume(
 					// 		message.From,
 					// 		msg.Address,
@@ -169,6 +175,15 @@ func (e *DataClockConsensusEngine) handleRebroadcast(
 
 	head, err := e.dataTimeReel.Head()
 	if err != nil {
+		return nil
+	}
+
+	e.logger.Debug(
+		"received rebroadcast",
+		zap.Uint64("from", frames.From),
+		zap.Uint64("to", frames.To),
+	)
+	if head.FrameNumber+1 < frames.From {
 		return nil
 	}
 

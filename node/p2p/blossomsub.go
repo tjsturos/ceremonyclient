@@ -584,6 +584,16 @@ func (b *BlossomSub) SetPeerScore(peerId []byte, score int64) {
 	b.peerScoreMx.Unlock()
 }
 
+func (b *BlossomSub) AddPeerScore(peerId []byte, scoreDelta int64) {
+	b.peerScoreMx.Lock()
+	if _, ok := b.peerScore[string(peerId)]; !ok {
+		b.peerScore[string(peerId)] = scoreDelta
+	} else {
+		b.peerScore[string(peerId)] = b.peerScore[string(peerId)] + scoreDelta
+	}
+	b.peerScoreMx.Unlock()
+}
+
 func (b *BlossomSub) GetBitmaskPeers() map[string][]string {
 	peers := map[string][]string{}
 

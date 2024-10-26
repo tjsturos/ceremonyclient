@@ -169,11 +169,11 @@ func (d *DataTimeReel) Insert(frame *protobufs.ClockFrame, isSync bool) error {
 		zap.String("output_tag", hex.EncodeToString(frame.Output[:64])),
 	)
 
-	if d.lruFrames.Contains(string(frame.Output[:64])) {
-		return nil
-	}
+	// if d.lruFrames.Contains(string(frame.Output[:64])) {
+	// 	return nil
+	// }
 
-	d.lruFrames.Add(string(frame.Output[:64]), string(frame.ParentSelector))
+	// d.lruFrames.Add(string(frame.Output[:64]), string(frame.ParentSelector))
 
 	parent := new(big.Int).SetBytes(frame.ParentSelector)
 	selector, err := frame.GetSelector()
@@ -183,16 +183,18 @@ func (d *DataTimeReel) Insert(frame *protobufs.ClockFrame, isSync bool) error {
 
 	distance, _ := d.GetDistance(frame)
 
-	d.storePending(selector, parent, distance, frame)
-
 	if d.head.FrameNumber < frame.FrameNumber {
-		go func() {
-			d.frames <- &pendingFrame{
-				selector:       selector,
-				parentSelector: parent,
-				frameNumber:    frame.FrameNumber,
-			}
-		}()
+		d.storePending(selector, parent, distance, frame)
+
+		if d.head.FrameNumber+1 == frame.FrameNumber {
+			go func() {
+				d.frames <- &pendingFrame{
+					selector:       selector,
+					parentSelector: parent,
+					frameNumber:    frame.FrameNumber,
+				}
+			}()
+		}
 	}
 
 	return nil

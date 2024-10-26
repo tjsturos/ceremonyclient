@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"strings"
 	"time"
 
 	"github.com/iden3/go-iden3-crypto/poseidon"
@@ -85,7 +86,18 @@ func (e *DataClockConsensusEngine) runPreMidnightProofWorker() {
 	}
 
 	resume := make([]byte, 32)
+	cc, err := e.pubSub.GetDirectChannel([]byte(peerId), "worker")
+	if err != nil {
+		e.logger.Info(
+			"could not establish direct channel, waiting...",
+			zap.Error(err),
+		)
+		time.Sleep(10 * time.Second)
+	}
 	for {
+		if e.state >= consensus.EngineStateStopping || e.state == consensus.EngineStateStopped {
+			break
+		}
 		_, prfs, err := e.coinStore.GetPreCoinProofsForOwner(addr)
 		if err != nil && !errors.Is(err, store.ErrNotFound) {
 			e.logger.Error("error while fetching pre-coin proofs", zap.Error(err))
@@ -97,14 +109,17 @@ func (e *DataClockConsensusEngine) runPreMidnightProofWorker() {
 			return
 		}
 
-		cc, err := e.pubSub.GetDirectChannel([]byte(peerId), "worker")
-		if err != nil {
-			e.logger.Info(
-				"could not establish direct channel, waiting...",
-				zap.Error(err),
-			)
-			time.Sleep(10 * time.Second)
-			continue
+		if cc == nil {
+			cc, err = e.pubSub.GetDirectChannel([]byte(peerId), "worker")
+			if err != nil {
+				e.logger.Info(
+					"could not establish direct channel, waiting...",
+					zap.Error(err),
+				)
+				cc = nil
+				time.Sleep(10 * time.Second)
+				continue
+			}
 		}
 
 		client := protobufs.NewDataServiceClient(cc)
@@ -125,6 +140,7 @@ func (e *DataClockConsensusEngine) runPreMidnightProofWorker() {
 				)
 				time.Sleep(10 * time.Second)
 				cc.Close()
+				cc = nil
 				continue
 			}
 
@@ -166,6 +182,7 @@ func (e *DataClockConsensusEngine) runPreMidnightProofWorker() {
 					zap.Int("increment", i),
 				)
 				cc.Close()
+				cc = nil
 				return
 			}
 
@@ -201,8 +218,20 @@ func (e *DataClockConsensusEngine) runPreMidnightProofWorker() {
 						"got error response, waiting...",
 						zap.Error(err),
 					)
+					if strings.Contains(
+						err.Error(),
+						application.ErrInvalidStateTransition.Error(),
+					) && i == 0 {
+						resume = make([]byte, 32)
+						e.logger.Info("pre-midnight proofs submitted, returning")
+						cc.Close()
+						cc = nil
+						return
+					}
+
 					resume = make([]byte, 32)
 					cc.Close()
+					cc = nil
 					time.Sleep(10 * time.Second)
 					break
 				}
@@ -217,6 +246,7 @@ func (e *DataClockConsensusEngine) runPreMidnightProofWorker() {
 				if i == 0 {
 					e.logger.Info("pre-midnight proofs submitted, returning")
 					cc.Close()
+					cc = nil
 					return
 				} else {
 					increment = uint32(i) - 1
@@ -225,7 +255,6 @@ func (e *DataClockConsensusEngine) runPreMidnightProofWorker() {
 				break
 			}
 		}
-		cc.Close()
 	}
 }
 
