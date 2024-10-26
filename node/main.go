@@ -332,7 +332,7 @@ func main() {
 	}
 
 	if *core != 0 {
-		runtime.GOMAXPROCS(2)
+		// runtime.GOMAXPROCS(2)
 		rdebug.SetGCPercent(9999)
 
 		if nodeConfig.Engine.DataWorkerMemoryLimit == 0 {
