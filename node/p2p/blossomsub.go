@@ -303,6 +303,17 @@ func NewBlossomSub(
 	bs.h = h
 	bs.signKey = privKey
 
+	go func() {
+		for {
+			time.Sleep(30 * time.Second)
+			for _, b := range bs.bitmaskMap {
+				if len(b.ListPeers()) < 4 {
+					discoverPeers(p2pConfig, bs.ctx, logger, bs.h, routingDiscovery)
+				}
+			}
+		}
+	}()
+
 	return bs
 }
 
@@ -874,16 +885,7 @@ func discoverPeers(
 
 	discover()
 
-	go func() {
-		for {
-			time.Sleep(5 * time.Second)
-			if len(h.Network().Peers()) < 6 {
-				discover()
-			}
-		}
-	}()
-
-	logger.Info("completed initial peer discovery")
+	logger.Info("completed peer discovery")
 }
 
 func mergeDefaults(p2pConfig *config.P2PConfig) blossomsub.BlossomSubParams {
