@@ -30,7 +30,10 @@ func (e *DataClockConsensusEngine) downloadSnapshot(
 	}
 
 	if frame.Timestamp > time.Now().Add(-6*time.Hour).UnixMilli() {
-		return nil
+		return errors.Wrap(
+			errors.New("synced higher than recent snapshot"),
+			"download snapshot",
+		)
 	}
 
 	resp, err := http.Get(

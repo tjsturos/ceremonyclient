@@ -270,6 +270,17 @@ func (d *DataTimeReel) createGenesisFrame() (
 		panic(err)
 	}
 
+	err = txn.Commit()
+	if err != nil {
+		txn.Abort()
+		panic(err)
+	}
+
+	txn, err = d.clockStore.NewTransaction()
+	if err != nil {
+		panic(err)
+	}
+
 	if err := d.clockStore.CommitDataClockFrame(
 		d.filter,
 		0,
