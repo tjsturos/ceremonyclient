@@ -854,11 +854,11 @@ func discoverPeers(
 			return
 		}
 
+		count := 12
 		for peer := range peerChan {
-			if len(h.Network().Peers()) >= 6 {
+			if count == 0 {
 				break
 			}
-
 			peer := peer
 			if peer.ID == h.ID() ||
 				h.Network().Connectedness(peer.ID) == network.Connected ||
@@ -875,6 +875,7 @@ func discoverPeers(
 					zap.Error(err),
 				)
 			} else {
+				count--
 				logger.Debug(
 					"connected to peer",
 					zap.String("peer_id", peer.ID.String()),
