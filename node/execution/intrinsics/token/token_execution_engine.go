@@ -161,7 +161,7 @@ func NewTokenExecutionEngine(
 	)
 
 	e.clock = data.NewDataClockConsensusEngine(
-		cfg.Engine,
+		cfg,
 		logger,
 		keyManager,
 		clockStore,

@@ -130,7 +130,7 @@ func TestHandlePreMidnightMint(t *testing.T) {
 		peerInfoManager:           nil,
 		peerSeniority:             newFromMap(map[string]uint64{}),
 		messageProcessorCh:        make(chan *pb.Message),
-		engineConfig:              nil,
+		config:                    nil,
 		preMidnightMint:           map[string]struct{}{},
 	}
 
