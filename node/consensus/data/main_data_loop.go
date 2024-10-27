@@ -61,6 +61,12 @@ func (e *DataClockConsensusEngine) runLoop() {
 					"current frame head",
 					zap.Uint64("frame_number", dataFrame.FrameNumber),
 				)
+				if !e.IsInProverTrie(e.provingKeyBytes) {
+					if latestFrame, err = e.collect(dataFrame); err != nil {
+						e.logger.Error("could not collect", zap.Error(err))
+					}
+				}
+
 				if latestFrame != nil &&
 					dataFrame.FrameNumber > latestFrame.FrameNumber {
 					latestFrame = dataFrame
@@ -171,6 +177,12 @@ func (e *DataClockConsensusEngine) runLoop() {
 					"current frame head",
 					zap.Uint64("frame_number", dataFrame.FrameNumber),
 				)
+
+				if !e.IsInProverTrie(e.provingKeyBytes) {
+					if latestFrame, err = e.collect(dataFrame); err != nil {
+						e.logger.Error("could not collect", zap.Error(err))
+					}
+				}
 
 				if latestFrame == nil ||
 					latestFrame.FrameNumber < dataFrame.FrameNumber {

@@ -192,13 +192,15 @@ func (e *DataClockConsensusEngine) handleRebroadcast(
 	}
 
 	for _, frame := range frames.ClockFrames {
-		if head.FrameNumber > frame.FrameNumber {
+		if head.FrameNumber >= frame.FrameNumber {
 			continue
 		}
 
 		e.logger.Info("receiving synchronization data")
 
 		if err := e.handleClockFrame(peerID, address, frame); err != nil {
+			// if they're sending invalid clock frames, nuke them.
+			e.pubSub.AddPeerScore(peerID, -100000)
 			return errors.Wrap(err, "handle rebroadcast")
 		}
 	}

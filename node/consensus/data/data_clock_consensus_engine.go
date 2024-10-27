@@ -302,6 +302,20 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 
 	e.logger.Info("subscribing to pubsub messages")
 	e.pubSub.Subscribe(e.filter, e.handleMessage)
+	go func() {
+		server := grpc.NewServer(
+			grpc.MaxSendMsgSize(600*1024*1024),
+			grpc.MaxRecvMsgSize(600*1024*1024),
+		)
+		protobufs.RegisterDataServiceServer(server, e)
+		if err := e.pubSub.StartDirectChannelListener(
+			e.pubSub.GetPeerID(),
+			"sync",
+			server,
+		); err != nil {
+			panic(err)
+		}
+	}()
 
 	go func() {
 		if e.dataTimeReel.GetFrameProverTries()[0].Contains(e.provingKeyAddress) {
