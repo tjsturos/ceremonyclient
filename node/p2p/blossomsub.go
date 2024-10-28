@@ -316,8 +316,11 @@ func NewBlossomSub(
 	verifyReachability(p2pConfig)
 
 	discoverPeers(p2pConfig, ctx, logger, h, routingDiscovery, true)
+<<<<<<< HEAD
 
 	go monitorPeers(ctx, logger, h)
+=======
+>>>>>>> 7eaf8e0 (a little more logic around connection management)
 
 	// TODO: turn into an option flag for console logging, this is too noisy for
 	// default logging behavior
@@ -392,6 +395,7 @@ func NewBlossomSub(
 		for {
 			time.Sleep(30 * time.Second)
 			for _, b := range bs.bitmaskMap {
+<<<<<<< HEAD
 				bitmaskPeers := b.ListPeers()
 				peerCount := len(bitmaskPeers)
 				for _, p := range bitmaskPeers {
@@ -400,6 +404,9 @@ func NewBlossomSub(
 					}
 				}
 				if peerCount < 4 {
+=======
+				if len(b.ListPeers()) < 4 {
+>>>>>>> 7eaf8e0 (a little more logic around connection management)
 					discoverPeers(p2pConfig, bs.ctx, logger, bs.h, routingDiscovery, false)
 					break
 				}
@@ -1060,21 +1067,20 @@ func discoverPeers(
 					return
 				}
 
-				logger.Debug("found peer", zap.String("peer_id", peer.ID.String()))
-				err := h.Connect(ctx, peer)
-				if err != nil {
-					logger.Debug(
-						"error while connecting to blossomsub peer",
-						zap.String("peer_id", peer.ID.String()),
-						zap.Error(err),
-					)
-				} else {
-					logger.Debug(
-						"connected to peer",
-						zap.String("peer_id", peer.ID.String()),
-					)
-				}
-			}()
+			logger.Debug("found peer", zap.String("peer_id", peer.ID.String()))
+			err := h.Connect(ctx, peer)
+			if err != nil {
+				logger.Debug(
+					"error while connecting to blossomsub peer",
+					zap.String("peer_id", peer.ID.String()),
+					zap.Error(err),
+				)
+			} else {
+				logger.Debug(
+					"connected to peer",
+					zap.String("peer_id", peer.ID.String()),
+				)
+			}
 		}
 	}
 
