@@ -25,6 +25,7 @@ var NodeConfig *config.Config
 var simulateFail bool
 var LightNode bool = false
 var DryRun bool = false
+var publicRpc bool = false
 
 var rootCmd = &cobra.Command{
 	Use:   "qclient",
@@ -108,8 +109,12 @@ var rootCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		if NodeConfig.ListenGRPCMultiaddr == "" {
-			fmt.Println("gRPC not enabled, using light node")
+		if NodeConfig.ListenGRPCMultiaddr == "" || publicRpc {
+			if !publicRpc {
+				fmt.Println("gRPC not enabled, using light node")
+			} else {
+				fmt.Println("Public RPC flag used, using light node")
+			}
 			LightNode = true
 		}
 	},
@@ -168,5 +173,11 @@ func init() {
 		"signature-check",
 		true,
 		"bypass signature check (not recommended for binaries)",
+	)
+	rootCmd.PersistentFlags().BoolVar(
+		&publicRpc,
+		"public-rpc",
+		false,
+		"use public RPC endpoint (default is to check config.yml settings)",
 	)
 }
