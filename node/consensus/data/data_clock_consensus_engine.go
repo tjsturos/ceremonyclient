@@ -1,6 +1,7 @@
 package data
 
 import (
+	"bytes"
 	"context"
 	"crypto"
 	"encoding/binary"
@@ -93,24 +94,24 @@ type DataClockConsensusEngine struct {
 	currentReceivingSyncPeersMx sync.Mutex
 	currentReceivingSyncPeers   int
 
-	frameChan            chan *protobufs.ClockFrame
-	executionEngines     map[string]execution.ExecutionEngine
-	filter               []byte
-	input                []byte
-	parentSelector       []byte
-	syncingStatus        SyncStatusType
-	syncingTarget        []byte
-	previousHead         *protobufs.ClockFrame
-	engineMx             sync.Mutex
-	dependencyMapMx      sync.Mutex
-	stagedTransactions   *protobufs.TokenRequests
-	stagedTransactionsMx sync.Mutex
-	peerMapMx            sync.RWMutex
-	peerAnnounceMapMx    sync.Mutex
-	// proverTrieJoinRequests         map[string]string
-	// proverTrieLeaveRequests        map[string]string
-	// proverTriePauseRequests        map[string]string
-	// proverTrieResumeRequests       map[string]string
+	frameChan                      chan *protobufs.ClockFrame
+	executionEngines               map[string]execution.ExecutionEngine
+	filter                         []byte
+	input                          []byte
+	parentSelector                 []byte
+	syncingStatus                  SyncStatusType
+	syncingTarget                  []byte
+	previousHead                   *protobufs.ClockFrame
+	engineMx                       sync.Mutex
+	dependencyMapMx                sync.Mutex
+	stagedTransactions             *protobufs.TokenRequests
+	stagedTransactionsMx           sync.Mutex
+	peerMapMx                      sync.RWMutex
+	peerAnnounceMapMx              sync.Mutex
+	proverTrieJoinRequests         map[string]string
+	proverTrieLeaveRequests        map[string]string
+	proverTriePauseRequests        map[string]string
+	proverTrieResumeRequests       map[string]string
 	proverTrieRequestsMx           sync.Mutex
 	lastKeyBundleAnnouncementFrame uint64
 	peerSeniority                  *peerSeniority
@@ -615,24 +616,24 @@ func (e *DataClockConsensusEngine) Stop(force bool) <-chan error {
 	e.state = consensus.EngineStateStopping
 	errChan := make(chan error)
 
-	// msg := []byte("pause")
-	// msg = binary.BigEndian.AppendUint64(msg, e.GetFrame().FrameNumber)
-	// msg = append(msg, e.filter...)
-	// sig, err := e.pubSub.SignMessage(msg)
-	// if err != nil {
-	// 	panic(err)
-	// }
+	msg := []byte("pause")
+	msg = binary.BigEndian.AppendUint64(msg, e.GetFrame().FrameNumber)
+	msg = append(msg, e.filter...)
+	sig, err := e.pubSub.SignMessage(msg)
+	if err != nil {
+		panic(err)
+	}
 
-	// e.publishMessage(e.filter, &protobufs.AnnounceProverPause{
-	// 	Filter:      e.filter,
-	// 	FrameNumber: e.GetFrame().FrameNumber,
-	// 	PublicKeySignatureEd448: &protobufs.Ed448Signature{
-	// 		PublicKey: &protobufs.Ed448PublicKey{
-	// 			KeyValue: e.pubSub.GetPublicKey(),
-	// 		},
-	// 		Signature: sig,
-	// 	},
-	// })
+	e.publishMessage(e.filter, &protobufs.AnnounceProverPause{
+		Filter:      e.filter,
+		FrameNumber: e.GetFrame().FrameNumber,
+		PublicKeySignatureEd448: &protobufs.Ed448Signature{
+			PublicKey: &protobufs.Ed448PublicKey{
+				KeyValue: e.pubSub.GetPublicKey(),
+			},
+			Signature: sig,
+		},
+	})
 
 	wg := sync.WaitGroup{}
 	wg.Add(len(e.executionEngines))
@@ -960,4 +961,26 @@ func (e *DataClockConsensusEngine) createParallelDataClientsFromBaseMultiaddr(
 		zap.Int("parallelism", parallelism),
 	)
 	return clients, nil
+}
+
+func (e *DataClockConsensusEngine) announceProverJoin() {
+	msg := []byte("join")
+	head, _ := e.dataTimeReel.Head()
+	msg = binary.BigEndian.AppendUint64(msg, head.FrameNumber)
+	msg = append(msg, bytes.Repeat([]byte{0xff}, 32)...)
+	sig, err := e.pubSub.SignMessage(msg)
+	if err != nil {
+		panic(err)
+	}
+
+	e.publishMessage(e.filter, &protobufs.AnnounceProverJoin{
+		Filter:      bytes.Repeat([]byte{0xff}, 32),
+		FrameNumber: head.FrameNumber,
+		PublicKeySignatureEd448: &protobufs.Ed448Signature{
+			Signature: sig,
+			PublicKey: &protobufs.Ed448PublicKey{
+				KeyValue: e.provingKeyBytes,
+			},
+		},
+	})
 }

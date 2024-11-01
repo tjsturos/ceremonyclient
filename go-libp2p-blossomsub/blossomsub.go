@@ -214,7 +214,13 @@ func NewBlossomSubWithRouter(ctx context.Context, h host.Host, rt PubSubRouter, 
 }
 
 // NewBlossomSubRouter returns a new BlossomSubRouter with custom parameters.
-func NewBlossomSubRouter(h host.Host, params BlossomSubParams) *BlossomSubRouter {
+func NewBlossomSubRouter(h host.Host, params BlossomSubParams, network uint8) *BlossomSubRouter {
+	if network != 0 {
+		BlossomSubDefaultProtocols[0] = protocol.ID(
+			string(BlossomSubID_v2) + fmt.Sprintf("-network-%d", network),
+		)
+	}
+
 	return &BlossomSubRouter{
 		peers:     make(map[peer.ID]protocol.ID),
 		mesh:      make(map[string]map[peer.ID]struct{}),
@@ -233,6 +239,7 @@ func NewBlossomSubRouter(h host.Host, params BlossomSubParams) *BlossomSubRouter
 		feature:   BlossomSubDefaultFeatures,
 		tagTracer: newTagTracer(h.ConnManager()),
 		params:    params,
+		network:   network,
 	}
 }
 
@@ -453,6 +460,7 @@ type BlossomSubRouter struct {
 	connect  chan connectInfo                 // px connection requests
 	cab      peerstore.AddrBook
 	meshMx   sync.RWMutex
+	network  uint8
 
 	protos  []protocol.ID
 	feature BlossomSubFeatureTest

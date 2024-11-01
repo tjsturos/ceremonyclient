@@ -234,7 +234,7 @@ func (e *DataClockConsensusEngine) handleMint(
 			t.Proofs[0],
 			[]byte("pre-dusk"),
 		) && (!bytes.Equal(t.Proofs[1], make([]byte, 32)) ||
-		head.FrameNumber < 67000) && e.GetFrameProverTries()[0].Contains(
+		time.Now().Unix() < 1730523600) && e.GetFrameProverTries()[0].Contains(
 		e.provingKeyAddress,
 	) {
 		prevInput := []byte{}
