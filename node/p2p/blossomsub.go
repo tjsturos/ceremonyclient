@@ -372,7 +372,7 @@ func NewBlossomSub(
 		}))
 
 	params := mergeDefaults(p2pConfig)
-	rt := blossomsub.NewBlossomSubRouter(h, params)
+	rt := blossomsub.NewBlossomSubRouter(h, params, bs.network)
 	pubsub, err := blossomsub.NewBlossomSubWithRouter(ctx, h, rt, blossomOpts...)
 	if err != nil {
 		panic(err)
@@ -1046,10 +1046,6 @@ func discoverPeers(
 		wg := &sync.WaitGroup{}
 		defer wg.Wait()
 		for peer := range peerChan {
-			if len(h.Network().Peers()) >= 6 {
-				break
-			}
-
 			peer := peer
 			wg.Add(1)
 			go func() {

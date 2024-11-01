@@ -194,5 +194,6 @@ func init() {
 		"public-rpc",
 		false,
 		"use public RPC endpoint (default is to check config.yml settings)",
+
 	)
 }

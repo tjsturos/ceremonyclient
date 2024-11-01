@@ -961,3 +961,25 @@ func (e *DataClockConsensusEngine) createParallelDataClientsFromBaseMultiaddr(
 	)
 	return clients, nil
 }
+
+func (e *DataClockConsensusEngine) announceProverJoin() {
+	msg := []byte("join")
+	head, _ := e.dataTimeReel.Head()
+	msg = binary.BigEndian.AppendUint64(msg, head.FrameNumber)
+	msg = append(msg, bytes.Repeat([]byte{0xff}, 32)...)
+	sig, err := e.pubSub.SignMessage(msg)
+	if err != nil {
+		panic(err)
+	}
+
+	e.publishMessage(e.filter, &protobufs.AnnounceProverJoin{
+		Filter:      bytes.Repeat([]byte{0xff}, 32),
+		FrameNumber: head.FrameNumber,
+		PublicKeySignatureEd448: &protobufs.Ed448Signature{
+			Signature: sig,
+			PublicKey: &protobufs.Ed448PublicKey{
+				KeyValue: e.provingKeyBytes,
+			},
+		},
+	})
+}
