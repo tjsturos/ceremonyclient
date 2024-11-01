@@ -131,7 +131,7 @@ var allCmd = &cobra.Command{
 					time.Sleep(10 * time.Second)
 					cc.Close()
 					cc = nil
-					err = pubSub.Reconnect([]byte(peerId))
+					err = pubSub.Reconnect([]byte(bpeerId))
 					if err != nil {
 						logger.Error(
 							"got error response, waiting...",
@@ -234,7 +234,7 @@ var allCmd = &cobra.Command{
 						cc.Close()
 						cc = nil
 						time.Sleep(10 * time.Second)
-						err = pubSub.Reconnect([]byte(peerId))
+						err = pubSub.Reconnect([]byte(bpeerId))
 						if err != nil {
 							logger.Error(
 								"got error response, waiting...",
