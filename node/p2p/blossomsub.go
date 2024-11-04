@@ -44,21 +44,29 @@ import (
 	blossomsub "source.quilibrium.com/quilibrium/monorepo/go-libp2p-blossomsub"
 	"source.quilibrium.com/quilibrium/monorepo/go-libp2p-blossomsub/pb"
 	"source.quilibrium.com/quilibrium/monorepo/node/config"
+	"source.quilibrium.com/quilibrium/monorepo/node/p2p/internal"
 	"source.quilibrium.com/quilibrium/monorepo/node/protobufs"
 )
 
+const (
+	minPeersPerBitmask   = 4
+	minBootstrapPeers    = 3
+	discoveryParallelism = 10
+	discoveryPeerLimit   = 1000
+	bootstrapParallelism = 10
+)
+
 type BlossomSub struct {
-	ps              *blossomsub.PubSub
-	ctx             context.Context
-	logger          *zap.Logger
-	peerID          peer.ID
-	bitmaskMap      map[string]*blossomsub.Bitmask
-	h               host.Host
-	signKey         crypto.PrivKey
-	peerScore       map[string]int64
-	peerScoreMx     sync.Mutex
-	isBootstrapPeer bool
-	network         uint8
+	ps          *blossomsub.PubSub
+	ctx         context.Context
+	logger      *zap.Logger
+	peerID      peer.ID
+	bitmaskMap  map[string]*blossomsub.Bitmask
+	h           host.Host
+	signKey     crypto.PrivKey
+	peerScore   map[string]int64
+	peerScoreMx sync.Mutex
+	network     uint8
 }
 
 var _ PubSub = (*BlossomSub)(nil)
@@ -128,13 +136,12 @@ func NewBlossomSubStreamer(
 	}
 
 	bs := &BlossomSub{
-		ctx:             ctx,
-		logger:          logger,
-		bitmaskMap:      make(map[string]*blossomsub.Bitmask),
-		signKey:         privKey,
-		peerScore:       make(map[string]int64),
-		isBootstrapPeer: false,
-		network:         p2pConfig.Network,
+		ctx:        ctx,
+		logger:     logger,
+		bitmaskMap: make(map[string]*blossomsub.Bitmask),
+		signKey:    privKey,
+		peerScore:  make(map[string]int64),
+		network:    p2pConfig.Network,
 	}
 
 	h, err := libp2p.New(opts...)
@@ -144,20 +151,13 @@ func NewBlossomSubStreamer(
 
 	logger.Info("established peer id", zap.String("peer_id", h.ID().String()))
 
-	kademliaDHT := initDHT(
+	_ = initDHT(
 		ctx,
-		p2pConfig,
 		logger,
 		h,
 		false,
 		bootstrappers,
 	)
-	routingDiscovery := routing.NewRoutingDiscovery(kademliaDHT)
-	util.Advertise(ctx, routingDiscovery, getNetworkNamespace(p2pConfig.Network))
-
-	if err != nil {
-		panic(err)
-	}
 
 	peerID := h.ID()
 	bs.peerID = peerID
@@ -286,36 +286,74 @@ func NewBlossomSub(
 	}
 
 	bs := &BlossomSub{
-		ctx:             ctx,
-		logger:          logger,
-		bitmaskMap:      make(map[string]*blossomsub.Bitmask),
-		signKey:         privKey,
-		peerScore:       make(map[string]int64),
-		isBootstrapPeer: isBootstrapPeer,
-		network:         p2pConfig.Network,
+		ctx:        ctx,
+		logger:     logger,
+		bitmaskMap: make(map[string]*blossomsub.Bitmask),
+		signKey:    privKey,
+		peerScore:  make(map[string]int64),
+		network:    p2pConfig.Network,
 	}
 
 	h, err := libp2p.New(opts...)
 	if err != nil {
 		panic(errors.Wrap(err, "error constructing p2p"))
 	}
+	idService := internal.IDServiceFromHost(h)
 
 	logger.Info("established peer id", zap.String("peer_id", h.ID().String()))
 
 	kademliaDHT := initDHT(
 		ctx,
-		p2pConfig,
 		logger,
 		h,
 		isBootstrapPeer,
 		bootstrappers,
 	)
+
 	routingDiscovery := routing.NewRoutingDiscovery(kademliaDHT)
 	util.Advertise(ctx, routingDiscovery, getNetworkNamespace(p2pConfig.Network))
 
 	verifyReachability(p2pConfig)
 
-	discoverPeers(p2pConfig, ctx, logger, h, routingDiscovery, true)
+	bootstrap := internal.NewPeerConnector(
+		ctx,
+		logger.Named("bootstrap"),
+		h,
+		idService,
+		minBootstrapPeers,
+		bootstrapParallelism,
+		internal.NewStaticPeerSource(bootstrappers, true),
+	)
+	if err := bootstrap.Connect(ctx); err != nil {
+		panic(err)
+	}
+	bootstrap = internal.NewConditionalPeerConnector(
+		ctx,
+		internal.NewNotEnoughPeersCondition(
+			h,
+			minBootstrapPeers,
+			internal.PeerAddrInfosToPeerIDMap(bootstrappers),
+		),
+		bootstrap,
+	)
+
+	discovery := internal.NewPeerConnector(
+		ctx,
+		logger.Named("discovery"),
+		h,
+		idService,
+		minPeersPerBitmask,
+		discoveryParallelism,
+		internal.NewRoutingDiscoveryPeerSource(
+			routingDiscovery,
+			getNetworkNamespace(p2pConfig.Network),
+			discoveryPeerLimit,
+		),
+	)
+	if err := discovery.Connect(ctx); err != nil {
+		panic(err)
+	}
+	discovery = internal.NewChainedPeerConnector(ctx, bootstrap, discovery)
 
 	go monitorPeers(ctx, logger, h)
 
@@ -399,8 +437,8 @@ func NewBlossomSub(
 						peerCount--
 					}
 				}
-				if peerCount < 4 {
-					discoverPeers(p2pConfig, bs.ctx, logger, bs.h, routingDiscovery, false)
+				if peerCount < minPeersPerBitmask {
+					_ = discovery.Connect(ctx)
 					break
 				}
 			}
@@ -602,7 +640,7 @@ func (b *BlossomSub) GetRandomPeer(bitmask []byte) ([]byte, error) {
 // up to 3 times to ensure they are still reachable. If the peer is not reachable after
 // 3 attempts, the connections to the peer are closed.
 func monitorPeers(ctx context.Context, logger *zap.Logger, h host.Host) {
-	const timeout, period, attempts = time.Minute, time.Minute, 3
+	const timeout, period, attempts = time.Minute, 20 * time.Second, 3
 	// Do not allow the pings to dial new connections. Adding new peers is a separate
 	// process and should not be done during the ping process.
 	ctx = network.WithNoDial(ctx, "monitor peers")
@@ -646,21 +684,12 @@ func monitorPeers(ctx context.Context, logger *zap.Logger, h host.Host) {
 		case <-ctx.Done():
 			return
 		case <-time.After(period):
-			// This is once again a snapshot of the peers at the time of the ping. If new peers
+			// This is once again a snapshot of the connected peers at the time of the ping. If new peers
 			// are added between the snapshot and the ping, they will be pinged in the next iteration.
 			peers := h.Network().Peers()
-			connected := make([]peer.ID, 0, len(peers))
-			for _, p := range peers {
-				// The connection status may change both before and after the check. Still, it is better
-				// to focus on pinging only connections which are potentially connected at the moment of the check.
-				switch h.Network().Connectedness(p) {
-				case network.Connected, network.Limited:
-					connected = append(connected, p)
-				}
-			}
-			logger.Debug("pinging connected peers", zap.Int("peer_count", len(connected)))
+			logger.Debug("pinging connected peers", zap.Int("peer_count", len(peers)))
 			wg := &sync.WaitGroup{}
-			for _, id := range connected {
+			for _, id := range peers {
 				logger := logger.With(zap.String("peer_id", id.String()))
 				wg.Add(1)
 				go ping(ctx, logger, wg, id)
@@ -673,86 +702,30 @@ func monitorPeers(ctx context.Context, logger *zap.Logger, h host.Host) {
 
 func initDHT(
 	ctx context.Context,
-	p2pConfig *config.P2PConfig,
 	logger *zap.Logger,
 	h host.Host,
 	isBootstrapPeer bool,
 	bootstrappers []peer.AddrInfo,
 ) *dht.IpfsDHT {
 	logger.Info("establishing dht")
-	var kademliaDHT *dht.IpfsDHT
-	var err error
+	var mode dht.ModeOpt
 	if isBootstrapPeer {
-		kademliaDHT, err = dht.New(
-			ctx,
-			h,
-			dht.Mode(dht.ModeServer),
-			dht.BootstrapPeers(bootstrappers...),
-		)
+		mode = dht.ModeServer
 	} else {
-		kademliaDHT, err = dht.New(
-			ctx,
-			h,
-			dht.Mode(dht.ModeClient),
-			dht.BootstrapPeers(bootstrappers...),
-		)
+		mode = dht.ModeClient
 	}
+	kademliaDHT, err := dht.New(
+		ctx,
+		h,
+		dht.Mode(mode),
+		dht.BootstrapPeers(bootstrappers...),
+	)
 	if err != nil {
 		panic(err)
 	}
-	if err = kademliaDHT.Bootstrap(ctx); err != nil {
+	if err := kademliaDHT.Bootstrap(ctx); err != nil {
 		panic(err)
 	}
-
-	reconnect := func() {
-		wg := &sync.WaitGroup{}
-		defer wg.Wait()
-		for _, peerinfo := range bootstrappers {
-			peerinfo := peerinfo
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				if peerinfo.ID == h.ID() ||
-					h.Network().Connectedness(peerinfo.ID) == network.Connected ||
-					h.Network().Connectedness(peerinfo.ID) == network.Limited {
-					return
-				}
-
-				if err := h.Connect(ctx, peerinfo); err != nil {
-					logger.Debug("error while connecting to dht peer", zap.Error(err))
-				} else {
-					h.ConnManager().Protect(peerinfo.ID, "bootstrap")
-					logger.Debug(
-						"connected to peer",
-						zap.String("peer_id", peerinfo.ID.String()),
-					)
-				}
-			}()
-		}
-	}
-
-	reconnect()
-
-	bootstrapPeerIDs := make(map[peer.ID]struct{}, len(bootstrappers))
-	for _, peerinfo := range bootstrappers {
-		bootstrapPeerIDs[peerinfo.ID] = struct{}{}
-	}
-	go func() {
-		for {
-			time.Sleep(30 * time.Second)
-			found := false
-			for _, p := range h.Network().Peers() {
-				if _, ok := bootstrapPeerIDs[p]; ok {
-					found = true
-					break
-				}
-			}
-			if !found {
-				reconnect()
-			}
-		}
-	}()
-
 	return kademliaDHT
 }
 
@@ -1020,65 +993,6 @@ func verifyReachability(cfg *config.P2PConfig) bool {
 
 	fmt.Println("Node passed reachability check.")
 	return true
-}
-
-func discoverPeers(
-	p2pConfig *config.P2PConfig,
-	ctx context.Context,
-	logger *zap.Logger,
-	h host.Host,
-	routingDiscovery *routing.RoutingDiscovery,
-	init bool,
-) {
-	discover := func() {
-		logger.Info("initiating peer discovery")
-		defer logger.Info("completed peer discovery")
-
-		peerChan, err := routingDiscovery.FindPeers(
-			ctx,
-			getNetworkNamespace(p2pConfig.Network),
-		)
-		if err != nil {
-			logger.Error("could not find peers", zap.Error(err))
-			return
-		}
-
-		wg := &sync.WaitGroup{}
-		defer wg.Wait()
-		for peer := range peerChan {
-			peer := peer
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				if peer.ID == h.ID() ||
-					h.Network().Connectedness(peer.ID) == network.Connected ||
-					h.Network().Connectedness(peer.ID) == network.Limited {
-					return
-				}
-
-				logger.Debug("found peer", zap.String("peer_id", peer.ID.String()))
-				err := h.Connect(ctx, peer)
-				if err != nil {
-					logger.Debug(
-						"error while connecting to blossomsub peer",
-						zap.String("peer_id", peer.ID.String()),
-						zap.Error(err),
-					)
-				} else {
-					logger.Debug(
-						"connected to peer",
-						zap.String("peer_id", peer.ID.String()),
-					)
-				}
-			}()
-		}
-	}
-
-	if init {
-		go discover()
-	} else {
-		discover()
-	}
 }
 
 func mergeDefaults(p2pConfig *config.P2PConfig) blossomsub.BlossomSubParams {
