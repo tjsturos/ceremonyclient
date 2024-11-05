@@ -89,14 +89,14 @@ func (a *TokenApplication) handleDataAnnounceProverJoin(
 		return nil, errors.Wrap(err, "handle join")
 	}
 
+	lockMap[string(t.PublicKeySignatureEd448.PublicKey.KeyValue)] = struct{}{}
 	for _, t := range a.Tries {
 		if t.Contains(address) {
-			a.Logger.Debug("prover already in trie", zap.Binary("address", address))
-			return nil, errors.Wrap(ErrInvalidStateTransition, "handle join")
+			// do nothing:
+			return []*protobufs.TokenOutput{}, nil
 		}
 	}
 
-	lockMap[string(t.PublicKeySignatureEd448.PublicKey.KeyValue)] = struct{}{}
 	return []*protobufs.TokenOutput{
 		&protobufs.TokenOutput{
 			Output: &protobufs.TokenOutput_Join{

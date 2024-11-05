@@ -52,11 +52,11 @@ func (a *TokenApplication) handleDataAnnounceProverLeave(
 		inTries = inTries || t.Contains(address)
 	}
 
-	if !inTries {
-		return nil, errors.Wrap(ErrInvalidStateTransition, "handle leave")
-	}
-
 	lockMap[string(t.PublicKeySignatureEd448.PublicKey.KeyValue)] = struct{}{}
+	if !inTries {
+		// do nothing:
+		return []*protobufs.TokenOutput{}, nil
+	}
 
 	return []*protobufs.TokenOutput{
 		&protobufs.TokenOutput{

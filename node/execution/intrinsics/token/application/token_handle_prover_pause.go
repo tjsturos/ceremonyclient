@@ -51,10 +51,11 @@ func (a *TokenApplication) handleDataAnnounceProverPause(
 		inTries = inTries || t.Contains(address)
 	}
 
-	if !inTries {
-		return nil, errors.Wrap(ErrInvalidStateTransition, "handle pause")
-	}
 	lockMap[string(t.PublicKeySignatureEd448.PublicKey.KeyValue)] = struct{}{}
+	if !inTries {
+		// do nothing:
+		return []*protobufs.TokenOutput{}, nil
+	}
 	return []*protobufs.TokenOutput{
 		&protobufs.TokenOutput{
 			Output: &protobufs.TokenOutput_Pause{

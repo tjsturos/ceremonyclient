@@ -648,7 +648,9 @@ func (e *TokenExecutionEngine) ProcessFrame(
 			)
 			last = app.Tries[rings]
 		}
-		last.Add([]byte(addr.addr), frame.FrameNumber)
+		if !last.Contains([]byte(addr.addr)) {
+			last.Add([]byte(addr.addr), frame.FrameNumber)
+		}
 	}
 	for _, addr := range leaveReqs {
 		for _, t := range app.Tries {

@@ -134,7 +134,7 @@ func (t *RollingFrecencyCritbitTrie) FindNearestAndApproximateNeighbors(
 
 	var traverse func(p *Node, address []byte) bool
 	traverse = func(p *Node, address []byte) bool {
-		if len(ret) > 256 {
+		if len(ret) > 1024 {
 			return true
 		}
 
