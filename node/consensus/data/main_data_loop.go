@@ -78,7 +78,7 @@ func (e *DataClockConsensusEngine) processFrame(
 		zap.Uint64("frame_number", dataFrame.FrameNumber),
 	)
 	var err error
-	if !e.IsInProverTrie(e.provingKeyBytes) {
+	if !e.GetFrameProverTries()[0].Contains(e.provingKeyBytes) {
 		if latestFrame, err = e.collect(dataFrame); err != nil {
 			e.logger.Error("could not collect", zap.Error(err))
 		}
@@ -123,6 +123,6 @@ func (e *DataClockConsensusEngine) processFrame(
 			e.logger.Info("announcing prover join")
 			e.announceProverJoin()
 		}
-		return dataFrame
+		return latestFrame
 	}
 }

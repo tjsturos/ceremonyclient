@@ -13,12 +13,13 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"source.quilibrium.com/quilibrium/monorepo/node/config"
+	"source.quilibrium.com/quilibrium/monorepo/node/consensus"
 	"source.quilibrium.com/quilibrium/monorepo/node/execution/intrinsics/token/application"
 	"source.quilibrium.com/quilibrium/monorepo/node/protobufs"
 )
 
 func (e *DataClockConsensusEngine) runFrameMessageHandler() {
-	for {
+	for e.state < consensus.EngineStateStopping {
 		select {
 		case message := <-e.frameMessageProcessorCh:
 			e.logger.Debug("handling frame message")
@@ -54,7 +55,7 @@ func (e *DataClockConsensusEngine) runFrameMessageHandler() {
 }
 
 func (e *DataClockConsensusEngine) runTxMessageHandler() {
-	for {
+	for e.state < consensus.EngineStateStopping {
 		select {
 		case message := <-e.txMessageProcessorCh:
 			e.logger.Debug("handling tx message")
@@ -127,7 +128,7 @@ func (e *DataClockConsensusEngine) runTxMessageHandler() {
 }
 
 func (e *DataClockConsensusEngine) runInfoMessageHandler() {
-	for {
+	for e.state < consensus.EngineStateStopping {
 		select {
 		case message := <-e.infoMessageProcessorCh:
 			e.logger.Debug("handling info message")
