@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/iden3/go-iden3-crypto/poseidon"
 	pcrypto "github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/discovery/backoff"
@@ -19,7 +20,9 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/anypb"
 	"source.quilibrium.com/quilibrium/monorepo/go-libp2p-blossomsub/pb"
 	"source.quilibrium.com/quilibrium/monorepo/node/config"
@@ -36,8 +39,6 @@ import (
 
 const PEER_INFO_TTL = 60 * 60 * 1000
 const UNCOOPERATIVE_PEER_INFO_TTL = 60 * 1000
-
-var ErrNoApplicableChallenge = errors.New("no applicable challenge")
 
 type SyncStatusType int
 
@@ -509,6 +510,12 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 	go e.runPreMidnightProofWorker()
 
 	go func() {
+		h, err := poseidon.HashBytes(e.pubSub.GetPeerID())
+		if err != nil {
+			panic(err)
+		}
+		peerProvingKeyAddress := h.FillBytes(make([]byte, 32))
+
 		frame, err := e.dataTimeReel.Head()
 		if err != nil {
 			panic(err)
@@ -551,8 +558,8 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 			frame = nextFrame
 
 			for i, trie := range e.GetFrameProverTries()[1:] {
-				if trie.Contains(e.provingKeyAddress) {
-					e.logger.Info("creating data shard ring proof", zap.Int("ring", i-1))
+				if trie.Contains(peerProvingKeyAddress) {
+					e.logger.Info("creating data shard ring proof", zap.Int("ring", i))
 					e.PerformTimeProof(frame, frame.Difficulty, clients)
 				}
 			}
@@ -609,7 +616,7 @@ func (e *DataClockConsensusEngine) PerformTimeProof(
 						},
 					)
 				if err != nil {
-					if errors.Is(err, ErrNoApplicableChallenge) {
+					if status.Code(err) == codes.NotFound {
 						break
 					}
 					if j == 0 {
