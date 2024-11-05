@@ -159,6 +159,7 @@ func NewBlossomSubStreamer(
 		h,
 		false,
 		bootstrappers,
+		p2pConfig.Network,
 	)
 
 	peerID := h.ID()
@@ -310,6 +311,7 @@ func NewBlossomSub(
 		h,
 		isBootstrapPeer,
 		bootstrappers,
+		p2pConfig.Network,
 	)
 	h = routedhost.Wrap(h, kademliaDHT)
 
@@ -713,10 +715,11 @@ func initDHT(
 	h host.Host,
 	isBootstrapPeer bool,
 	bootstrappers []peer.AddrInfo,
+	network uint8,
 ) *dht.IpfsDHT {
 	logger.Info("establishing dht")
 	var mode dht.ModeOpt
-	if isBootstrapPeer {
+	if isBootstrapPeer || network != 0 {
 		mode = dht.ModeServer
 	} else {
 		mode = dht.ModeClient
