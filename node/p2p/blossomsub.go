@@ -317,13 +317,16 @@ func NewBlossomSub(
 	util.Advertise(ctx, routingDiscovery, getNetworkNamespace(p2pConfig.Network))
 
 	verifyReachability(p2pConfig)
-
+	minBootstraps := minBootstrapPeers
+	if p2pConfig.Network != 0 {
+		minBootstraps = 1
+	}
 	bootstrap := internal.NewPeerConnector(
 		ctx,
 		logger.Named("bootstrap"),
 		h,
 		idService,
-		minBootstrapPeers,
+		minBootstraps,
 		bootstrapParallelism,
 		internal.NewStaticPeerSource(bootstrappers, true),
 	)
@@ -334,7 +337,7 @@ func NewBlossomSub(
 		ctx,
 		internal.NewNotEnoughPeersCondition(
 			h,
-			minBootstrapPeers,
+			minBootstraps,
 			internal.PeerAddrInfosToPeerIDMap(bootstrappers),
 		),
 		bootstrap,

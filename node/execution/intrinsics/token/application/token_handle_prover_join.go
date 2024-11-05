@@ -58,7 +58,7 @@ func (a *TokenApplication) handleDataAnnounceProverJoin(
 		t.PublicKeySignatureEd448.Signature == nil ||
 		t.PublicKeySignatureEd448.PublicKey.KeyValue == nil ||
 		t.Filter == nil || len(t.Filter) != 32 ||
-		t.FrameNumber < currentFrameNumber-1 || t.FrameNumber > currentFrameNumber {
+		t.FrameNumber > currentFrameNumber {
 		a.Logger.Debug(
 			"bad payload",
 			zap.Uint64("given_frame_number", t.FrameNumber),

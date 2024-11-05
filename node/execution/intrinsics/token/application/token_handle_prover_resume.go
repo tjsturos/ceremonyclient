@@ -25,7 +25,7 @@ func (a *TokenApplication) handleDataAnnounceProverResume(
 		t.PublicKeySignatureEd448.Signature == nil ||
 		t.PublicKeySignatureEd448.PublicKey.KeyValue == nil ||
 		t.Filter == nil || len(t.Filter) != 32 ||
-		t.FrameNumber < currentFrameNumber-1 || t.FrameNumber > currentFrameNumber {
+		t.FrameNumber > currentFrameNumber {
 		return nil, errors.Wrap(ErrInvalidStateTransition, "handle resume")
 	}
 
