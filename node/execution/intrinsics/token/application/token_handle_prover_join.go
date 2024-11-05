@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 
 	"github.com/iden3/go-iden3-crypto/poseidon"
+	pcrypto "github.com/libp2p/go-libp2p/core/crypto"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"source.quilibrium.com/quilibrium/monorepo/node/protobufs"
@@ -15,12 +17,25 @@ func (a *TokenApplication) getAddressFromSignature(
 	if sig.PublicKey == nil || sig.PublicKey.KeyValue == nil {
 		return nil, errors.New("invalid data")
 	}
-	addrBI, err := poseidon.HashBytes(sig.PublicKey.KeyValue)
+
+	pk, err := pcrypto.UnmarshalEd448PublicKey(
+		sig.PublicKey.KeyValue,
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "get address from signature")
 	}
 
-	return addrBI.FillBytes(make([]byte, 32)), nil
+	peerId, err := peer.IDFromPublicKey(pk)
+	if err != nil {
+		return nil, errors.Wrap(err, "get address from signature")
+	}
+
+	altAddr, err := poseidon.HashBytes([]byte(peerId))
+	if err != nil {
+		return nil, errors.Wrap(err, "get address from signature")
+	}
+
+	return altAddr.FillBytes(make([]byte, 32)), nil
 }
 
 func (a *TokenApplication) handleDataAnnounceProverJoin(

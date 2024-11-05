@@ -1028,7 +1028,7 @@ func (e *DataClockConsensusEngine) announceProverJoin() {
 				PublicKeySignatureEd448: &protobufs.Ed448Signature{
 					Signature: sig,
 					PublicKey: &protobufs.Ed448PublicKey{
-						KeyValue: e.provingKeyBytes,
+						KeyValue: e.pubSub.GetPublicKey(),
 					},
 				},
 			},

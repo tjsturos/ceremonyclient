@@ -590,21 +590,19 @@ func (e *TokenExecutionEngine) ProcessFrame(
 				txn.Abort()
 				return nil, errors.Wrap(err, "process frame")
 			}
-			proverTrieJoinRequests[string(addr)] = string(addr)
+			proverTrieLeaveRequests[string(addr)] = string(addr)
 		case *protobufs.TokenOutput_Pause:
-			addr, err := e.getAddressFromSignature(o.Pause.PublicKeySignatureEd448)
+			_, err := e.getAddressFromSignature(o.Pause.PublicKeySignatureEd448)
 			if err != nil {
 				txn.Abort()
 				return nil, errors.Wrap(err, "process frame")
 			}
-			proverTrieJoinRequests[string(addr)] = string(addr)
 		case *protobufs.TokenOutput_Resume:
-			addr, err := e.getAddressFromSignature(o.Resume.PublicKeySignatureEd448)
+			_, err := e.getAddressFromSignature(o.Resume.PublicKeySignatureEd448)
 			if err != nil {
 				txn.Abort()
 				return nil, errors.Wrap(err, "process frame")
 			}
-			proverTrieJoinRequests[string(addr)] = string(addr)
 		}
 	}
 
