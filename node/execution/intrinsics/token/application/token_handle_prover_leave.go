@@ -54,8 +54,7 @@ func (a *TokenApplication) handleDataAnnounceProverLeave(
 
 	lockMap[string(t.PublicKeySignatureEd448.PublicKey.KeyValue)] = struct{}{}
 	if !inTries {
-		// do nothing:
-		return []*protobufs.TokenOutput{}, nil
+		return nil, errors.Wrap(errors.New("in prover trie"), "handle leave")
 	}
 
 	return []*protobufs.TokenOutput{

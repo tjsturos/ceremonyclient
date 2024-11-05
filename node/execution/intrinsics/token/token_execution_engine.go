@@ -5,6 +5,7 @@ import (
 	"crypto"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"math/big"
 	"slices"
 	"strings"
@@ -172,15 +173,19 @@ func NewTokenExecutionEngine(
 		clockStore,
 		cfg.Engine,
 		frameProver,
-		func(txn store.Transaction, frame *protobufs.ClockFrame) (
+		func(
+			txn store.Transaction,
+			frame *protobufs.ClockFrame,
+			triesAtFrame []*tries.RollingFrecencyCritbitTrie,
+		) (
 			[]*tries.RollingFrecencyCritbitTrie,
 			error,
 		) {
-			if err := e.VerifyExecution(frame); err != nil {
+			if err := e.VerifyExecution(frame, triesAtFrame); err != nil {
 				return nil, err
 			}
 			var tries []*tries.RollingFrecencyCritbitTrie
-			if tries, err = e.ProcessFrame(txn, frame); err != nil {
+			if tries, err = e.ProcessFrame(txn, frame, triesAtFrame); err != nil {
 				return nil, err
 			}
 
@@ -309,7 +314,7 @@ func NewTokenExecutionEngine(
 			e.publishMessage(append([]byte{0x00}, intrinsicFilter...), req)
 		}()
 	} else {
-		f, _, err := e.clockStore.GetLatestDataClockFrame(e.intrinsicFilter)
+		f, tries, err := e.clockStore.GetLatestDataClockFrame(e.intrinsicFilter)
 		fn, err := coinStore.GetLatestFrameProcessed()
 		if err != nil {
 			panic(err)
@@ -339,7 +344,7 @@ func NewTokenExecutionEngine(
 				"replaying last data frame",
 				zap.Uint64("frame_number", f.FrameNumber),
 			)
-			e.ProcessFrame(txn, f)
+			e.ProcessFrame(txn, f, tries)
 			if err = txn.Commit(); err != nil {
 				panic(err)
 			}
@@ -477,6 +482,7 @@ func (e *TokenExecutionEngine) ProcessMessage(
 func (e *TokenExecutionEngine) ProcessFrame(
 	txn store.Transaction,
 	frame *protobufs.ClockFrame,
+	triesAtFrame []*tries.RollingFrecencyCritbitTrie,
 ) ([]*tries.RollingFrecencyCritbitTrie, error) {
 	f, err := e.coinStore.GetLatestFrameProcessed()
 	if err != nil || f == frame.FrameNumber {
@@ -494,7 +500,7 @@ func (e *TokenExecutionEngine) ProcessFrame(
 	app, err := application.MaterializeApplicationFromFrame(
 		e.provingKey,
 		frame,
-		e.clock.GetFrameProverTries(),
+		triesAtFrame,
 		e.coinStore,
 		e.logger,
 	)
@@ -649,6 +655,7 @@ func (e *TokenExecutionEngine) ProcessFrame(
 			last = app.Tries[rings]
 		}
 		if !last.Contains([]byte(addr.addr)) {
+			fmt.Printf("add join %x\n", []byte(addr.addr))
 			last.Add([]byte(addr.addr), frame.FrameNumber)
 		}
 	}
@@ -710,6 +717,7 @@ func (e *TokenExecutionEngine) publishMessage(
 
 func (e *TokenExecutionEngine) VerifyExecution(
 	frame *protobufs.ClockFrame,
+	triesAtFrame []*tries.RollingFrecencyCritbitTrie,
 ) error {
 	if len(frame.AggregateProofs) > 0 {
 		for _, proofs := range frame.AggregateProofs {
@@ -761,7 +769,7 @@ func (e *TokenExecutionEngine) VerifyExecution(
 					a2, err := application.MaterializeApplicationFromFrame(
 						e.provingKey,
 						frame,
-						tries,
+						triesAtFrame,
 						e.coinStore,
 						e.logger,
 					)

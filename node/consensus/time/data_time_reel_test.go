@@ -169,7 +169,11 @@ func TestDataTimeReel(t *testing.T) {
 			Difficulty:  10,
 		},
 		prover,
-		func(txn store.Transaction, frame *protobufs.ClockFrame) (
+		func(
+			txn store.Transaction,
+			frame *protobufs.ClockFrame,
+			triesAtFrame []*tries.RollingFrecencyCritbitTrie,
+		) (
 			[]*tries.RollingFrecencyCritbitTrie,
 			error,
 		) {

@@ -92,8 +92,7 @@ func (a *TokenApplication) handleDataAnnounceProverJoin(
 	lockMap[string(t.PublicKeySignatureEd448.PublicKey.KeyValue)] = struct{}{}
 	for _, t := range a.Tries {
 		if t.Contains(address) {
-			// do nothing:
-			return []*protobufs.TokenOutput{}, nil
+			return nil, errors.Wrap(errors.New("in prover trie"), "handle join")
 		}
 	}
 

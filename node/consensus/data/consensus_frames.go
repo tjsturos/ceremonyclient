@@ -60,10 +60,15 @@ func (e *DataClockConsensusEngine) prove(
 ) (*protobufs.ClockFrame, error) {
 	e.stagedTransactionsMx.Lock()
 	executionOutput := &protobufs.IntrinsicExecutionOutput{}
+	_, tries, err := e.clockStore.GetDataClockFrame(
+		e.filter,
+		previousFrame.FrameNumber,
+		false,
+	)
 	app, err := application.MaterializeApplicationFromFrame(
 		e.provingKey,
 		previousFrame,
-		e.frameProverTries,
+		tries,
 		e.coinStore,
 		e.logger,
 	)
@@ -221,6 +226,12 @@ func (e *DataClockConsensusEngine) GetMostAheadPeer(
 	max := frameNumber
 	var peer []byte = nil
 	e.peerMapMx.RLock()
+	beaconInfo, ok := e.peerMap[string(e.beaconPeerId)]
+	if !ok {
+		e.peerMapMx.RUnlock()
+		return nil, 0, p2p.ErrNoPeersAvailable
+	}
+
 	for _, v := range e.peerMap {
 		e.logger.Debug(
 			"checking peer info",
@@ -230,7 +241,7 @@ func (e *DataClockConsensusEngine) GetMostAheadPeer(
 			zap.Binary("version", v.version),
 		)
 		_, ok := e.uncooperativePeersMap[string(v.peerId)]
-		if v.maxFrame > max &&
+		if v.maxFrame <= beaconInfo.maxFrame && v.maxFrame > max &&
 			v.timestamp > config.GetMinimumVersionCutoff().UnixMilli() &&
 			bytes.Compare(v.version, config.GetMinimumVersion()) >= 0 && !ok {
 			peer = v.peerId

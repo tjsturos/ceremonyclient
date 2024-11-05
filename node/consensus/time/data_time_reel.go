@@ -38,7 +38,11 @@ type DataTimeReel struct {
 	logger       *zap.Logger
 	clockStore   store.ClockStore
 	frameProver  crypto.FrameProver
-	exec         func(txn store.Transaction, frame *protobufs.ClockFrame) (
+	exec         func(
+		txn store.Transaction,
+		frame *protobufs.ClockFrame,
+		triesAtFrame []*tries.RollingFrecencyCritbitTrie,
+	) (
 		[]*tries.RollingFrecencyCritbitTrie,
 		error,
 	)
@@ -65,7 +69,11 @@ func NewDataTimeReel(
 	clockStore store.ClockStore,
 	engineConfig *config.EngineConfig,
 	frameProver crypto.FrameProver,
-	exec func(txn store.Transaction, frame *protobufs.ClockFrame) (
+	exec func(
+		txn store.Transaction,
+		frame *protobufs.ClockFrame,
+		triesAtFrame []*tries.RollingFrecencyCritbitTrie,
+	) (
 		[]*tries.RollingFrecencyCritbitTrie,
 		error,
 	),
@@ -613,8 +621,13 @@ func (d *DataTimeReel) setHead(frame *protobufs.ClockFrame, distance *big.Int) {
 		panic(err)
 	}
 
-	var tries []*tries.RollingFrecencyCritbitTrie
-	if tries, err = d.exec(txn, frame); err != nil {
+	_, tries, err := d.clockStore.GetDataClockFrame(
+		d.filter,
+		frame.FrameNumber-1,
+		false,
+	)
+
+	if tries, err = d.exec(txn, frame, tries); err != nil {
 		d.logger.Debug("invalid frame execution, unwinding", zap.Error(err))
 		txn.Abort()
 		return

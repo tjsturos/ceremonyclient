@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	pcrypto "github.com/libp2p/go-libp2p/core/crypto"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/discovery/backoff"
 	"github.com/multiformats/go-multiaddr"
 	mn "github.com/multiformats/go-multiaddr/net"
@@ -95,6 +97,7 @@ type DataClockConsensusEngine struct {
 	statsClient                 protobufs.NodeStatsClient
 	currentReceivingSyncPeersMx sync.Mutex
 	currentReceivingSyncPeers   int
+	beaconPeerId                []byte
 
 	frameChan                      chan *protobufs.ClockFrame
 	executionEngines               map[string]execution.ExecutionEngine
@@ -147,7 +150,7 @@ func (p peerSeniorityItem) Priority() *big.Int {
 var _ consensus.DataConsensusEngine = (*DataClockConsensusEngine)(nil)
 
 func NewDataClockConsensusEngine(
-	config *config.Config,
+	cfg *config.Config,
 	logger *zap.Logger,
 	keyManager keys.KeyManager,
 	clockStore store.ClockStore,
@@ -169,7 +172,7 @@ func NewDataClockConsensusEngine(
 		panic(errors.New("logger is nil"))
 	}
 
-	if config == nil {
+	if cfg == nil {
 		panic(errors.New("engine config is nil"))
 	}
 
@@ -217,12 +220,23 @@ func NewDataClockConsensusEngine(
 		panic(errors.New("peer info manager is nil"))
 	}
 
-	minimumPeersRequired := config.Engine.MinimumPeersRequired
+	genesis := config.GetGenesis()
+	beaconPubKey, err := pcrypto.UnmarshalEd448PublicKey(genesis.Beacon)
+	if err != nil {
+		panic(err)
+	}
+
+	beaconPeerId, err := peer.IDFromPublicKey(beaconPubKey)
+	if err != nil {
+		panic(err)
+	}
+
+	minimumPeersRequired := cfg.Engine.MinimumPeersRequired
 	if minimumPeersRequired == 0 {
 		minimumPeersRequired = 3
 	}
 
-	difficulty := config.Engine.Difficulty
+	difficulty := cfg.Engine.Difficulty
 	if difficulty == 0 {
 		difficulty = 160000
 	}
@@ -263,14 +277,15 @@ func NewDataClockConsensusEngine(
 		frameMessageProcessorCh:   make(chan *pb.Message),
 		txMessageProcessorCh:      make(chan *pb.Message),
 		infoMessageProcessorCh:    make(chan *pb.Message),
-		config:                    config,
+		config:                    cfg,
 		preMidnightMint:           map[string]struct{}{},
+		beaconPeerId:              []byte(beaconPeerId),
 	}
 
 	logger.Info("constructing consensus engine")
 
 	signer, keyType, bytes, address := e.GetProvingKey(
-		config.Engine,
+		cfg.Engine,
 	)
 
 	e.filter = filter

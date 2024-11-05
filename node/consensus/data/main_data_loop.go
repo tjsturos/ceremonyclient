@@ -118,7 +118,7 @@ func (e *DataClockConsensusEngine) processFrame(
 
 		return nextFrame
 	} else {
-		if !e.IsInProverTrie(e.provingKeyBytes) &&
+		if !e.IsInProverTrie(e.pubSub.GetPeerID()) &&
 			dataFrame.Timestamp > time.Now().UnixMilli()-30000 {
 			e.logger.Info("announcing prover join")
 			e.announceProverJoin()
