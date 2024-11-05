@@ -38,9 +38,7 @@ func (a *TokenApplication) handleDataAnnounceProverLeave(
 	payload = binary.BigEndian.AppendUint64(payload, t.FrameNumber)
 	payload = append(payload, t.Filter...)
 
-	if err := t.PublicKeySignatureEd448.Verify(
-		t.PublicKeySignatureEd448.PublicKey.KeyValue,
-	); err != nil {
+	if err := t.PublicKeySignatureEd448.Verify(payload); err != nil {
 		return nil, errors.Wrap(ErrInvalidStateTransition, "handle leave")
 	}
 
