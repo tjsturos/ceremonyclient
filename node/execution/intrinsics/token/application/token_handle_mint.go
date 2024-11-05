@@ -9,8 +9,8 @@ import (
 	pcrypto "github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/sha3"
 	"source.quilibrium.com/quilibrium/monorepo/node/crypto"
-	"source.quilibrium.com/quilibrium/monorepo/node/p2p"
 	"source.quilibrium.com/quilibrium/monorepo/node/protobufs"
 	"source.quilibrium.com/quilibrium/monorepo/node/store"
 )
@@ -19,6 +19,7 @@ func (a *TokenApplication) handleMint(
 	currentFrameNumber uint64,
 	lockMap map[string]struct{},
 	t *protobufs.MintCoinRequest,
+	frame *protobufs.ClockFrame,
 ) ([]*protobufs.TokenOutput, error) {
 	if t == nil || t.Proofs == nil || t.Signature == nil {
 		return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
@@ -115,117 +116,107 @@ func (a *TokenApplication) handleMint(
 			},
 		}
 		return outputs, nil
-	} else if len(t.Proofs) != 3 && currentFrameNumber > 0 {
+	} else if len(t.Proofs) > 1 && len(t.Proofs) != 3 && currentFrameNumber > 0 {
 		if _, touched := lockMap[string(t.Signature.PublicKey.KeyValue)]; touched {
 			return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
 		}
 		ring := -1
-		addrBytes := addr.FillBytes(make([]byte, 32))
 		proverSet := int64((len(a.Tries) - 1) * 1024)
 		for i, t := range a.Tries[1:] {
-			n := t.FindNearest(addrBytes)
-			if n != nil && bytes.Equal(n.External.Key, addrBytes) {
+			if t.Contains(altAddr.FillBytes(make([]byte, 32))) {
 				ring = i - 1
 			}
 		}
 		if ring == -1 {
 			return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
 		}
-		outputs := []*protobufs.TokenOutput{}
-		for _, p := range t.Proofs {
-			if len(p) < 516+len(peerId)+8+32 {
-				return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
-			}
+		challenge := []byte{}
+		challenge = append(challenge, peerId...)
+		challenge = binary.BigEndian.AppendUint64(
+			challenge,
+			currentFrameNumber-1,
+		)
 
-			if !bytes.Equal(p[516:len(peerId)], []byte(peerId)) {
+		digest := make([]byte, 128)
+		s := sha3.NewShake256()
+		pubkey, _ := pk.Raw()
+		s.Write(pubkey)
+		_, err = s.Read(digest)
+		if err != nil {
+			panic(err)
+		}
+
+		outputs := []*protobufs.TokenOutput{}
+		proofs := []byte{}
+
+		for i, p := range t.Proofs {
+			individualChallenge := append([]byte{}, challenge...)
+			individualChallenge = binary.BigEndian.AppendUint32(
+				individualChallenge,
+				uint32(i),
+			)
+			if len(p) != 516 {
 				return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
 			}
 
 			wesoProver := crypto.NewWesolowskiFrameProver(a.Logger)
 
-			frameNumber := binary.BigEndian.Uint64(
-				p[516+len(peerId) : 516+len(peerId)+8],
-			)
-			if frameNumber > currentFrameNumber {
+			if !wesoProver.VerifyChallengeProof(
+				individualChallenge,
+				frame.Difficulty,
+				p,
+			) {
 				return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
 			}
 
-			frames, proofs, err := a.CoinStore.GetPreCoinProofsForOwner(
-				altAddr.FillBytes(make([]byte, 32)),
-			)
-			if err == nil {
-				none := true
-				for _, f := range frames {
-					if f == frameNumber {
-						none = false
-						break
-					}
-				}
-
-				if !none {
-					for _, pr := range proofs {
-						if bytes.Equal(pr.Proof, p) {
-							return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
-						}
-					}
-				}
-			}
-
-			if !wesoProver.VerifyChallengeProof(p[516:], a.Difficulty, p[:516]) {
-				return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
-			}
-
-			scale := len(p2p.GetOnesIndices(p[516+len(peerId)+8 : 32]))
-			if scale == 0 {
-				return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
-			}
-
-			ringFactor := big.NewInt(2)
-			ringFactor.Exp(ringFactor, big.NewInt(int64(ring)), nil)
-
-			storage := big.NewInt(int64(512))
-			unitFactor := big.NewInt(8000000000)
-			storage.Mul(storage, unitFactor)
-			storage.Quo(storage, big.NewInt(proverSet))
-			storage.Quo(storage, ringFactor)
-
-			outputs = append(
-				outputs,
-				&protobufs.TokenOutput{
-					Output: &protobufs.TokenOutput_Proof{
-						Proof: &protobufs.PreCoinProof{
-							Amount:     storage.FillBytes(make([]byte, 32)),
-							Proof:      p,
-							Difficulty: a.Difficulty,
-							Owner: &protobufs.AccountRef{
-								Account: &protobufs.AccountRef_ImplicitAccount{
-									ImplicitAccount: &protobufs.ImplicitAccount{
-										ImplicitType: 0,
-										Address:      addr.FillBytes(make([]byte, 32)),
-									},
-								},
-							},
-						},
-					},
-				},
-				&protobufs.TokenOutput{
-					Output: &protobufs.TokenOutput_Coin{
-						Coin: &protobufs.Coin{
-							Amount:       storage.FillBytes(make([]byte, 32)),
-							Intersection: make([]byte, 1024),
-							Owner: &protobufs.AccountRef{
-								Account: &protobufs.AccountRef_ImplicitAccount{
-									ImplicitAccount: &protobufs.ImplicitAccount{
-										ImplicitType: 0,
-										Address:      addr.FillBytes(make([]byte, 32)),
-									},
-								},
-							},
-						},
-					},
-				},
-			)
+			proofs = append(proofs, p...)
 		}
+
+		ringFactor := big.NewInt(2)
+		ringFactor.Exp(ringFactor, big.NewInt(int64(ring)), nil)
+
+		storage := big.NewInt(int64(512 * len(t.Proofs)))
+		unitFactor := big.NewInt(8000000000)
+		storage.Mul(storage, unitFactor)
+		storage.Quo(storage, big.NewInt(proverSet))
+		storage.Quo(storage, ringFactor)
+
+		outputs = append(
+			outputs,
+			&protobufs.TokenOutput{
+				Output: &protobufs.TokenOutput_Proof{
+					Proof: &protobufs.PreCoinProof{
+						Amount:     storage.FillBytes(make([]byte, 32)),
+						Proof:      proofs,
+						Difficulty: a.Difficulty,
+						Owner: &protobufs.AccountRef{
+							Account: &protobufs.AccountRef_ImplicitAccount{
+								ImplicitAccount: &protobufs.ImplicitAccount{
+									ImplicitType: 0,
+									Address:      addr.FillBytes(make([]byte, 32)),
+								},
+							},
+						},
+					},
+				},
+			},
+			&protobufs.TokenOutput{
+				Output: &protobufs.TokenOutput_Coin{
+					Coin: &protobufs.Coin{
+						Amount:       storage.FillBytes(make([]byte, 32)),
+						Intersection: make([]byte, 1024),
+						Owner: &protobufs.AccountRef{
+							Account: &protobufs.AccountRef_ImplicitAccount{
+								ImplicitAccount: &protobufs.ImplicitAccount{
+									ImplicitType: 0,
+									Address:      addr.FillBytes(make([]byte, 32)),
+								},
+							},
+						},
+					},
+				},
+			},
+		)
 		lockMap[string(t.Signature.PublicKey.KeyValue)] = struct{}{}
 		return outputs, nil
 	}

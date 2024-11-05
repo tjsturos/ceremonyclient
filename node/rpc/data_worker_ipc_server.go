@@ -12,7 +12,6 @@ import (
 	"golang.org/x/crypto/sha3"
 	"source.quilibrium.com/quilibrium/monorepo/node/config"
 	"source.quilibrium.com/quilibrium/monorepo/node/crypto"
-	"source.quilibrium.com/quilibrium/monorepo/node/execution/intrinsics/token"
 	"source.quilibrium.com/quilibrium/monorepo/node/p2p"
 
 	pcrypto "github.com/libp2p/go-libp2p/core/crypto"
@@ -21,10 +20,7 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
-	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
 	"source.quilibrium.com/quilibrium/monorepo/node/protobufs"
 )
 
@@ -49,114 +45,10 @@ func (r *DataWorkerIPCServer) CalculateChallengeProof(
 		challenge,
 		req.ClockFrame.FrameNumber,
 	)
-	found := false
-	for _, proof := range req.ClockFrame.AggregateProofs {
-		for _, c := range proof.InclusionCommitments {
-			o := &protobufs.IntrinsicExecutionOutput{}
-			err := proto.Unmarshal(c.Data, o)
-			if err != nil {
-				return nil, err
-			}
+	challenge = binary.BigEndian.AppendUint32(challenge, r.coreId)
 
-			outputs := &protobufs.TokenOutputs{}
-			err = proto.Unmarshal(o.Output, outputs)
-			if err != nil {
-				return nil, err
-			}
-
-		inRange:
-			for i, out := range outputs.Outputs {
-				switch e := out.Output.(type) {
-				case *protobufs.TokenOutput_Coin:
-					addr, err := token.GetAddressOfCoin(
-						e.Coin,
-						req.ClockFrame.FrameNumber,
-						uint64(i),
-					)
-					if err != nil {
-						return nil, err
-					}
-					for _, idx := range p2p.GetOnesIndices(
-						p2p.GetBloomFilter(
-							addr,
-							1024,
-							64,
-						),
-					) {
-						for _, i := range r.indices {
-							if i == idx {
-								challenge = append(challenge, req.ClockFrame.Filter...)
-								challenge = append(challenge, req.ClockFrame.Input...)
-								challenge = append(challenge, c.Data...)
-								found = true
-								break inRange
-							}
-						}
-					}
-				case *protobufs.TokenOutput_DeletedCoin:
-					for _, idx := range p2p.GetOnesIndices(
-						p2p.GetBloomFilter(
-							e.DeletedCoin.Address,
-							1024,
-							64,
-						),
-					) {
-						for _, i := range r.indices {
-							if i == idx {
-								challenge = append(challenge, req.ClockFrame.Filter...)
-								challenge = append(challenge, req.ClockFrame.Input...)
-								challenge = append(challenge, c.Data...)
-								found = true
-								break inRange
-							}
-						}
-					}
-				case *protobufs.TokenOutput_DeletedProof:
-					for _, idx := range p2p.GetOnesIndices(
-						p2p.GetBloomFilter(
-							e.DeletedProof.Owner.GetImplicitAccount().Address,
-							1024,
-							64,
-						),
-					) {
-						for _, i := range r.indices {
-							if i == idx {
-								challenge = append(challenge, req.ClockFrame.Filter...)
-								challenge = append(challenge, req.ClockFrame.Input...)
-								challenge = append(challenge, c.Data...)
-								found = true
-								break inRange
-							}
-						}
-					}
-				case *protobufs.TokenOutput_Proof:
-					for _, idx := range p2p.GetOnesIndices(
-						p2p.GetBloomFilter(
-							e.Proof.Owner.GetImplicitAccount().Address,
-							1024,
-							64,
-						),
-					) {
-						for _, i := range r.indices {
-							if i == idx {
-								challenge = append(challenge, req.ClockFrame.Filter...)
-								challenge = append(challenge, req.ClockFrame.Input...)
-								challenge = append(challenge, c.Data...)
-								found = true
-								break inRange
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	if !found {
-		return nil, status.Error(codes.NotFound, "no applicable challenge")
-	}
 	proof, err := r.prover.CalculateChallengeProof(
-		challenge,
+		req.ClockFrame.Output,
 		req.ClockFrame.Difficulty,
 	)
 	if err != nil {

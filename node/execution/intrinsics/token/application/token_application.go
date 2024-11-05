@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 	"source.quilibrium.com/quilibrium/monorepo/node/config"
+	"source.quilibrium.com/quilibrium/monorepo/node/p2p"
 	"source.quilibrium.com/quilibrium/monorepo/node/protobufs"
 	"source.quilibrium.com/quilibrium/monorepo/node/store"
 	"source.quilibrium.com/quilibrium/monorepo/node/tries"
@@ -27,6 +28,7 @@ type TokenApplication struct {
 	TokenOutputs *protobufs.TokenOutputs
 	Tries        []*tries.RollingFrecencyCritbitTrie
 	CoinStore    store.CoinStore
+	ClockStore   store.ClockStore
 	Logger       *zap.Logger
 	Difficulty   uint32
 }
@@ -74,7 +76,8 @@ func MaterializeApplicationFromFrame(
 	privKey crypto.Signer,
 	frame *protobufs.ClockFrame,
 	tries []*tries.RollingFrecencyCritbitTrie,
-	store store.CoinStore,
+	coinStore store.CoinStore,
+	clockStore store.ClockStore,
 	logger *zap.Logger,
 ) (*TokenApplication, error) {
 	_, tokenOutputs, err := GetOutputsFromClockFrame(frame)
@@ -88,7 +91,8 @@ func MaterializeApplicationFromFrame(
 		Beacon:       genesis.Beacon,
 		TokenOutputs: tokenOutputs,
 		Tries:        tries,
-		CoinStore:    store,
+		CoinStore:    coinStore,
+		ClockStore:   clockStore,
 		Logger:       logger,
 		Difficulty:   frame.Difficulty,
 	}, nil
@@ -108,6 +112,17 @@ func (a *TokenApplication) ApplyTransitions(
 	failedTransitions := &protobufs.TokenRequests{}
 	outputs := &protobufs.TokenOutputs{}
 	lockMap := map[string]struct{}{}
+
+	frame, _, err := a.ClockStore.GetDataClockFrame(
+		p2p.GetBloomFilter(TOKEN_ADDRESS, 256, 3),
+		currentFrameNumber-1,
+		false,
+	)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(
+			ErrInvalidStateTransition,
+			"apply transitions")
+	}
 
 	for _, transition := range transitions.Requests {
 	req:
@@ -289,7 +304,7 @@ func (a *TokenApplication) ApplyTransitions(
 				transition,
 			)
 		case *protobufs.TokenRequest_Mint:
-			success, err := a.handleMint(currentFrameNumber, lockMap, t.Mint)
+			success, err := a.handleMint(currentFrameNumber, lockMap, t.Mint, frame)
 			if err != nil {
 				if !skipFailures {
 					return nil, nil, nil, errors.Wrap(

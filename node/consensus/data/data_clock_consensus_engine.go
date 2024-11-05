@@ -576,6 +576,7 @@ func (e *DataClockConsensusEngine) PerformTimeProof(
 ) []byte {
 	wg := sync.WaitGroup{}
 	wg.Add(len(clients))
+	output := make([][]byte, len(clients))
 	for i, client := range clients {
 		client := client
 		go func() {
@@ -647,32 +648,36 @@ func (e *DataClockConsensusEngine) PerformTimeProof(
 					continue
 				}
 
-				sig, err := e.pubSub.SignMessage(
-					append([]byte("mint"), resp.Output...),
-				)
-				if err != nil {
-					e.logger.Error("failed to reconnect", zap.Error(err))
-					continue
-				}
-				e.publishMessage(e.txFilter, &protobufs.TokenRequest{
-					Request: &protobufs.TokenRequest_Mint{
-						Mint: &protobufs.MintCoinRequest{
-							Proofs: [][]byte{resp.Output},
-							Signature: &protobufs.Ed448Signature{
-								PublicKey: &protobufs.Ed448PublicKey{
-									KeyValue: e.pubSub.GetPublicKey(),
-								},
-								Signature: sig,
-							},
-						},
-					},
-				})
+				output[i] = resp.Output
 				break
 			}
 			wg.Done()
 		}()
 	}
 	wg.Wait()
+	payload := []byte("mint")
+	for _, out := range output {
+		payload = append(payload, out...)
+	}
+	sig, err := e.pubSub.SignMessage(
+		payload,
+	)
+	if err != nil {
+		panic(err)
+	}
+	e.publishMessage(e.txFilter, &protobufs.TokenRequest{
+		Request: &protobufs.TokenRequest_Mint{
+			Mint: &protobufs.MintCoinRequest{
+				Proofs: output,
+				Signature: &protobufs.Ed448Signature{
+					PublicKey: &protobufs.Ed448PublicKey{
+						KeyValue: e.pubSub.GetPublicKey(),
+					},
+					Signature: sig,
+				},
+			},
+		},
+	})
 	return []byte{}
 }
 
