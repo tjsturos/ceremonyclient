@@ -522,6 +522,7 @@ func (e *DataClockConsensusEngine) PerformTimeProof(
 	for i, client := range clients {
 		client := client
 		go func() {
+			e.logger.Info("performing data proof")
 			for j := 3; j >= 0; j-- {
 				var err error
 				if client == nil {
