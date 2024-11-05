@@ -242,7 +242,7 @@ func (r *RPCServer) SendMessage(
 		return nil, errors.Wrap(err, "publish message")
 	}
 	return &protobufs.SendMessageResponse{}, r.pubSub.PublishToBitmask(
-		intrinsicFilter,
+		append([]byte{0x00}, intrinsicFilter...),
 		data,
 	)
 }
