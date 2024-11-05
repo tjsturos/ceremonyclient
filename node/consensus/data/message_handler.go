@@ -17,11 +17,47 @@ import (
 	"source.quilibrium.com/quilibrium/monorepo/node/protobufs"
 )
 
-func (e *DataClockConsensusEngine) runMessageHandler() {
+func (e *DataClockConsensusEngine) runFrameMessageHandler() {
 	for {
 		select {
-		case message := <-e.messageProcessorCh:
-			e.logger.Debug("handling message")
+		case message := <-e.frameMessageProcessorCh:
+			e.logger.Debug("handling frame message")
+			msg := &protobufs.Message{}
+
+			if err := proto.Unmarshal(message.Data, msg); err != nil {
+				e.logger.Debug("bad message")
+				continue
+			}
+
+			any := &anypb.Any{}
+			if err := proto.Unmarshal(msg.Payload, any); err != nil {
+				e.logger.Error("error while unmarshaling", zap.Error(err))
+				continue
+			}
+			e.logger.Debug("message type", zap.String("type", any.TypeUrl))
+
+			go func() {
+				switch any.TypeUrl {
+				case protobufs.ClockFrameType:
+					if err := e.handleClockFrameData(
+						message.From,
+						msg.Address,
+						any,
+						false,
+					); err != nil {
+						return
+					}
+				}
+			}()
+		}
+	}
+}
+
+func (e *DataClockConsensusEngine) runTxMessageHandler() {
+	for {
+		select {
+		case message := <-e.txMessageProcessorCh:
+			e.logger.Debug("handling tx message")
 			msg := &protobufs.Message{}
 
 			if err := proto.Unmarshal(message.Data, msg); err != nil {
@@ -86,68 +122,33 @@ func (e *DataClockConsensusEngine) runMessageHandler() {
 				continue
 			}
 			e.logger.Debug("message type", zap.String("type", any.TypeUrl))
+		}
+	}
+}
+
+func (e *DataClockConsensusEngine) runInfoMessageHandler() {
+	for {
+		select {
+		case message := <-e.infoMessageProcessorCh:
+			e.logger.Debug("handling info message")
+			msg := &protobufs.Message{}
+
+			if err := proto.Unmarshal(message.Data, msg); err != nil {
+				e.logger.Debug("bad message")
+				continue
+			}
+
+			any := &anypb.Any{}
+			if err := proto.Unmarshal(msg.Payload, any); err != nil {
+				e.logger.Error("error while unmarshaling", zap.Error(err))
+				continue
+			}
+			e.logger.Debug("message type", zap.String("type", any.TypeUrl))
 
 			go func() {
 				switch any.TypeUrl {
-				case protobufs.FrameRebroadcastType:
-					if err := e.handleRebroadcast(
-						message.From,
-						msg.Address,
-						any,
-					); err != nil {
-						return
-					}
-				case protobufs.ClockFrameType:
-					if err := e.handleClockFrameData(
-						message.From,
-						msg.Address,
-						any,
-						false,
-					); err != nil {
-						return
-					}
 				case protobufs.DataPeerListAnnounceType:
 					if err := e.handleDataPeerListAnnounce(
-						message.From,
-						msg.Address,
-						any,
-					); err != nil {
-						return
-					}
-				case protobufs.AnnounceProverJoinType:
-					if err := e.handleDataAnnounceProverJoin(
-						message.From,
-						msg.Address,
-						any,
-					); err != nil {
-						return
-					}
-				case protobufs.AnnounceProverLeaveType:
-					if !e.IsInProverTrie(message.From) {
-						return
-					}
-					if err := e.handleDataAnnounceProverLeave(
-						message.From,
-						msg.Address,
-						any,
-					); err != nil {
-						return
-					}
-				case protobufs.AnnounceProverPauseType:
-					if !e.IsInProverTrie(message.From) {
-						return
-					}
-					// Limit score to penalize frequent restarts
-					e.pubSub.AddPeerScore(message.From, -100)
-					if err := e.handleDataAnnounceProverPause(
-						message.From,
-						msg.Address,
-						any,
-					); err != nil {
-						return
-					}
-				case protobufs.AnnounceProverResumeType:
-					if err := e.handleDataAnnounceProverResume(
 						message.From,
 						msg.Address,
 						any,
@@ -158,55 +159,6 @@ func (e *DataClockConsensusEngine) runMessageHandler() {
 			}()
 		}
 	}
-}
-
-func (e *DataClockConsensusEngine) handleRebroadcast(
-	peerID []byte,
-	address []byte,
-	any *anypb.Any,
-) error {
-	if bytes.Equal(peerID, e.pubSub.GetPeerID()) {
-		return nil
-	}
-
-	frames := &protobufs.FrameRebroadcast{}
-	if err := any.UnmarshalTo(frames); err != nil {
-		return errors.Wrap(err, "handle clock frame data")
-	}
-
-	head, err := e.dataTimeReel.Head()
-	if err != nil {
-		return nil
-	}
-
-	e.logger.Debug(
-		"received rebroadcast",
-		zap.Uint64("from", frames.From),
-		zap.Uint64("to", frames.To),
-	)
-	if head.FrameNumber+1 < frames.From {
-		return nil
-	}
-
-	if head.FrameNumber > frames.To {
-		return nil
-	}
-
-	for _, frame := range frames.ClockFrames {
-		if head.FrameNumber >= frame.FrameNumber {
-			continue
-		}
-
-		e.logger.Info("receiving synchronization data")
-
-		if err := e.handleClockFrame(peerID, address, frame); err != nil {
-			// if they're sending invalid clock frames, nuke them.
-			e.pubSub.AddPeerScore(peerID, -100000)
-			return errors.Wrap(err, "handle rebroadcast")
-		}
-	}
-
-	return nil
 }
 
 func (e *DataClockConsensusEngine) handleClockFrame(
@@ -404,197 +356,6 @@ func (e *DataClockConsensusEngine) handleDataPeerListAnnounce(
 	return nil
 }
 
-func (e *DataClockConsensusEngine) getAddressFromSignature(
-	sig *protobufs.Ed448Signature,
-) ([]byte, error) {
-	if sig.PublicKey == nil || sig.PublicKey.KeyValue == nil {
-		return nil, errors.New("invalid data")
-	}
-	addrBI, err := poseidon.HashBytes(sig.PublicKey.KeyValue)
-	if err != nil {
-		return nil, errors.Wrap(err, "get address from signature")
-	}
-
-	return addrBI.FillBytes(make([]byte, 32)), nil
-}
-
-func (e *DataClockConsensusEngine) handleDataAnnounceProverJoin(
-	peerID []byte,
-	address []byte,
-	any *anypb.Any,
-) error {
-	if e.GetFrameProverTries()[0].Contains(e.provingKeyAddress) {
-		announce := &protobufs.AnnounceProverJoin{}
-		if err := any.UnmarshalTo(announce); err != nil {
-			return errors.Wrap(err, "handle data announce prover join")
-		}
-
-		if announce.PublicKeySignatureEd448 == nil || announce.Filter == nil {
-			return errors.Wrap(
-				errors.New("invalid data"),
-				"handle data announce prover join",
-			)
-		}
-
-		address, err := e.getAddressFromSignature(announce.PublicKeySignatureEd448)
-		if err != nil {
-			return errors.Wrap(err, "handle data announce prover join")
-		}
-
-		msg := []byte("join")
-		msg = binary.BigEndian.AppendUint64(msg, announce.FrameNumber)
-		msg = append(msg, announce.Filter...)
-		if err := announce.GetPublicKeySignatureEd448().Verify(msg); err != nil {
-			return errors.Wrap(err, "handle data announce prover join")
-		}
-
-		e.proverTrieRequestsMx.Lock()
-		if len(announce.Filter) != len(e.filter) {
-			return errors.Wrap(
-				errors.New("filter width mismatch"),
-				"handle data announce prover join",
-			)
-		}
-
-		e.proverTrieJoinRequests[string(address)] = string(announce.Filter)
-		e.proverTrieRequestsMx.Unlock()
-	}
-	return nil
-}
-
-func (e *DataClockConsensusEngine) handleDataAnnounceProverLeave(
-	peerID []byte,
-	address []byte,
-	any *anypb.Any,
-) error {
-	if e.GetFrameProverTries()[0].Contains(e.provingKeyAddress) {
-		announce := &protobufs.AnnounceProverLeave{}
-		if err := any.UnmarshalTo(announce); err != nil {
-			return errors.Wrap(err, "handle data announce prover leave")
-		}
-
-		if announce.PublicKeySignatureEd448 == nil || announce.Filter == nil {
-			return errors.Wrap(
-				errors.New("invalid data"),
-				"handle data announce prover leave",
-			)
-		}
-
-		e.proverTrieRequestsMx.Lock()
-
-		if len(announce.Filter) != len(e.filter) {
-			return errors.Wrap(
-				errors.New("filter width mismatch"),
-				"handle data announce prover leave",
-			)
-		}
-
-		msg := []byte("leave")
-		msg = binary.BigEndian.AppendUint64(msg, announce.FrameNumber)
-		msg = append(msg, announce.Filter...)
-		if err := announce.GetPublicKeySignatureEd448().Verify(msg); err != nil {
-			return errors.Wrap(err, "handle data announce prover leave")
-		}
-
-		address, err := e.getAddressFromSignature(announce.PublicKeySignatureEd448)
-		if err != nil {
-			return errors.Wrap(err, "handle data announce prover leave")
-		}
-
-		e.proverTrieLeaveRequests[string(address)] = string(announce.Filter)
-		e.proverTrieRequestsMx.Unlock()
-	}
-	return nil
-}
-
-func (e *DataClockConsensusEngine) handleDataAnnounceProverPause(
-	peerID []byte,
-	address []byte,
-	any *anypb.Any,
-) error {
-	if e.GetFrameProverTries()[0].Contains(e.provingKeyAddress) {
-		announce := &protobufs.AnnounceProverPause{}
-		if err := any.UnmarshalTo(announce); err != nil {
-			return errors.Wrap(err, "handle data announce prover pause")
-		}
-
-		if announce.PublicKeySignatureEd448 == nil || announce.Filter == nil {
-			return errors.Wrap(
-				errors.New("invalid data"),
-				"handle data announce prover leave",
-			)
-		}
-
-		e.proverTrieRequestsMx.Lock()
-		if len(announce.Filter) != len(e.filter) {
-			return errors.Wrap(
-				errors.New("filter width mismatch"),
-				"handle data announce prover pause",
-			)
-		}
-
-		msg := []byte("pause")
-		msg = binary.BigEndian.AppendUint64(msg, announce.FrameNumber)
-		msg = append(msg, announce.Filter...)
-		if err := announce.GetPublicKeySignatureEd448().Verify(msg); err != nil {
-			return errors.Wrap(err, "handle data announce prover pause")
-		}
-
-		address, err := e.getAddressFromSignature(announce.PublicKeySignatureEd448)
-		if err != nil {
-			return errors.Wrap(err, "handle data announce prover pause")
-		}
-
-		e.proverTriePauseRequests[string(address)] = string(announce.Filter)
-		e.proverTrieRequestsMx.Unlock()
-	}
-	return nil
-}
-
-func (e *DataClockConsensusEngine) handleDataAnnounceProverResume(
-	peerID []byte,
-	address []byte,
-	any *anypb.Any,
-) error {
-	if e.GetFrameProverTries()[0].Contains(e.provingKeyAddress) {
-		announce := &protobufs.AnnounceProverResume{}
-		if err := any.UnmarshalTo(announce); err != nil {
-			return errors.Wrap(err, "handle data announce prover resume")
-		}
-
-		if announce.PublicKeySignatureEd448 == nil || announce.Filter == nil {
-			return errors.Wrap(
-				errors.New("invalid data"),
-				"handle data announce prover resume",
-			)
-		}
-
-		e.proverTrieRequestsMx.Lock()
-		if len(announce.Filter) != len(e.filter) {
-			return errors.Wrap(
-				errors.New("filter width mismatch"),
-				"handle data announce prover resume",
-			)
-		}
-
-		address, err := e.getAddressFromSignature(announce.PublicKeySignatureEd448)
-		if err != nil {
-			return errors.Wrap(err, "handle data announce prover resume")
-		}
-
-		msg := []byte("resume")
-		msg = binary.BigEndian.AppendUint64(msg, announce.FrameNumber)
-		msg = append(msg, announce.Filter...)
-		if err := announce.GetPublicKeySignatureEd448().Verify(msg); err != nil {
-			return errors.Wrap(err, "handle data announce prover resume")
-		}
-
-		e.proverTrieResumeRequests[string(address)] = string(announce.Filter)
-		e.proverTrieRequestsMx.Unlock()
-	}
-	return nil
-}
-
 func (e *DataClockConsensusEngine) handleTokenRequest(
 	transition *protobufs.TokenRequest,
 ) error {
@@ -647,6 +408,62 @@ func (e *DataClockConsensusEngine) handleTokenRequest(
 								}
 							}
 						}
+					}
+				}
+			case *protobufs.TokenRequest_Announce:
+				switch r := transition.Request.(type) {
+				case *protobufs.TokenRequest_Announce:
+				checkannounce:
+					for i := range t.Announce.GetPublicKeySignaturesEd448() {
+						for j := range r.Announce.GetPublicKeySignaturesEd448() {
+							if bytes.Equal(
+								t.Announce.GetPublicKeySignaturesEd448()[i].PublicKey.KeyValue,
+								r.Announce.GetPublicKeySignaturesEd448()[j].PublicKey.KeyValue,
+							) {
+								found = true
+								break checkannounce
+							}
+						}
+					}
+				}
+			case *protobufs.TokenRequest_Join:
+				switch r := transition.Request.(type) {
+				case *protobufs.TokenRequest_Join:
+					if bytes.Equal(
+						t.Join.GetPublicKeySignatureEd448().PublicKey.KeyValue,
+						r.Join.GetPublicKeySignatureEd448().PublicKey.KeyValue,
+					) {
+						found = true
+					}
+				}
+			case *protobufs.TokenRequest_Leave:
+				switch r := transition.Request.(type) {
+				case *protobufs.TokenRequest_Leave:
+					if bytes.Equal(
+						t.Leave.GetPublicKeySignatureEd448().PublicKey.KeyValue,
+						r.Leave.GetPublicKeySignatureEd448().PublicKey.KeyValue,
+					) {
+						found = true
+					}
+				}
+			case *protobufs.TokenRequest_Pause:
+				switch r := transition.Request.(type) {
+				case *protobufs.TokenRequest_Pause:
+					if bytes.Equal(
+						t.Pause.GetPublicKeySignatureEd448().PublicKey.KeyValue,
+						r.Pause.GetPublicKeySignatureEd448().PublicKey.KeyValue,
+					) {
+						found = true
+					}
+				}
+			case *protobufs.TokenRequest_Resume:
+				switch r := transition.Request.(type) {
+				case *protobufs.TokenRequest_Resume:
+					if bytes.Equal(
+						t.Resume.GetPublicKeySignatureEd448().PublicKey.KeyValue,
+						r.Resume.GetPublicKeySignatureEd448().PublicKey.KeyValue,
+					) {
+						found = true
 					}
 				}
 			}

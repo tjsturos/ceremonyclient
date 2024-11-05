@@ -173,7 +173,6 @@ message PeerManifest {
 
 message AnnounceProverRequest {
   repeated quilibrium.node.keys.pb.Ed448Signature public_key_signatures_ed448 = 1;
-  MintCoinRequest initial_proof = 2;
 }
 
 message AnnounceProverJoin {
@@ -238,6 +237,10 @@ message TokenRequest {
     MergeCoinRequest merge = 3;
     MintCoinRequest mint = 4;
     AnnounceProverRequest announce = 5;
+    AnnounceProverJoin join = 6;
+    AnnounceProverLeave leave = 7;
+    AnnounceProverPause pause = 8;
+    AnnounceProverResume resume = 9;
   }
 }
 
@@ -262,6 +265,11 @@ message TokenOutput {
     PreCoinProof proof = 2;
     CoinRef deleted_coin = 3;
     PreCoinProof deleted_proof = 4;
+    AnnounceProverRequest announce = 5;
+    AnnounceProverJoin join = 6;
+    AnnounceProverLeave leave = 7;
+    AnnounceProverPause pause = 8;
+    AnnounceProverResume resume = 9;
   }
 }
 

@@ -130,7 +130,9 @@ func TestHandlePreMidnightMint(t *testing.T) {
 		dataTimeReel:              &qtime.DataTimeReel{},
 		peerInfoManager:           nil,
 		peerSeniority:             newFromMap(map[string]uint64{}),
-		messageProcessorCh:        make(chan *pb.Message),
+		frameMessageProcessorCh:   make(chan *pb.Message),
+		txMessageProcessorCh:      make(chan *pb.Message),
+		infoMessageProcessorCh:    make(chan *pb.Message),
 		config:                    nil,
 		preMidnightMint:           map[string]struct{}{},
 	}
@@ -626,7 +628,7 @@ func TestHandlePreMidnightMint(t *testing.T) {
 		}
 	}
 
-	req := <-d.messageProcessorCh
+	req := <-d.txMessageProcessorCh
 
 	assert.NotNil(t, req)
 	message := &protobufs.Message{}

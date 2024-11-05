@@ -20,6 +20,10 @@ func (a *TokenApplication) handleAnnounce(
 		return nil, errors.Wrap(ErrInvalidStateTransition, "handle announce")
 	}
 	for i, p := range t.PublicKeySignaturesEd448 {
+		if _, touched := lockMap[string(p.PublicKey.KeyValue)]; touched {
+			return nil, errors.Wrap(ErrInvalidStateTransition, "handle announce")
+		}
+
 		if p.PublicKey == nil || p.Signature == nil ||
 			p.PublicKey.KeyValue == nil {
 			return nil, errors.Wrap(ErrInvalidStateTransition, "handle announce")
@@ -38,6 +42,10 @@ func (a *TokenApplication) handleAnnounce(
 	}
 	if err := primary.Verify(payload); err != nil {
 		return nil, errors.Wrap(ErrInvalidStateTransition, "handle announce")
+	}
+
+	for _, p := range t.PublicKeySignaturesEd448 {
+		lockMap[string(p.PublicKey.KeyValue)] = struct{}{}
 	}
 
 	outputs := []*protobufs.TokenOutput{}

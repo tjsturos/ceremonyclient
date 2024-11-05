@@ -132,6 +132,102 @@ func (a *TokenApplication) ApplyTransitions(
 				finalizedTransitions.Requests,
 				transition,
 			)
+		case *protobufs.TokenRequest_Join:
+			success, err := a.handleDataAnnounceProverJoin(
+				currentFrameNumber,
+				lockMap,
+				t.Join,
+			)
+			if err != nil {
+				if !skipFailures {
+					return nil, nil, nil, errors.Wrap(
+						err,
+						"apply transitions",
+					)
+				}
+				failedTransitions.Requests = append(
+					failedTransitions.Requests,
+					transition,
+				)
+				break req
+			}
+			outputs.Outputs = append(outputs.Outputs, success...)
+			finalizedTransitions.Requests = append(
+				finalizedTransitions.Requests,
+				transition,
+			)
+		case *protobufs.TokenRequest_Leave:
+			success, err := a.handleDataAnnounceProverLeave(
+				currentFrameNumber,
+				lockMap,
+				t.Leave,
+			)
+			if err != nil {
+				if !skipFailures {
+					return nil, nil, nil, errors.Wrap(
+						err,
+						"apply transitions",
+					)
+				}
+				failedTransitions.Requests = append(
+					failedTransitions.Requests,
+					transition,
+				)
+				break req
+			}
+			outputs.Outputs = append(outputs.Outputs, success...)
+			finalizedTransitions.Requests = append(
+				finalizedTransitions.Requests,
+				transition,
+			)
+		case *protobufs.TokenRequest_Resume:
+			success, err := a.handleDataAnnounceProverResume(
+				currentFrameNumber,
+				lockMap,
+				t.Resume,
+			)
+			if err != nil {
+				if !skipFailures {
+					return nil, nil, nil, errors.Wrap(
+						err,
+						"apply transitions",
+					)
+				}
+				failedTransitions.Requests = append(
+					failedTransitions.Requests,
+					transition,
+				)
+				break req
+			}
+			outputs.Outputs = append(outputs.Outputs, success...)
+			finalizedTransitions.Requests = append(
+				finalizedTransitions.Requests,
+				transition,
+			)
+		case *protobufs.TokenRequest_Pause:
+			success, err := a.handleDataAnnounceProverPause(
+				currentFrameNumber,
+				lockMap,
+				t.Pause,
+			)
+			if err != nil {
+				if !skipFailures {
+					return nil, nil, nil, errors.Wrap(
+						err,
+						"apply transitions",
+					)
+				}
+				failedTransitions.Requests = append(
+					failedTransitions.Requests,
+					transition,
+				)
+				break req
+			}
+			outputs.Outputs = append(outputs.Outputs, success...)
+			finalizedTransitions.Requests = append(
+				finalizedTransitions.Requests,
+				transition,
+			)
 		case *protobufs.TokenRequest_Merge:
 			success, err := a.handleMerge(currentFrameNumber, lockMap, t.Merge)
 			if err != nil {

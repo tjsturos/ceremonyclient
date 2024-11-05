@@ -169,7 +169,12 @@ func TestDataTimeReel(t *testing.T) {
 			Difficulty:  10,
 		},
 		prover,
-		func(txn store.Transaction, frame *protobufs.ClockFrame) error { return nil },
+		func(txn store.Transaction, frame *protobufs.ClockFrame) (
+			[]*tries.RollingFrecencyCritbitTrie,
+			error,
+		) {
+			return []*tries.RollingFrecencyCritbitTrie{proverTrie}, nil
+		},
 		bytes.Repeat([]byte{0x00}, 516),
 		&qcrypto.InclusionAggregateProof{
 			InclusionCommitments: []*qcrypto.InclusionCommitment{},

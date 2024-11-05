@@ -121,10 +121,11 @@ func (a *TokenApplication) handleMint(
 		}
 		ring := -1
 		addrBytes := addr.FillBytes(make([]byte, 32))
-		for i, t := range a.Tries {
+		proverSet := int64((len(a.Tries) - 1) * 1024)
+		for i, t := range a.Tries[1:] {
 			n := t.FindNearest(addrBytes)
 			if n != nil && bytes.Equal(n.External.Key, addrBytes) {
-				ring = i
+				ring = i - 1
 			}
 		}
 		if ring == -1 {
@@ -181,9 +182,11 @@ func (a *TokenApplication) handleMint(
 
 			ringFactor := big.NewInt(2)
 			ringFactor.Exp(ringFactor, big.NewInt(int64(ring)), nil)
-			storage := big.NewInt(int64(1024 / (256 / scale)))
+
+			storage := big.NewInt(int64(512))
 			unitFactor := big.NewInt(8000000000)
 			storage.Mul(storage, unitFactor)
+			storage.Quo(storage, big.NewInt(proverSet))
 			storage.Quo(storage, ringFactor)
 
 			outputs = append(

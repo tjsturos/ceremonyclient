@@ -15,11 +15,31 @@ import (
 	"source.quilibrium.com/quilibrium/monorepo/node/protobufs"
 )
 
-func (e *DataClockConsensusEngine) handleMessage(
+func (e *DataClockConsensusEngine) handleFrameMessage(
 	message *pb.Message,
 ) error {
 	go func() {
-		e.messageProcessorCh <- message
+		e.frameMessageProcessorCh <- message
+	}()
+
+	return nil
+}
+
+func (e *DataClockConsensusEngine) handleTxMessage(
+	message *pb.Message,
+) error {
+	go func() {
+		e.txMessageProcessorCh <- message
+	}()
+
+	return nil
+}
+
+func (e *DataClockConsensusEngine) handleInfoMessage(
+	message *pb.Message,
+) error {
+	go func() {
+		e.infoMessageProcessorCh <- message
 	}()
 
 	return nil
@@ -71,7 +91,7 @@ func (e *DataClockConsensusEngine) publishProof(
 		),
 	})
 	e.peerMapMx.Unlock()
-	if err := e.publishMessage(e.filter, list); err != nil {
+	if err := e.publishMessage(e.infoFilter, list); err != nil {
 		e.logger.Debug("error publishing message", zap.Error(err))
 	}
 
@@ -80,7 +100,7 @@ func (e *DataClockConsensusEngine) publishProof(
 	return nil
 }
 
-func (e *DataClockConsensusEngine) insertMessage(
+func (e *DataClockConsensusEngine) insertTxMessage(
 	filter []byte,
 	message proto.Message,
 ) error {
@@ -124,7 +144,7 @@ func (e *DataClockConsensusEngine) insertMessage(
 	}
 
 	go func() {
-		e.messageProcessorCh <- m
+		e.txMessageProcessorCh <- m
 	}()
 
 	return nil

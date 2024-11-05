@@ -513,7 +513,7 @@ func (e *DataClockConsensusEngine) handleMint(
 				txn.Abort()
 				return nil, errors.Wrap(err, "handle mint")
 			}
-			err = e.insertMessage(
+			err = e.insertTxMessage(
 				e.filter,
 				&protobufs.TokenRequest{
 					Request: &protobufs.TokenRequest_Mint{

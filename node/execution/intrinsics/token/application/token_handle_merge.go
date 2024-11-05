@@ -25,7 +25,7 @@ func (a *TokenApplication) handleMerge(
 	}
 	addresses := [][]byte{}
 	for _, c := range t.Coins {
-		if c.Address == nil {
+		if c.Address == nil || len(c.Address) != 32 {
 			return nil, errors.Wrap(ErrInvalidStateTransition, "handle merge")
 		}
 

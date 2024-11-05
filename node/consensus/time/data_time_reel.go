@@ -38,7 +38,10 @@ type DataTimeReel struct {
 	logger       *zap.Logger
 	clockStore   store.ClockStore
 	frameProver  crypto.FrameProver
-	exec         func(txn store.Transaction, frame *protobufs.ClockFrame) error
+	exec         func(txn store.Transaction, frame *protobufs.ClockFrame) (
+		[]*tries.RollingFrecencyCritbitTrie,
+		error,
+	)
 
 	origin                []byte
 	initialInclusionProof *crypto.InclusionAggregateProof
@@ -62,7 +65,10 @@ func NewDataTimeReel(
 	clockStore store.ClockStore,
 	engineConfig *config.EngineConfig,
 	frameProver crypto.FrameProver,
-	exec func(txn store.Transaction, frame *protobufs.ClockFrame) error,
+	exec func(txn store.Transaction, frame *protobufs.ClockFrame) (
+		[]*tries.RollingFrecencyCritbitTrie,
+		error,
+	),
 	origin []byte,
 	initialInclusionProof *crypto.InclusionAggregateProof,
 	initialProverKeys [][]byte,
@@ -607,26 +613,29 @@ func (d *DataTimeReel) setHead(frame *protobufs.ClockFrame, distance *big.Int) {
 		panic(err)
 	}
 
+	var tries []*tries.RollingFrecencyCritbitTrie
+	if tries, err = d.exec(txn, frame); err != nil {
+		d.logger.Debug("invalid frame execution, unwinding", zap.Error(err))
+		txn.Abort()
+		return
+	}
+
 	if err := d.clockStore.CommitDataClockFrame(
 		d.filter,
 		frame.FrameNumber,
 		selector.FillBytes(make([]byte, 32)),
-		d.proverTries,
+		tries,
 		txn,
 		false,
 	); err != nil {
 		panic(err)
-	}
-	if err = d.exec(txn, frame); err != nil {
-		d.logger.Debug("invalid frame execution, unwinding", zap.Error(err))
-		txn.Abort()
-		return
 	}
 
 	if err = txn.Commit(); err != nil {
 		panic(err)
 	}
 
+	d.proverTries = tries
 	d.head = frame
 
 	d.headDistance = distance

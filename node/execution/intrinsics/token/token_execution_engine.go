@@ -3,7 +3,10 @@ package token
 import (
 	"bytes"
 	"crypto"
+	"encoding/binary"
 	"encoding/hex"
+	"math/big"
+	"slices"
 	"strings"
 	"sync"
 	gotime "time"
@@ -25,7 +28,30 @@ import (
 	"source.quilibrium.com/quilibrium/monorepo/node/p2p"
 	"source.quilibrium.com/quilibrium/monorepo/node/protobufs"
 	"source.quilibrium.com/quilibrium/monorepo/node/store"
+	"source.quilibrium.com/quilibrium/monorepo/node/tries"
 )
+
+type peerSeniorityItem struct {
+	seniority uint64
+	addr      string
+}
+
+type peerSeniority map[string]peerSeniorityItem
+
+func newFromMap(m map[string]uint64) *peerSeniority {
+	s := &peerSeniority{}
+	for k, v := range m {
+		(*s)[k] = peerSeniorityItem{
+			seniority: v,
+			addr:      k,
+		}
+	}
+	return s
+}
+
+func (p peerSeniorityItem) Priority() *big.Int {
+	return big.NewInt(int64(p.seniority))
+}
 
 type TokenExecutionEngine struct {
 	logger                *zap.Logger
@@ -47,7 +73,7 @@ type TokenExecutionEngine struct {
 	alreadyPublishedShare bool
 	intrinsicFilter       []byte
 	frameProver           qcrypto.FrameProver
-	peerSeniority         map[string]uint64
+	peerSeniority         *peerSeniority
 }
 
 func NewTokenExecutionEngine(
@@ -136,7 +162,7 @@ func NewTokenExecutionEngine(
 		peerChannels:          map[string]*p2p.PublicP2PChannel{},
 		alreadyPublishedShare: false,
 		intrinsicFilter:       intrinsicFilter,
-		peerSeniority:         peerSeniority,
+		peerSeniority:         newFromMap(peerSeniority),
 	}
 
 	dataTimeReel := time.NewDataTimeReel(
@@ -145,15 +171,19 @@ func NewTokenExecutionEngine(
 		clockStore,
 		cfg.Engine,
 		frameProver,
-		func(txn store.Transaction, frame *protobufs.ClockFrame) error {
+		func(txn store.Transaction, frame *protobufs.ClockFrame) (
+			[]*tries.RollingFrecencyCritbitTrie,
+			error,
+		) {
 			if err := e.VerifyExecution(frame); err != nil {
-				return err
+				return nil, err
 			}
-			if err := e.ProcessFrame(txn, frame); err != nil {
-				return err
+			var tries []*tries.RollingFrecencyCritbitTrie
+			if tries, err = e.ProcessFrame(txn, frame); err != nil {
+				return nil, err
 			}
 
-			return nil
+			return tries, nil
 		},
 		origin,
 		inclusionProof,
@@ -275,7 +305,7 @@ func NewTokenExecutionEngine(
 
 			// need to wait for peering
 			gotime.Sleep(30 * gotime.Second)
-			e.publishMessage(intrinsicFilter, req)
+			e.publishMessage(append([]byte{0x00}, intrinsicFilter...), req)
 		}()
 	} else {
 		f, _, err := e.clockStore.GetLatestDataClockFrame(e.intrinsicFilter)
@@ -315,26 +345,33 @@ func NewTokenExecutionEngine(
 		}
 
 		if err == nil {
-			// msg := []byte("resume")
-			// msg = binary.BigEndian.AppendUint64(msg, f.FrameNumber)
-			// msg = append(msg, e.intrinsicFilter...)
-			// sig, err := e.pubSub.SignMessage(msg)
-			// if err != nil {
-			// 	panic(err)
-			// }
+			msg := []byte("resume")
+			msg = binary.BigEndian.AppendUint64(msg, f.FrameNumber)
+			msg = append(msg, e.intrinsicFilter...)
+			sig, err := e.pubSub.SignMessage(msg)
+			if err != nil {
+				panic(err)
+			}
 
-			// // need to wait for peering
-			// gotime.Sleep(30 * gotime.Second)
-			// e.publishMessage(e.intrinsicFilter, &protobufs.AnnounceProverResume{
-			// 	Filter:      e.intrinsicFilter,
-			// 	FrameNumber: f.FrameNumber,
-			// 	PublicKeySignatureEd448: &protobufs.Ed448Signature{
-			// 		PublicKey: &protobufs.Ed448PublicKey{
-			// 			KeyValue: e.pubSub.GetPublicKey(),
-			// 		},
-			// 		Signature: sig,
-			// 	},
-			// })
+			// need to wait for peering
+			gotime.Sleep(30 * gotime.Second)
+			e.publishMessage(
+				append([]byte{0x00}, e.intrinsicFilter...),
+				&protobufs.TokenRequest{
+					Request: &protobufs.TokenRequest_Resume{
+						Resume: &protobufs.AnnounceProverResume{
+							Filter:      e.intrinsicFilter,
+							FrameNumber: f.FrameNumber,
+							PublicKeySignatureEd448: &protobufs.Ed448Signature{
+								PublicKey: &protobufs.Ed448PublicKey{
+									KeyValue: e.pubSub.GetPublicKey(),
+								},
+								Signature: sig,
+							},
+						},
+					},
+				},
+			)
 		}
 	}
 
@@ -439,10 +476,10 @@ func (e *TokenExecutionEngine) ProcessMessage(
 func (e *TokenExecutionEngine) ProcessFrame(
 	txn store.Transaction,
 	frame *protobufs.ClockFrame,
-) error {
+) ([]*tries.RollingFrecencyCritbitTrie, error) {
 	f, err := e.coinStore.GetLatestFrameProcessed()
 	if err != nil || f == frame.FrameNumber {
-		return errors.Wrap(err, "process frame")
+		return nil, errors.Wrap(err, "process frame")
 	}
 
 	e.activeClockFrame = frame
@@ -465,7 +502,7 @@ func (e *TokenExecutionEngine) ProcessFrame(
 			"error while materializing application from frame",
 			zap.Error(err),
 		)
-		return errors.Wrap(err, "process frame")
+		return nil, errors.Wrap(err, "process frame")
 	}
 
 	e.logger.Debug(
@@ -473,13 +510,16 @@ func (e *TokenExecutionEngine) ProcessFrame(
 		zap.Int("outputs", len(app.TokenOutputs.Outputs)),
 	)
 
+	proverTrieJoinRequests := make(map[string]string)
+	proverTrieLeaveRequests := make(map[string]string)
+
 	for i, output := range app.TokenOutputs.Outputs {
 		switch o := output.Output.(type) {
 		case *protobufs.TokenOutput_Coin:
 			address, err := GetAddressOfCoin(o.Coin, frame.FrameNumber, uint64(i))
 			if err != nil {
 				txn.Abort()
-				return errors.Wrap(err, "process frame")
+				return nil, errors.Wrap(err, "process frame")
 			}
 			err = e.coinStore.PutCoin(
 				txn,
@@ -489,13 +529,13 @@ func (e *TokenExecutionEngine) ProcessFrame(
 			)
 			if err != nil {
 				txn.Abort()
-				return errors.Wrap(err, "process frame")
+				return nil, errors.Wrap(err, "process frame")
 			}
 		case *protobufs.TokenOutput_DeletedCoin:
 			coin, err := e.coinStore.GetCoinByAddress(txn, o.DeletedCoin.Address)
 			if err != nil {
 				txn.Abort()
-				return errors.Wrap(err, "process frame")
+				return nil, errors.Wrap(err, "process frame")
 			}
 			err = e.coinStore.DeleteCoin(
 				txn,
@@ -504,13 +544,13 @@ func (e *TokenExecutionEngine) ProcessFrame(
 			)
 			if err != nil {
 				txn.Abort()
-				return errors.Wrap(err, "process frame")
+				return nil, errors.Wrap(err, "process frame")
 			}
 		case *protobufs.TokenOutput_Proof:
 			address, err := GetAddressOfPreCoinProof(o.Proof)
 			if err != nil {
 				txn.Abort()
-				return errors.Wrap(err, "process frame")
+				return nil, errors.Wrap(err, "process frame")
 			}
 			err = e.coinStore.PutPreCoinProof(
 				txn,
@@ -520,13 +560,13 @@ func (e *TokenExecutionEngine) ProcessFrame(
 			)
 			if err != nil {
 				txn.Abort()
-				return errors.Wrap(err, "process frame")
+				return nil, errors.Wrap(err, "process frame")
 			}
 		case *protobufs.TokenOutput_DeletedProof:
 			address, err := GetAddressOfPreCoinProof(o.DeletedProof)
 			if err != nil {
 				txn.Abort()
-				return errors.Wrap(err, "process frame")
+				return nil, errors.Wrap(err, "process frame")
 			}
 			err = e.coinStore.DeletePreCoinProof(
 				txn,
@@ -535,7 +575,87 @@ func (e *TokenExecutionEngine) ProcessFrame(
 			)
 			if err != nil {
 				txn.Abort()
-				return errors.Wrap(err, "process frame")
+				return nil, errors.Wrap(err, "process frame")
+			}
+		case *protobufs.TokenOutput_Join:
+			addr, err := e.getAddressFromSignature(o.Join.PublicKeySignatureEd448)
+			if err != nil {
+				txn.Abort()
+				return nil, errors.Wrap(err, "process frame")
+			}
+			proverTrieJoinRequests[string(addr)] = string(addr)
+		case *protobufs.TokenOutput_Leave:
+			addr, err := e.getAddressFromSignature(o.Leave.PublicKeySignatureEd448)
+			if err != nil {
+				txn.Abort()
+				return nil, errors.Wrap(err, "process frame")
+			}
+			proverTrieJoinRequests[string(addr)] = string(addr)
+		case *protobufs.TokenOutput_Pause:
+			addr, err := e.getAddressFromSignature(o.Pause.PublicKeySignatureEd448)
+			if err != nil {
+				txn.Abort()
+				return nil, errors.Wrap(err, "process frame")
+			}
+			proverTrieJoinRequests[string(addr)] = string(addr)
+		case *protobufs.TokenOutput_Resume:
+			addr, err := e.getAddressFromSignature(o.Resume.PublicKeySignatureEd448)
+			if err != nil {
+				txn.Abort()
+				return nil, errors.Wrap(err, "process frame")
+			}
+			proverTrieJoinRequests[string(addr)] = string(addr)
+		}
+	}
+
+	joinAddrs := tries.NewMinHeap[peerSeniorityItem]()
+	leaveAddrs := tries.NewMinHeap[peerSeniorityItem]()
+	for _, addr := range proverTrieJoinRequests {
+		if _, ok := (*e.peerSeniority)[addr]; !ok {
+			joinAddrs.Push(peerSeniorityItem{
+				addr:      addr,
+				seniority: 0,
+			})
+		} else {
+			joinAddrs.Push((*e.peerSeniority)[addr])
+		}
+	}
+	for _, addr := range proverTrieLeaveRequests {
+		if _, ok := (*e.peerSeniority)[addr]; !ok {
+			leaveAddrs.Push(peerSeniorityItem{
+				addr:      addr,
+				seniority: 0,
+			})
+		} else {
+			leaveAddrs.Push((*e.peerSeniority)[addr])
+		}
+	}
+
+	joinReqs := make([]peerSeniorityItem, len(joinAddrs.All()))
+	copy(joinReqs, joinAddrs.All())
+	slices.Reverse(joinReqs)
+	leaveReqs := make([]peerSeniorityItem, len(leaveAddrs.All()))
+	copy(leaveReqs, leaveAddrs.All())
+	slices.Reverse(leaveReqs)
+
+	for _, addr := range joinReqs {
+		rings := len(app.Tries)
+		last := app.Tries[rings-1]
+		set := last.FindNearestAndApproximateNeighbors(make([]byte, 32))
+		if len(set) == 1024 || rings == 1 {
+			app.Tries = append(
+				app.Tries,
+				&tries.RollingFrecencyCritbitTrie{},
+			)
+			last = app.Tries[rings]
+		}
+		last.Add([]byte(addr.addr), frame.FrameNumber)
+	}
+	for _, addr := range leaveReqs {
+		for _, t := range app.Tries {
+			if t.Contains([]byte(addr.addr)) {
+				t.Remove([]byte(addr.addr))
+				break
 			}
 		}
 	}
@@ -543,10 +663,10 @@ func (e *TokenExecutionEngine) ProcessFrame(
 	err = e.coinStore.SetLatestFrameProcessed(txn, frame.FrameNumber)
 	if err != nil {
 		txn.Abort()
-		return errors.Wrap(err, "process frame")
+		return nil, errors.Wrap(err, "process frame")
 	}
 
-	return nil
+	return app.Tries, nil
 }
 
 func (e *TokenExecutionEngine) publishMessage(
@@ -681,4 +801,18 @@ func (e *TokenExecutionEngine) GetPeerInfo() *protobufs.PeerInfoResponse {
 
 func (e *TokenExecutionEngine) GetFrame() *protobufs.ClockFrame {
 	return e.clock.GetFrame()
+}
+
+func (e *TokenExecutionEngine) getAddressFromSignature(
+	sig *protobufs.Ed448Signature,
+) ([]byte, error) {
+	if sig.PublicKey == nil || sig.PublicKey.KeyValue == nil {
+		return nil, errors.New("invalid data")
+	}
+	addrBI, err := poseidon.HashBytes(sig.PublicKey.KeyValue)
+	if err != nil {
+		return nil, errors.Wrap(err, "get address from signature")
+	}
+
+	return addrBI.FillBytes(make([]byte, 32)), nil
 }

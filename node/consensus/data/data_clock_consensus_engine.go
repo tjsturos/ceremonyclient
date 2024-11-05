@@ -97,6 +97,8 @@ type DataClockConsensusEngine struct {
 	frameChan                      chan *protobufs.ClockFrame
 	executionEngines               map[string]execution.ExecutionEngine
 	filter                         []byte
+	txFilter                       []byte
+	infoFilter                     []byte
 	input                          []byte
 	parentSelector                 []byte
 	syncingStatus                  SyncStatusType
@@ -108,16 +110,13 @@ type DataClockConsensusEngine struct {
 	stagedTransactionsMx           sync.Mutex
 	peerMapMx                      sync.RWMutex
 	peerAnnounceMapMx              sync.Mutex
-	proverTrieJoinRequests         map[string]string
-	proverTrieLeaveRequests        map[string]string
-	proverTriePauseRequests        map[string]string
-	proverTrieResumeRequests       map[string]string
-	proverTrieRequestsMx           sync.Mutex
 	lastKeyBundleAnnouncementFrame uint64
 	peerSeniority                  *peerSeniority
 	peerMap                        map[string]*peerInfo
 	uncooperativePeersMap          map[string]*peerInfo
-	messageProcessorCh             chan *pb.Message
+	frameMessageProcessorCh        chan *pb.Message
+	txMessageProcessorCh           chan *pb.Message
+	infoMessageProcessorCh         chan *pb.Message
 	report                         *protobufs.SelfTestReport
 }
 
@@ -259,7 +258,9 @@ func NewDataClockConsensusEngine(
 		dataTimeReel:              dataTimeReel,
 		peerInfoManager:           peerInfoManager,
 		peerSeniority:             newFromMap(peerSeniority),
-		messageProcessorCh:        make(chan *pb.Message),
+		frameMessageProcessorCh:   make(chan *pb.Message),
+		txMessageProcessorCh:      make(chan *pb.Message),
+		infoMessageProcessorCh:    make(chan *pb.Message),
 		config:                    config,
 		preMidnightMint:           map[string]struct{}{},
 	}
@@ -271,6 +272,8 @@ func NewDataClockConsensusEngine(
 	)
 
 	e.filter = filter
+	e.txFilter = append([]byte{0x00}, e.filter...)
+	e.infoFilter = append([]byte{0x00, 0x00}, e.filter...)
 	e.input = seed
 	e.provingKey = signer
 	e.provingKeyType = keyType
@@ -299,10 +302,14 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 		panic(err)
 	}
 
-	go e.runMessageHandler()
+	go e.runFrameMessageHandler()
+	go e.runTxMessageHandler()
+	go e.runInfoMessageHandler()
 
 	e.logger.Info("subscribing to pubsub messages")
-	e.pubSub.Subscribe(e.filter, e.handleMessage)
+	e.pubSub.Subscribe(e.filter, e.handleFrameMessage)
+	e.pubSub.Subscribe(e.txFilter, e.handleTxMessage)
+	e.pubSub.Subscribe(e.infoFilter, e.handleInfoMessage)
 	go func() {
 		server := grpc.NewServer(
 			grpc.MaxSendMsgSize(600*1024*1024),
@@ -422,7 +429,7 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 				zap.Uint64("frame_number", frame.FrameNumber),
 			)
 
-			if err := e.publishMessage(e.filter, list); err != nil {
+			if err := e.publishMessage(e.infoFilter, list); err != nil {
 				e.logger.Debug("error publishing message", zap.Error(err))
 			}
 
@@ -435,7 +442,6 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 	}()
 
 	go e.runLoop()
-	go e.rebroadcastLoop()
 	go func() {
 		time.Sleep(30 * time.Second)
 		e.logger.Info("checking for snapshots to play forward")
@@ -579,6 +585,7 @@ func (e *DataClockConsensusEngine) PerformTimeProof(
 							e.logger.Error("failed to reconnect", zap.Error(err))
 						}
 					}
+					clients[i] = client
 					continue
 				}
 
@@ -589,7 +596,7 @@ func (e *DataClockConsensusEngine) PerformTimeProof(
 					e.logger.Error("failed to reconnect", zap.Error(err))
 					continue
 				}
-				e.publishMessage(e.filter, &protobufs.TokenRequest{
+				e.publishMessage(e.txFilter, &protobufs.TokenRequest{
 					Request: &protobufs.TokenRequest_Mint{
 						Mint: &protobufs.MintCoinRequest{
 							Proofs: [][]byte{resp.Output},
@@ -624,14 +631,18 @@ func (e *DataClockConsensusEngine) Stop(force bool) <-chan error {
 		panic(err)
 	}
 
-	e.publishMessage(e.filter, &protobufs.AnnounceProverPause{
-		Filter:      e.filter,
-		FrameNumber: e.GetFrame().FrameNumber,
-		PublicKeySignatureEd448: &protobufs.Ed448Signature{
-			PublicKey: &protobufs.Ed448PublicKey{
-				KeyValue: e.pubSub.GetPublicKey(),
+	e.publishMessage(e.txFilter, &protobufs.TokenRequest{
+		Request: &protobufs.TokenRequest_Pause{
+			Pause: &protobufs.AnnounceProverPause{
+				Filter:      e.filter,
+				FrameNumber: e.GetFrame().FrameNumber,
+				PublicKeySignatureEd448: &protobufs.Ed448Signature{
+					PublicKey: &protobufs.Ed448PublicKey{
+						KeyValue: e.pubSub.GetPublicKey(),
+					},
+					Signature: sig,
+				},
 			},
-			Signature: sig,
 		},
 	})
 
@@ -777,8 +788,8 @@ func (e *DataClockConsensusEngine) createParallelDataClientsFromListAndIndex(
 			insecure.NewCredentials(),
 		),
 		grpc.WithDefaultCallOptions(
-			grpc.MaxCallSendMsgSize(600*1024*1024),
-			grpc.MaxCallRecvMsgSize(600*1024*1024),
+			grpc.MaxCallSendMsgSize(10*1024*1024),
+			grpc.MaxCallRecvMsgSize(10*1024*1024),
 		),
 	)
 	if err != nil {
@@ -973,13 +984,17 @@ func (e *DataClockConsensusEngine) announceProverJoin() {
 		panic(err)
 	}
 
-	e.publishMessage(e.filter, &protobufs.AnnounceProverJoin{
-		Filter:      bytes.Repeat([]byte{0xff}, 32),
-		FrameNumber: head.FrameNumber,
-		PublicKeySignatureEd448: &protobufs.Ed448Signature{
-			Signature: sig,
-			PublicKey: &protobufs.Ed448PublicKey{
-				KeyValue: e.provingKeyBytes,
+	e.publishMessage(e.txFilter, &protobufs.TokenRequest{
+		Request: &protobufs.TokenRequest_Join{
+			Join: &protobufs.AnnounceProverJoin{
+				Filter:      bytes.Repeat([]byte{0xff}, 32),
+				FrameNumber: head.FrameNumber,
+				PublicKeySignatureEd448: &protobufs.Ed448Signature{
+					Signature: sig,
+					PublicKey: &protobufs.Ed448PublicKey{
+						KeyValue: e.provingKeyBytes,
+					},
+				},
 			},
 		},
 	})
