@@ -70,6 +70,7 @@ func (e *DataClockConsensusEngine) prove(
 		previousFrame,
 		tries,
 		e.coinStore,
+		e.clockStore,
 		e.logger,
 	)
 	if err != nil {
