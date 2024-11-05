@@ -5,7 +5,6 @@ import (
 	"crypto"
 	"encoding/binary"
 	"encoding/hex"
-	"fmt"
 	"math/big"
 	"slices"
 	"strings"
@@ -655,7 +654,6 @@ func (e *TokenExecutionEngine) ProcessFrame(
 			last = app.Tries[rings]
 		}
 		if !last.Contains([]byte(addr.addr)) {
-			fmt.Printf("add join %x\n", []byte(addr.addr))
 			last.Add([]byte(addr.addr), frame.FrameNumber)
 		}
 	}
