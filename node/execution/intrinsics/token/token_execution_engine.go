@@ -758,7 +758,7 @@ func (e *TokenExecutionEngine) VerifyExecution(
 					}
 
 					a, _, _, err = a.ApplyTransitions(
-						frame.FrameNumber,
+						parent.FrameNumber,
 						transition,
 						false,
 					)
