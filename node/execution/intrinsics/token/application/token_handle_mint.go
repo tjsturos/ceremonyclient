@@ -8,7 +8,9 @@ import (
 	"github.com/iden3/go-iden3-crypto/poseidon"
 	pcrypto "github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/mr-tron/base58"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/sha3"
 	"source.quilibrium.com/quilibrium/monorepo/node/crypto"
 	"source.quilibrium.com/quilibrium/monorepo/node/protobufs"
@@ -116,18 +118,33 @@ func (a *TokenApplication) handleMint(
 			},
 		}
 		return outputs, nil
-	} else if len(t.Proofs) > 1 && len(t.Proofs) != 3 && currentFrameNumber > 0 {
+	} else if len(t.Proofs) > 0 && currentFrameNumber > 0 {
+		a.Logger.Debug(
+			"got mint from peer",
+			zap.String("peer_id", base58.Encode([]byte(peerId))),
+			zap.Uint64("frame_number", currentFrameNumber),
+		)
 		if _, touched := lockMap[string(t.Signature.PublicKey.KeyValue)]; touched {
+			a.Logger.Debug(
+				"already received",
+				zap.String("peer_id", base58.Encode([]byte(peerId))),
+				zap.Uint64("frame_number", currentFrameNumber),
+			)
 			return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
 		}
 		ring := -1
 		proverSet := int64((len(a.Tries) - 1) * 1024)
 		for i, t := range a.Tries[1:] {
 			if t.Contains(altAddr.FillBytes(make([]byte, 32))) {
-				ring = i - 1
+				ring = i
 			}
 		}
 		if ring == -1 {
+			a.Logger.Debug(
+				"not in ring",
+				zap.String("peer_id", base58.Encode([]byte(peerId))),
+				zap.Uint64("frame_number", currentFrameNumber),
+			)
 			return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
 		}
 		challenge := []byte{}
@@ -155,7 +172,14 @@ func (a *TokenApplication) handleMint(
 				individualChallenge,
 				uint32(i),
 			)
+			individualChallenge = append(individualChallenge, frame.Output...)
 			if len(p) != 516 {
+				a.Logger.Debug(
+					"invalid size",
+					zap.String("peer_id", base58.Encode([]byte(peerId))),
+					zap.Uint64("frame_number", currentFrameNumber),
+					zap.Int("proof_size", len(p)),
+				)
 				return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
 			}
 
@@ -166,6 +190,11 @@ func (a *TokenApplication) handleMint(
 				frame.Difficulty,
 				p,
 			) {
+				a.Logger.Debug(
+					"invalid proof",
+					zap.String("peer_id", base58.Encode([]byte(peerId))),
+					zap.Uint64("frame_number", currentFrameNumber),
+				)
 				return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
 			}
 
@@ -180,6 +209,13 @@ func (a *TokenApplication) handleMint(
 		storage.Mul(storage, unitFactor)
 		storage.Quo(storage, big.NewInt(proverSet))
 		storage.Quo(storage, ringFactor)
+
+		a.Logger.Debug(
+			"issued reward",
+			zap.String("peer_id", base58.Encode([]byte(peerId))),
+			zap.Uint64("frame_number", currentFrameNumber),
+			zap.String("reward", storage.String()),
+		)
 
 		outputs = append(
 			outputs,
@@ -220,6 +256,10 @@ func (a *TokenApplication) handleMint(
 		lockMap[string(t.Signature.PublicKey.KeyValue)] = struct{}{}
 		return outputs, nil
 	}
-
+	a.Logger.Debug(
+		"could not find case for proof",
+		zap.String("peer_id", base58.Encode([]byte(peerId))),
+		zap.Uint64("frame_number", currentFrameNumber),
+	)
 	return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
 }

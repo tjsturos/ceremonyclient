@@ -46,9 +46,10 @@ func (r *DataWorkerIPCServer) CalculateChallengeProof(
 		req.ClockFrame.FrameNumber,
 	)
 	challenge = binary.BigEndian.AppendUint32(challenge, r.coreId)
+	challenge = append(challenge, req.ClockFrame.Output...)
 
 	proof, err := r.prover.CalculateChallengeProof(
-		req.ClockFrame.Output,
+		challenge,
 		req.ClockFrame.Difficulty,
 	)
 	if err != nil {

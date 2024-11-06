@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"testing"
+	"time"
 
 	"github.com/cloudflare/circl/sign/ed448"
 	"github.com/iden3/go-iden3-crypto/poseidon"
@@ -13,7 +14,9 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
+	qcrypto "source.quilibrium.com/quilibrium/monorepo/node/crypto"
 	"source.quilibrium.com/quilibrium/monorepo/node/execution/intrinsics/token/application"
+	"source.quilibrium.com/quilibrium/monorepo/node/p2p"
 	"source.quilibrium.com/quilibrium/monorepo/node/protobufs"
 	"source.quilibrium.com/quilibrium/monorepo/node/store"
 	"source.quilibrium.com/quilibrium/monorepo/node/tries"
@@ -21,14 +24,14 @@ import (
 
 func TestHandleProverJoin(t *testing.T) {
 	log, _ := zap.NewDevelopment()
-	bpub, _, _ := ed448.GenerateKey(rand.Reader)
+	bpub, bprivKey, _ := ed448.GenerateKey(rand.Reader)
 	app := &application.TokenApplication{
 		Beacon:     bpub,
 		CoinStore:  store.NewPebbleCoinStore(store.NewInMemKVDB(), log),
+		ClockStore: store.NewPebbleClockStore(store.NewInMemKVDB(), log),
 		Logger:     log,
 		Difficulty: 200000,
 		Tries: []*tries.RollingFrecencyCritbitTrie{
-			&tries.RollingFrecencyCritbitTrie{},
 			&tries.RollingFrecencyCritbitTrie{},
 		},
 	}
@@ -69,8 +72,21 @@ func TestHandleProverJoin(t *testing.T) {
 	payload = binary.BigEndian.AppendUint64(payload, 0)
 	payload = append(payload, bytes.Repeat([]byte{0xff}, 32)...)
 	sig, _ := privKey.Sign(payload)
+	wprover := qcrypto.NewWesolowskiFrameProver(app.Logger)
+	gen, _, err := wprover.CreateDataGenesisFrame(
+		p2p.GetBloomFilter(application.TOKEN_ADDRESS, 256, 3),
+		make([]byte, 516),
+		10000,
+		&qcrypto.InclusionAggregateProof{},
+		[][]byte{bpub},
+	)
+	selbi, _ := gen.GetSelector()
+	txn, _ := app.ClockStore.NewTransaction()
+	app.ClockStore.StageDataClockFrame(selbi.FillBytes(make([]byte, 32)), gen, txn)
+	app.ClockStore.CommitDataClockFrame(gen.Filter, 0, selbi.FillBytes(make([]byte, 32)), app.Tries, txn, false)
+	txn.Commit()
 	app, success, fail, err := app.ApplyTransitions(
-		0,
+		1,
 		&protobufs.TokenRequests{
 			Requests: []*protobufs.TokenRequest{
 				&protobufs.TokenRequest{
@@ -95,9 +111,16 @@ func TestHandleProverJoin(t *testing.T) {
 
 	assert.Len(t, success.Requests, 1)
 	assert.Len(t, fail.Requests, 0)
+	app.Tries = append(app.Tries, &tries.RollingFrecencyCritbitTrie{})
 	app.Tries[1].Add(addr, 0)
-	app, success, fail, err = app.ApplyTransitions(
-		0,
+	txn, _ = app.ClockStore.NewTransaction()
+	frame1, _ := wprover.ProveDataClockFrame(gen, [][]byte{}, []*protobufs.InclusionAggregateProof{}, bprivKey, time.Now().UnixMilli(), 10000)
+	selbi, _ = frame1.GetSelector()
+	app.ClockStore.StageDataClockFrame(selbi.FillBytes(make([]byte, 32)), frame1, txn)
+	app.ClockStore.CommitDataClockFrame(frame1.Filter, 1, selbi.FillBytes(make([]byte, 32)), app.Tries, txn, false)
+	txn.Commit()
+	_, success, fail, err = app.ApplyTransitions(
+		2,
 		&protobufs.TokenRequests{
 			Requests: []*protobufs.TokenRequest{
 				&protobufs.TokenRequest{
@@ -118,6 +141,48 @@ func TestHandleProverJoin(t *testing.T) {
 		},
 		false,
 	)
-
 	assert.Error(t, err)
+	txn, _ = app.ClockStore.NewTransaction()
+	frame2, _ := wprover.ProveDataClockFrame(frame1, [][]byte{}, []*protobufs.InclusionAggregateProof{}, bprivKey, time.Now().UnixMilli(), 10000)
+	selbi, _ = frame1.GetSelector()
+	app.ClockStore.StageDataClockFrame(selbi.FillBytes(make([]byte, 32)), frame1, txn)
+	app.ClockStore.CommitDataClockFrame(frame2.Filter, 1, selbi.FillBytes(make([]byte, 32)), app.Tries, txn, false)
+	txn.Commit()
+
+	challenge := []byte{}
+	challenge = append(challenge, []byte(peerId)...)
+	challenge = binary.BigEndian.AppendUint64(
+		challenge,
+		1,
+	)
+	individualChallenge := append([]byte{}, challenge...)
+	individualChallenge = binary.BigEndian.AppendUint32(
+		individualChallenge,
+		uint32(0),
+	)
+	individualChallenge = append(individualChallenge, frame1.Output...)
+	out, _ := wprover.CalculateChallengeProof(individualChallenge, 10000)
+
+	payload = []byte("mint")
+	payload = append(payload, out...)
+	sig, _ = privKey.Sign(payload)
+	_, _, _, err = app.ApplyTransitions(2, &protobufs.TokenRequests{
+		Requests: []*protobufs.TokenRequest{
+			&protobufs.TokenRequest{
+				Request: &protobufs.TokenRequest_Mint{
+					Mint: &protobufs.MintCoinRequest{
+						Proofs: [][]byte{out},
+						Signature: &protobufs.Ed448Signature{
+							Signature: sig,
+							PublicKey: &protobufs.Ed448PublicKey{
+								KeyValue: pubkey,
+							},
+						},
+					},
+				},
+			},
+		},
+	}, false)
+
+	assert.NoError(t, err)
 }
