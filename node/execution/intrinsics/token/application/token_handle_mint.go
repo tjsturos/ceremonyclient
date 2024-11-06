@@ -3,7 +3,6 @@ package application
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"math/big"
 
 	"github.com/iden3/go-iden3-crypto/poseidon"
@@ -230,7 +229,6 @@ func (a *TokenApplication) handleMint(
 			}
 
 			wesoProver := crypto.NewWesolowskiFrameProver(a.Logger)
-			fmt.Printf("%x\n", individualChallenge)
 			if bytes.Equal(leaf, bytes.Repeat([]byte{0x00}, 516)) ||
 				!wesoProver.VerifyChallengeProof(
 					individualChallenge,

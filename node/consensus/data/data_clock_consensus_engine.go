@@ -546,6 +546,7 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 			}
 		}
 
+		var previousTreeFrame uint64
 		var previousTree *mt.MerkleTree
 
 		for e.state < consensus.EngineStateStopping {
@@ -560,19 +561,33 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 			}
 
 			frame = nextFrame
-			_, triesAtFrame, err := e.clockStore.GetDataClockFrame(
-				e.filter,
-				frame.FrameNumber,
-				false,
-			)
-			if err != nil {
-				panic(err)
-			}
 
 			modulo := len(clients)
 
-			for i, trie := range triesAtFrame[1:] {
+		outer:
+			for i, trie := range e.GetFrameProverTries()[1:] {
 				if trie.Contains(peerProvingKeyAddress) {
+					if previousTree != nil {
+						_, prfs, err := e.coinStore.GetPreCoinProofsForOwner(
+							peerProvingKeyAddress,
+						)
+						if err != nil {
+							e.logger.Error("error while fetching proofs", zap.Error(err))
+							break
+						}
+
+						for _, pr := range prfs {
+							if len(pr.Commitment) == 40 &&
+								!bytes.Equal(pr.Commitment[:32], previousTree.Root) {
+								if frame.FrameNumber > previousTreeFrame+5 {
+									previousTree = nil
+									previousTreeFrame = 0
+								}
+								break outer
+							}
+						}
+					}
+
 					e.logger.Info("creating data shard ring proof", zap.Int("ring", i))
 					outputs := e.PerformTimeProof(frame, frame.Difficulty, clients)
 					proofTree, payload, output := tries.PackOutputIntoPayloadAndProof(
@@ -582,6 +597,7 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 						previousTree,
 					)
 					previousTree = proofTree
+					previousTreeFrame = frame.FrameNumber
 
 					sig, err := e.pubSub.SignMessage(
 						payload,
