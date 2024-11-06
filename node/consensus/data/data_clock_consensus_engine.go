@@ -18,6 +18,7 @@ import (
 	"github.com/multiformats/go-multiaddr"
 	mn "github.com/multiformats/go-multiaddr/net"
 	"github.com/pkg/errors"
+	mt "github.com/txaty/go-merkletree"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -98,6 +99,7 @@ type DataClockConsensusEngine struct {
 	statsClient                 protobufs.NodeStatsClient
 	currentReceivingSyncPeersMx sync.Mutex
 	currentReceivingSyncPeers   int
+	announcedJoin               int
 	beaconPeerId                []byte
 
 	frameChan                      chan *protobufs.ClockFrame
@@ -544,6 +546,8 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 			}
 		}
 
+		var previousTree *mt.MerkleTree
+
 		for e.state < consensus.EngineStateStopping {
 			nextFrame, err := e.dataTimeReel.Head()
 			if err != nil {
@@ -551,12 +555,17 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 			}
 
 			if frame.FrameNumber == nextFrame.FrameNumber {
-				time.Sleep(5 * time.Second)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+
+			if nextFrame.Timestamp < time.Now().UnixMilli()-30000 {
+				time.Sleep(1 * time.Second)
 				continue
 			}
 
 			frame = nextFrame
-			_, tries, err := e.clockStore.GetDataClockFrame(
+			_, triesAtFrame, err := e.clockStore.GetDataClockFrame(
 				e.filter,
 				frame.FrameNumber,
 				false,
@@ -565,10 +574,40 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 				panic(err)
 			}
 
-			for i, trie := range tries[1:] {
+			modulo := len(clients)
+
+			for i, trie := range triesAtFrame[1:] {
 				if trie.Contains(peerProvingKeyAddress) {
 					e.logger.Info("creating data shard ring proof", zap.Int("ring", i))
-					e.PerformTimeProof(frame, frame.Difficulty, clients)
+					outputs := e.PerformTimeProof(frame, frame.Difficulty, clients)
+					proofTree, payload, output := tries.PackOutputIntoPayloadAndProof(
+						outputs,
+						modulo,
+						frame,
+						previousTree,
+					)
+					previousTree = proofTree
+
+					sig, err := e.pubSub.SignMessage(
+						payload,
+					)
+					if err != nil {
+						panic(err)
+					}
+
+					e.publishMessage(e.txFilter, &protobufs.TokenRequest{
+						Request: &protobufs.TokenRequest_Mint{
+							Mint: &protobufs.MintCoinRequest{
+								Proofs: output,
+								Signature: &protobufs.Ed448Signature{
+									PublicKey: &protobufs.Ed448PublicKey{
+										KeyValue: e.pubSub.GetPublicKey(),
+									},
+									Signature: sig,
+								},
+							},
+						},
+					})
 				}
 			}
 		}
@@ -581,10 +620,10 @@ func (e *DataClockConsensusEngine) PerformTimeProof(
 	frame *protobufs.ClockFrame,
 	difficulty uint32,
 	clients []protobufs.DataIPCServiceClient,
-) []byte {
+) []mt.DataBlock {
 	wg := sync.WaitGroup{}
 	wg.Add(len(clients))
-	output := make([][]byte, len(clients))
+	output := make([]mt.DataBlock, len(clients))
 	for i, client := range clients {
 		i := i
 		client := client
@@ -660,37 +699,18 @@ func (e *DataClockConsensusEngine) PerformTimeProof(
 					continue
 				}
 
-				output[i] = resp.Output
+				output[i] = tries.NewProofLeaf(resp.Output)
 				break
+			}
+			if output[i] == nil {
+				output[i] = tries.NewProofLeaf([]byte{})
 			}
 			wg.Done()
 		}()
 	}
 	wg.Wait()
-	payload := []byte("mint")
-	for _, out := range output {
-		payload = append(payload, out...)
-	}
-	sig, err := e.pubSub.SignMessage(
-		payload,
-	)
-	if err != nil {
-		panic(err)
-	}
-	e.publishMessage(e.txFilter, &protobufs.TokenRequest{
-		Request: &protobufs.TokenRequest_Mint{
-			Mint: &protobufs.MintCoinRequest{
-				Proofs: output,
-				Signature: &protobufs.Ed448Signature{
-					PublicKey: &protobufs.Ed448PublicKey{
-						KeyValue: e.pubSub.GetPublicKey(),
-					},
-					Signature: sig,
-				},
-			},
-		},
-	})
-	return []byte{}
+
+	return output
 }
 
 func (e *DataClockConsensusEngine) Stop(force bool) <-chan error {

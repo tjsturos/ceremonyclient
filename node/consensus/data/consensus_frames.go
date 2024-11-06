@@ -90,7 +90,7 @@ func (e *DataClockConsensusEngine) prove(
 	var validTransactions *protobufs.TokenRequests
 	var invalidTransactions *protobufs.TokenRequests
 	app, validTransactions, invalidTransactions, err = app.ApplyTransitions(
-		previousFrame.FrameNumber,
+		previousFrame.FrameNumber+1,
 		e.stagedTransactions,
 		true,
 	)

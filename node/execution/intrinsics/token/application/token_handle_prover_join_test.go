@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"testing"
 	"time"
 
@@ -13,8 +14,10 @@ import (
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/assert"
+	"github.com/txaty/go-merkletree"
 	"go.uber.org/zap"
 	qcrypto "source.quilibrium.com/quilibrium/monorepo/node/crypto"
+	"source.quilibrium.com/quilibrium/monorepo/node/execution/intrinsics/token"
 	"source.quilibrium.com/quilibrium/monorepo/node/execution/intrinsics/token/application"
 	"source.quilibrium.com/quilibrium/monorepo/node/p2p"
 	"source.quilibrium.com/quilibrium/monorepo/node/protobufs"
@@ -144,39 +147,45 @@ func TestHandleProverJoin(t *testing.T) {
 	assert.Error(t, err)
 	txn, _ = app.ClockStore.NewTransaction()
 	frame2, _ := wprover.ProveDataClockFrame(frame1, [][]byte{}, []*protobufs.InclusionAggregateProof{}, bprivKey, time.Now().UnixMilli(), 10000)
-	selbi, _ = frame1.GetSelector()
-	app.ClockStore.StageDataClockFrame(selbi.FillBytes(make([]byte, 32)), frame1, txn)
-	app.ClockStore.CommitDataClockFrame(frame2.Filter, 1, selbi.FillBytes(make([]byte, 32)), app.Tries, txn, false)
+	selbi, _ = frame2.GetSelector()
+	app.ClockStore.StageDataClockFrame(selbi.FillBytes(make([]byte, 32)), frame2, txn)
+	app.ClockStore.CommitDataClockFrame(frame2.Filter, 2, selbi.FillBytes(make([]byte, 32)), app.Tries, txn, false)
 	txn.Commit()
 
 	challenge := []byte{}
 	challenge = append(challenge, []byte(peerId)...)
 	challenge = binary.BigEndian.AppendUint64(
 		challenge,
-		1,
+		2,
 	)
 	individualChallenge := append([]byte{}, challenge...)
 	individualChallenge = binary.BigEndian.AppendUint32(
 		individualChallenge,
 		uint32(0),
 	)
-	individualChallenge = append(individualChallenge, frame1.Output...)
+	individualChallenge = append(individualChallenge, frame2.Output...)
+	fmt.Printf("%x\n", individualChallenge)
 	out, _ := wprover.CalculateChallengeProof(individualChallenge, 10000)
 
-	payload = []byte("mint")
-	payload = append(payload, out...)
+	proofTree, payload, output := tries.PackOutputIntoPayloadAndProof(
+		[]merkletree.DataBlock{tries.NewProofLeaf(out), tries.NewProofLeaf(make([]byte, 516))},
+		2,
+		frame2,
+		nil,
+	)
+
 	sig, _ = privKey.Sign(payload)
-	_, _, _, err = app.ApplyTransitions(2, &protobufs.TokenRequests{
+	app, success, _, err = app.ApplyTransitions(2, &protobufs.TokenRequests{
 		Requests: []*protobufs.TokenRequest{
 			&protobufs.TokenRequest{
 				Request: &protobufs.TokenRequest_Mint{
 					Mint: &protobufs.MintCoinRequest{
-						Proofs: [][]byte{out},
+						Proofs: output,
 						Signature: &protobufs.Ed448Signature{
-							Signature: sig,
 							PublicKey: &protobufs.Ed448PublicKey{
 								KeyValue: pubkey,
 							},
+							Signature: sig,
 						},
 					},
 				},
@@ -185,4 +194,69 @@ func TestHandleProverJoin(t *testing.T) {
 	}, false)
 
 	assert.NoError(t, err)
+	assert.Len(t, success.Requests, 1)
+	assert.Len(t, app.TokenOutputs.Outputs, 1)
+	txn, _ = app.CoinStore.NewTransaction()
+	for i, o := range app.TokenOutputs.Outputs {
+		switch e := o.Output.(type) {
+		case *protobufs.TokenOutput_Coin:
+			a, err := token.GetAddressOfCoin(e.Coin, 1, uint64(i))
+			assert.NoError(t, err)
+			err = app.CoinStore.PutCoin(txn, 1, a, e.Coin)
+			assert.NoError(t, err)
+		case *protobufs.TokenOutput_DeletedCoin:
+			c, err := app.CoinStore.GetCoinByAddress(txn, e.DeletedCoin.Address)
+			assert.NoError(t, err)
+			err = app.CoinStore.DeleteCoin(txn, e.DeletedCoin.Address, c)
+			assert.NoError(t, err)
+		case *protobufs.TokenOutput_Proof:
+			a, err := token.GetAddressOfPreCoinProof(e.Proof)
+			assert.NoError(t, err)
+			err = app.CoinStore.PutPreCoinProof(txn, 1, a, e.Proof)
+			assert.NoError(t, err)
+		case *protobufs.TokenOutput_DeletedProof:
+			a, err := token.GetAddressOfPreCoinProof(e.DeletedProof)
+			assert.NoError(t, err)
+			c, err := app.CoinStore.GetPreCoinProofByAddress(a)
+			assert.NoError(t, err)
+			err = app.CoinStore.DeletePreCoinProof(txn, a, c)
+			assert.NoError(t, err)
+		}
+	}
+	err = txn.Commit()
+	txn, _ = app.ClockStore.NewTransaction()
+	frame3, _ := wprover.ProveDataClockFrame(frame2, [][]byte{}, []*protobufs.InclusionAggregateProof{}, bprivKey, time.Now().UnixMilli(), 10000)
+	selbi, _ = frame3.GetSelector()
+	app.ClockStore.StageDataClockFrame(selbi.FillBytes(make([]byte, 32)), frame3, txn)
+	app.ClockStore.CommitDataClockFrame(frame3.Filter, 1, selbi.FillBytes(make([]byte, 32)), app.Tries, txn, false)
+	txn.Commit()
+
+	proofTree, payload, output = tries.PackOutputIntoPayloadAndProof(
+		[]merkletree.DataBlock{tries.NewProofLeaf(out), tries.NewProofLeaf(make([]byte, 516))},
+		2,
+		frame3,
+		proofTree,
+	)
+
+	sig, _ = privKey.Sign(payload)
+	app, success, _, err = app.ApplyTransitions(3, &protobufs.TokenRequests{
+		Requests: []*protobufs.TokenRequest{
+			&protobufs.TokenRequest{
+				Request: &protobufs.TokenRequest_Mint{
+					Mint: &protobufs.MintCoinRequest{
+						Proofs: output,
+						Signature: &protobufs.Ed448Signature{
+							PublicKey: &protobufs.Ed448PublicKey{
+								KeyValue: pubkey,
+							},
+							Signature: sig,
+						},
+					},
+				},
+			},
+		},
+	}, false)
+	assert.NoError(t, err)
+	assert.Len(t, success.Requests, 1)
+	assert.Len(t, app.TokenOutputs.Outputs, 3)
 }
