@@ -92,6 +92,9 @@ func (e *DataClockConsensusEngine) processFrame(
 	if e.latestFrameReceived < latestFrame.FrameNumber {
 		e.latestFrameReceived = latestFrame.FrameNumber
 	}
+	e.frameProverTriesMx.Lock()
+	e.frameProverTries = e.dataTimeReel.GetFrameProverTries()
+	e.frameProverTriesMx.Unlock()
 
 	trie := e.GetFrameProverTries()[0]
 	selBI, _ := dataFrame.GetSelector()
@@ -118,8 +121,7 @@ func (e *DataClockConsensusEngine) processFrame(
 
 		return nextFrame
 	} else {
-		e.announcedJoin++
-		if e.announcedJoin < 5 && !e.IsInProverTrie(e.pubSub.GetPeerID()) &&
+		if !e.IsInProverTrie(e.pubSub.GetPeerID()) &&
 			dataFrame.Timestamp > time.Now().UnixMilli()-30000 {
 			e.logger.Info("announcing prover join")
 			e.announceProverJoin()

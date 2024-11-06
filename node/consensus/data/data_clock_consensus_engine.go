@@ -559,11 +559,6 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 				continue
 			}
 
-			if nextFrame.Timestamp < time.Now().UnixMilli()-30000 {
-				time.Sleep(1 * time.Second)
-				continue
-			}
-
 			frame = nextFrame
 			_, triesAtFrame, err := e.clockStore.GetDataClockFrame(
 				e.filter,
