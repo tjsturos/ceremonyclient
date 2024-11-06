@@ -556,8 +556,16 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 			}
 
 			frame = nextFrame
+			_, tries, err := e.clockStore.GetDataClockFrame(
+				e.filter,
+				frame.FrameNumber,
+				false,
+			)
+			if err != nil {
+				panic(err)
+			}
 
-			for i, trie := range e.GetFrameProverTries()[1:] {
+			for i, trie := range tries[1:] {
 				if trie.Contains(peerProvingKeyAddress) {
 					e.logger.Info("creating data shard ring proof", zap.Int("ring", i))
 					e.PerformTimeProof(frame, frame.Difficulty, clients)
@@ -578,6 +586,7 @@ func (e *DataClockConsensusEngine) PerformTimeProof(
 	wg.Add(len(clients))
 	output := make([][]byte, len(clients))
 	for i, client := range clients {
+		i := i
 		client := client
 		go func() {
 			e.logger.Info("performing data proof")
@@ -621,7 +630,10 @@ func (e *DataClockConsensusEngine) PerformTimeProof(
 						break
 					}
 					if j == 0 {
-						e.logger.Error("unable to get a response in time from worker", zap.Error(err))
+						e.logger.Error(
+							"unable to get a response in time from worker",
+							zap.Error(err),
+						)
 					}
 					if len(e.config.Engine.DataWorkerMultiaddrs) != 0 {
 						e.logger.Error(

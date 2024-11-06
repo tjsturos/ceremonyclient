@@ -118,8 +118,20 @@ func (e *DataClockConsensusEngine) processFrame(
 
 		return nextFrame
 	} else {
-		if !e.IsInProverTrie(e.pubSub.GetPeerID()) &&
-			dataFrame.Timestamp > time.Now().UnixMilli()-30000 {
+		_, tries, err := e.clockStore.GetDataClockFrame(
+			e.filter,
+			latestFrame.FrameNumber,
+			false,
+		)
+		if err != nil {
+			e.logger.Error("error while fetching frame", zap.Error(err))
+			return latestFrame
+		}
+		found := false
+		for _, trie := range tries[1:] {
+			found = found || trie.Contains(e.pubSub.GetPeerID())
+		}
+		if !found && dataFrame.Timestamp > time.Now().UnixMilli()-30000 {
 			e.logger.Info("announcing prover join")
 			e.announceProverJoin()
 		}
