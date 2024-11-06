@@ -165,6 +165,7 @@ func (a *TokenApplication) handleMint(
 
 		outputs := []*protobufs.TokenOutput{}
 		proofs := []byte{}
+		hits := 0
 
 		for i, p := range t.Proofs {
 			individualChallenge := append([]byte{}, challenge...)
@@ -180,8 +181,10 @@ func (a *TokenApplication) handleMint(
 					zap.Uint64("frame_number", currentFrameNumber),
 					zap.Int("proof_size", len(p)),
 				)
-				return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
+				continue
 			}
+
+			hits++
 
 			wesoProver := crypto.NewWesolowskiFrameProver(a.Logger)
 
@@ -201,10 +204,19 @@ func (a *TokenApplication) handleMint(
 			proofs = append(proofs, p...)
 		}
 
+		if hits == 0 {
+			a.Logger.Debug(
+				"no proofs",
+				zap.String("peer_id", base58.Encode([]byte(peerId))),
+				zap.Uint64("frame_number", currentFrameNumber),
+			)
+			return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
+		}
+
 		ringFactor := big.NewInt(2)
 		ringFactor.Exp(ringFactor, big.NewInt(int64(ring)), nil)
 
-		storage := big.NewInt(int64(512 * len(t.Proofs)))
+		storage := big.NewInt(int64(512 * hits))
 		unitFactor := big.NewInt(8000000000)
 		storage.Mul(storage, unitFactor)
 		storage.Quo(storage, big.NewInt(proverSet))
