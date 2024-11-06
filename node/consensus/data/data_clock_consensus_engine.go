@@ -544,7 +544,7 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 			}
 		}
 
-		for {
+		for e.state < consensus.EngineStateStopping {
 			nextFrame, err := e.dataTimeReel.Head()
 			if err != nil {
 				panic(err)
