@@ -28,11 +28,11 @@ replace github.com/cockroachdb/pebble => ../pebble
 
 require (
 	github.com/iden3/go-iden3-crypto v0.0.16
-	github.com/mr-tron/base58 v1.2.0
 	github.com/multiformats/go-multiaddr v0.12.4
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.24.0
 	google.golang.org/grpc v1.58.2
+	source.quilibrium.com/quilibrium/monorepo/go-libp2p-blossomsub v0.0.0-00010101000000-000000000000
 	source.quilibrium.com/quilibrium/monorepo/node v0.0.0-00010101000000-000000000000
 )
 
@@ -110,6 +110,7 @@ require (
 	github.com/mikioh/tcpinfo v0.0.0-20190314235526-30a79bb1804b // indirect
 	github.com/mikioh/tcpopt v0.0.0-20190314235656-172688c1accc // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
+	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
 	github.com/multiformats/go-base36 v0.2.0 // indirect
 	github.com/multiformats/go-multiaddr-dns v0.3.1 // indirect
@@ -151,6 +152,7 @@ require (
 	github.com/raulk/go-watchdog v1.3.0 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
+	github.com/txaty/go-merkletree v0.2.2 // indirect
 	github.com/whyrusleeping/go-keyspace v0.0.0-20160322163242-5b898ac5add1 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/otel v1.16.0 // indirect
@@ -174,7 +176,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/blake3 v1.2.1 // indirect
 	source.quilibrium.com/quilibrium/monorepo/bls48581 v0.0.0-00010101000000-000000000000 // indirect
-	source.quilibrium.com/quilibrium/monorepo/go-libp2p-blossomsub v0.0.0-00010101000000-000000000000 // indirect
 	source.quilibrium.com/quilibrium/monorepo/nekryptology v0.0.0-00010101000000-000000000000 // indirect
 	source.quilibrium.com/quilibrium/monorepo/vdf v0.0.0-00010101000000-000000000000 // indirect
 )
@@ -189,5 +190,5 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5 // indirect
 	go.uber.org/zap v1.27.0
-	google.golang.org/protobuf v1.34.1 // indirect
+	google.golang.org/protobuf v1.34.1
 )
