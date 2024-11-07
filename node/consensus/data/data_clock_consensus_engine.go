@@ -423,6 +423,7 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 				time.Sleep(120 * time.Second)
 				continue
 			}
+			e.peerMapMx.RUnlock()
 
 			if nextFrame.FrameNumber < beaconInfo.maxFrame-100 {
 				time.Sleep(120 * time.Second)
