@@ -57,8 +57,7 @@ func (a *TokenApplication) handleDataAnnounceProverJoin(
 	if t.PublicKeySignatureEd448.PublicKey == nil ||
 		t.PublicKeySignatureEd448.Signature == nil ||
 		t.PublicKeySignatureEd448.PublicKey.KeyValue == nil ||
-		t.Filter == nil || len(t.Filter) != 32 ||
-		t.FrameNumber > currentFrameNumber {
+		t.Filter == nil || len(t.Filter) != 32 {
 		a.Logger.Debug(
 			"bad payload",
 			zap.Uint64("given_frame_number", t.FrameNumber),
@@ -68,6 +67,7 @@ func (a *TokenApplication) handleDataAnnounceProverJoin(
 
 		return nil, errors.Wrap(ErrInvalidStateTransition, "handle join")
 	}
+
 	if _, touched := lockMap[string(
 		t.PublicKeySignatureEd448.PublicKey.KeyValue,
 	)]; touched {
@@ -87,6 +87,30 @@ func (a *TokenApplication) handleDataAnnounceProverJoin(
 	if err != nil {
 		a.Logger.Debug("can't get address from signature")
 		return nil, errors.Wrap(err, "handle join")
+	}
+
+	if t.FrameNumber > currentFrameNumber {
+		a.Logger.Debug(
+			"bad payload",
+			zap.Uint64("given_frame_number", t.FrameNumber),
+			zap.Uint64("current_frame_number", currentFrameNumber),
+			zap.Int("filter_length", len(t.Filter)),
+		)
+
+		pk, err := pcrypto.UnmarshalEd448PublicKey(
+			t.PublicKeySignatureEd448.PublicKey.KeyValue,
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "get address from signature")
+		}
+
+		peerId, err := peer.IDFromPublicKey(pk)
+		if err != nil {
+			return nil, errors.Wrap(err, "get address from signature")
+		}
+
+		a.PubSub.AddPeerScore([]byte(peerId), -100000)
+		return nil, errors.Wrap(ErrInvalidStateTransition, "handle join")
 	}
 
 	lockMap[string(t.PublicKeySignatureEd448.PublicKey.KeyValue)] = struct{}{}

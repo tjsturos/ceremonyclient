@@ -502,6 +502,7 @@ func (e *TokenExecutionEngine) ProcessFrame(
 		triesAtFrame,
 		e.coinStore,
 		e.clockStore,
+		e.pubSub,
 		e.logger,
 	)
 	if err != nil {
@@ -751,6 +752,7 @@ func (e *TokenExecutionEngine) VerifyExecution(
 						tries,
 						e.coinStore,
 						e.clockStore,
+						e.pubSub,
 						e.logger,
 					)
 					if err != nil {
@@ -772,6 +774,7 @@ func (e *TokenExecutionEngine) VerifyExecution(
 						triesAtFrame,
 						e.coinStore,
 						e.clockStore,
+						e.pubSub,
 						e.logger,
 					)
 					if err != nil {

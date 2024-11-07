@@ -202,6 +202,23 @@ func (a *TokenApplication) handleMint(
 			)
 		}
 
+		if (previousFrame != nil && newFrame <= previousFrame.FrameNumber) ||
+			newFrame < currentFrameNumber-10 {
+			previousFrameNumber := uint64(0)
+			if previousFrame != nil {
+				previousFrameNumber = previousFrame.FrameNumber
+			}
+			a.Logger.Debug(
+				"received out of order proofs, ignoring",
+				zap.Error(err),
+				zap.String("peer_id", base58.Encode([]byte(peerId))),
+				zap.Uint64("previous_frame", previousFrameNumber),
+				zap.Uint64("new_frame", newFrame),
+				zap.Uint64("frame_number", currentFrameNumber),
+			)
+			return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
+		}
+
 		if verified && delete != nil && len(t.Proofs) > 3 {
 			hash := sha3.Sum256(previousFrame.Output)
 			pick := tries.BytesToUnbiasedMod(hash, uint64(parallelism))
@@ -240,7 +257,8 @@ func (a *TokenApplication) handleMint(
 					zap.String("peer_id", base58.Encode([]byte(peerId))),
 					zap.Uint64("frame_number", currentFrameNumber),
 				)
-				return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
+				// we want this to still apply the next commit even if this proof failed
+				verified = false
 			}
 		}
 

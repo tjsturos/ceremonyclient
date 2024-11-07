@@ -29,6 +29,7 @@ type TokenApplication struct {
 	Tries        []*tries.RollingFrecencyCritbitTrie
 	CoinStore    store.CoinStore
 	ClockStore   store.ClockStore
+	PubSub       p2p.PubSub
 	Logger       *zap.Logger
 	Difficulty   uint32
 }
@@ -78,6 +79,7 @@ func MaterializeApplicationFromFrame(
 	tries []*tries.RollingFrecencyCritbitTrie,
 	coinStore store.CoinStore,
 	clockStore store.ClockStore,
+	pubSub p2p.PubSub,
 	logger *zap.Logger,
 ) (*TokenApplication, error) {
 	_, tokenOutputs, err := GetOutputsFromClockFrame(frame)
@@ -94,6 +96,7 @@ func MaterializeApplicationFromFrame(
 		CoinStore:    coinStore,
 		ClockStore:   clockStore,
 		Logger:       logger,
+		PubSub:       pubSub,
 		Difficulty:   frame.Difficulty,
 	}, nil
 }
@@ -124,7 +127,19 @@ func (a *TokenApplication) ApplyTransitions(
 			"apply transitions")
 	}
 
-	for _, transition := range transitions.Requests {
+	requests := []*protobufs.TokenRequest{}
+	if skipFailures {
+		mints := tries.NewMinHeap[*protobufs.TokenRequest]()
+		for _, req := range transitions.Requests {
+			mints.Push(req)
+		}
+
+		requests = mints.All()
+	} else {
+		requests = transitions.Requests
+	}
+
+	for _, transition := range requests {
 	req:
 		switch t := transition.Request.(type) {
 		case *protobufs.TokenRequest_Announce:

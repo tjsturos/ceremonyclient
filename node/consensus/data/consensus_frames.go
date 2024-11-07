@@ -71,6 +71,7 @@ func (e *DataClockConsensusEngine) prove(
 		tries,
 		e.coinStore,
 		e.clockStore,
+		e.pubSub,
 		e.logger,
 	)
 	if err != nil {

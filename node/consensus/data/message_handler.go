@@ -66,8 +66,7 @@ func (e *DataClockConsensusEngine) runTxMessageHandler() {
 				continue
 			}
 
-			if e.frameProverTries[0].Contains(e.provingKeyAddress) &&
-				e.syncingStatus == SyncStatusNotSyncing {
+			if e.frameProverTries[0].Contains(e.provingKeyAddress) {
 				for name := range e.executionEngines {
 					name := name
 					go func() error {
