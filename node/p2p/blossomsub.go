@@ -52,9 +52,9 @@ import (
 const (
 	minPeersPerBitmask   = 4
 	minBootstrapPeers    = 3
-	discoveryParallelism = 10
+	discoveryParallelism = 1
 	discoveryPeerLimit   = 1000
-	bootstrapParallelism = 10
+	bootstrapParallelism = 1
 )
 
 type BlossomSub struct {
