@@ -166,9 +166,15 @@ func (r *RPCServer) GetNodeInfo(
 	if head != nil {
 		frame = head.FrameNumber
 	}
-	seniority := r.executionEngines[0].GetSeniority()
-	ring := r.executionEngines[0].GetRingPosition()
-
+	var seniority *big.Int
+	ring := -1
+	if frame > 0 {
+		seniority = r.executionEngines[0].GetSeniority()
+		ring = r.executionEngines[0].GetRingPosition()
+	}
+	if seniority == nil {
+		seniority = big.NewInt(0)
+	}
 	return &protobufs.NodeInfoResponse{
 		PeerId:    peerID.String(),
 		MaxFrame:  frame,

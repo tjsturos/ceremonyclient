@@ -840,6 +840,10 @@ func (e *TokenExecutionEngine) GetRingPosition() int {
 	}
 
 	tries := e.clock.GetFrameProverTries()
+	if len(tries) <= 1 {
+		return -1
+	}
+
 	for i, trie := range tries[1:] {
 		if trie.Contains(altAddr.FillBytes(make([]byte, 32))) {
 			return i
