@@ -724,11 +724,17 @@ func initDHT(
 	} else {
 		mode = dht.ModeClient
 	}
+	opts := []dht.Option{
+		dht.Mode(mode),
+		dht.BootstrapPeers(bootstrappers...),
+	}
+	if network != 0 {
+		opts = append(opts, dht.ProtocolPrefix(protocol.ID("/testnet")))
+	}
 	kademliaDHT, err := dht.New(
 		ctx,
 		h,
-		dht.Mode(mode),
-		dht.BootstrapPeers(bootstrappers...),
+		opts...,
 	)
 	if err != nil {
 		panic(err)
