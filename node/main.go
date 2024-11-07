@@ -695,6 +695,16 @@ func printNodeInfo(cfg *config.Config) {
 
 	fmt.Println("Version: " + config.FormatVersion(nodeInfo.Version))
 	fmt.Println("Max Frame: " + strconv.FormatUint(nodeInfo.GetMaxFrame(), 10))
-	fmt.Println("Peer Score: " + strconv.FormatUint(nodeInfo.GetPeerScore(), 10))
+	if nodeInfo.ProverRing == -1 {
+		fmt.Println("Not in Prover Ring")
+	} else {
+		fmt.Println("Prover Ring: " + strconv.FormatUint(
+			uint64(nodeInfo.ProverRing),
+			10,
+		))
+	}
+	fmt.Println("Seniority: " + new(big.Int).SetBytes(
+		nodeInfo.PeerSeniority,
+	).String())
 	printBalance(cfg)
 }

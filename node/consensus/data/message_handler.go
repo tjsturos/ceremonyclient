@@ -261,6 +261,13 @@ func (e *DataClockConsensusEngine) handleDataPeerListAnnounce(
 			continue
 		}
 
+		head, err := e.dataTimeReel.Head()
+		if err == nil {
+			if p.MaxFrame < head.FrameNumber {
+				continue
+			}
+		}
+
 		if p.PublicKey != nil && p.Signature != nil && p.Version != nil {
 			key, err := pcrypto.UnmarshalEd448PublicKey(p.PublicKey)
 			if err != nil {

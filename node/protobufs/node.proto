@@ -61,6 +61,8 @@ message NodeInfoResponse {
   uint64 max_frame = 2;
   uint64 peer_score = 3;
   bytes version = 4;
+  bytes peer_seniority = 5;
+  int32 prover_ring = 6;
 }
 
 message PutPeerInfoRequest {

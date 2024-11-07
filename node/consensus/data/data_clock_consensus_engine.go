@@ -412,7 +412,20 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 
 			if frame.FrameNumber-100 >= nextFrame.FrameNumber ||
 				nextFrame.FrameNumber == 0 {
-				time.Sleep(60 * time.Second)
+				time.Sleep(120 * time.Second)
+				continue
+			}
+
+			e.peerMapMx.RLock()
+			beaconInfo, ok := e.peerMap[string(e.beaconPeerId)]
+			if !ok {
+				e.peerMapMx.RUnlock()
+				time.Sleep(120 * time.Second)
+				continue
+			}
+
+			if nextFrame.FrameNumber < beaconInfo.maxFrame-100 {
+				time.Sleep(120 * time.Second)
 				continue
 			}
 
@@ -463,6 +476,18 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 					make([]byte, 256),
 				),
 			})
+			for _, v := range e.peerMap {
+				if v == nil {
+					continue
+				}
+				if v.timestamp <= time.Now().UnixMilli()-PEER_INFO_TTL {
+					deletes = append(deletes, v)
+				}
+			}
+			for _, v := range deletes {
+				delete(e.peerMap, string(v.peerId))
+			}
+			deletes = []*peerInfo{}
 			for _, v := range e.uncooperativePeersMap {
 				if v == nil {
 					continue

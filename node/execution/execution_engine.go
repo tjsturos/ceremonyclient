@@ -1,6 +1,8 @@
 package execution
 
 import (
+	"math/big"
+
 	"source.quilibrium.com/quilibrium/monorepo/node/protobufs"
 )
 
@@ -15,4 +17,6 @@ type ExecutionEngine interface {
 	) ([]*protobufs.Message, error)
 	GetPeerInfo() *protobufs.PeerInfoResponse
 	GetFrame() *protobufs.ClockFrame
+	GetSeniority() *big.Int
+	GetRingPosition() int
 }

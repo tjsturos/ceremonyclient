@@ -816,6 +816,39 @@ func (e *TokenExecutionEngine) GetFrame() *protobufs.ClockFrame {
 	return e.clock.GetFrame()
 }
 
+func (e *TokenExecutionEngine) GetSeniority() *big.Int {
+	altAddr, err := poseidon.HashBytes(e.pubSub.GetPeerID())
+	if err != nil {
+		return nil
+	}
+
+	sen, ok := (*e.peerSeniority)[string(
+		altAddr.FillBytes(make([]byte, 32)),
+	)]
+
+	if !ok {
+		return nil
+	}
+
+	return sen.Priority()
+}
+
+func (e *TokenExecutionEngine) GetRingPosition() int {
+	altAddr, err := poseidon.HashBytes(e.pubSub.GetPeerID())
+	if err != nil {
+		return -1
+	}
+
+	tries := e.clock.GetFrameProverTries()
+	for i, trie := range tries[1:] {
+		if trie.Contains(altAddr.FillBytes(make([]byte, 32))) {
+			return i
+		}
+	}
+
+	return -1
+}
+
 func (e *TokenExecutionEngine) getAddressFromSignature(
 	sig *protobufs.Ed448Signature,
 ) ([]byte, error) {
