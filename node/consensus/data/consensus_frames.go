@@ -7,6 +7,7 @@ import (
 
 	"golang.org/x/crypto/sha3"
 	"source.quilibrium.com/quilibrium/monorepo/node/config"
+	"source.quilibrium.com/quilibrium/monorepo/node/consensus"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -284,7 +285,7 @@ func (e *DataClockConsensusEngine) sync(
 
 	client := protobufs.NewDataServiceClient(cc)
 
-	for {
+	for e.GetState() < consensus.EngineStateStopping {
 		response, err := client.GetDataFrame(
 			context.TODO(),
 			&protobufs.GetDataFrameRequest{

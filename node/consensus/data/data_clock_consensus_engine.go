@@ -886,6 +886,7 @@ func (e *DataClockConsensusEngine) createParallelDataClientsFromListAndIndex(
 			grpc.MaxCallSendMsgSize(10*1024*1024),
 			grpc.MaxCallRecvMsgSize(10*1024*1024),
 		),
+		grpc.WithBlock(),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "create parallel data client")
@@ -945,6 +946,7 @@ func (
 			grpc.MaxCallSendMsgSize(10*1024*1024),
 			grpc.MaxCallRecvMsgSize(10*1024*1024),
 		),
+		grpc.WithBlock(),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "create parallel data client")
@@ -993,6 +995,7 @@ func (e *DataClockConsensusEngine) createParallelDataClientsFromList() (
 				grpc.MaxCallSendMsgSize(10*1024*1024),
 				grpc.MaxCallRecvMsgSize(10*1024*1024),
 			),
+			grpc.WithBlock(),
 		)
 		if err != nil {
 			e.logger.Error("could not dial", zap.Error(err))
@@ -1053,6 +1056,7 @@ func (e *DataClockConsensusEngine) createParallelDataClientsFromBaseMultiaddr(
 				grpc.MaxCallSendMsgSize(10*1024*1024),
 				grpc.MaxCallRecvMsgSize(10*1024*1024),
 			),
+			grpc.WithBlock(),
 		)
 		if err != nil {
 			e.logger.Error("could not dial", zap.Error(err))

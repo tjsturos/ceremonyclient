@@ -437,6 +437,7 @@ func (d *DataTimeReel) runLoop() {
 				// }
 			}
 		case <-d.done:
+			d.running = false
 			return
 		}
 	}
@@ -537,7 +538,7 @@ func (d *DataTimeReel) processPending(
 	// 	zap.Int("pending_frame_numbers", len(d.pending)),
 	// )
 
-	for {
+	for d.running {
 		next := d.head.FrameNumber + 1
 		sel, err := d.head.GetSelector()
 		if err != nil {

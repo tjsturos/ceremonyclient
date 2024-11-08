@@ -79,7 +79,11 @@ func (e *DataClockConsensusEngine) processFrame(
 	)
 	var err error
 	if !e.GetFrameProverTries()[0].Contains(e.provingKeyBytes) {
-		if latestFrame, err = e.collect(dataFrame); err != nil {
+		if latestFrame == nil ||
+			dataFrame.FrameNumber > latestFrame.FrameNumber {
+			latestFrame = dataFrame
+		}
+		if latestFrame, err = e.collect(latestFrame); err != nil {
 			e.logger.Error("could not collect", zap.Error(err))
 		}
 	}
