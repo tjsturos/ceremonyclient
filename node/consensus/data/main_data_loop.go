@@ -40,7 +40,7 @@ func (
 func (e *DataClockConsensusEngine) runLoop() {
 	dataFrameCh := e.dataTimeReel.NewFrameCh()
 
-	for e.state < consensus.EngineStateStopping {
+	for e.GetState() < consensus.EngineStateStopping {
 		peerCount := e.pubSub.GetNetworkPeersCount()
 		if peerCount < e.minimumPeersRequired {
 			e.logger.Info(
@@ -108,7 +108,9 @@ func (e *DataClockConsensusEngine) processFrame(
 		var nextFrame *protobufs.ClockFrame
 		if nextFrame, err = e.prove(latestFrame); err != nil {
 			e.logger.Error("could not prove", zap.Error(err))
+			e.stateMx.Lock()
 			e.state = consensus.EngineStateCollecting
+			e.stateMx.Unlock()
 			return latestFrame
 		}
 
@@ -116,7 +118,9 @@ func (e *DataClockConsensusEngine) processFrame(
 
 		if err = e.publishProof(nextFrame); err != nil {
 			e.logger.Error("could not publish", zap.Error(err))
+			e.stateMx.Lock()
 			e.state = consensus.EngineStateCollecting
+			e.stateMx.Unlock()
 		}
 
 		return nextFrame

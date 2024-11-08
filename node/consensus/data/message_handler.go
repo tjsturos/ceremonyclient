@@ -19,7 +19,7 @@ import (
 )
 
 func (e *DataClockConsensusEngine) runFrameMessageHandler() {
-	for e.state < consensus.EngineStateStopping {
+	for e.GetState() < consensus.EngineStateStopping {
 		select {
 		case message := <-e.frameMessageProcessorCh:
 			e.logger.Debug("handling frame message")
@@ -55,7 +55,7 @@ func (e *DataClockConsensusEngine) runFrameMessageHandler() {
 }
 
 func (e *DataClockConsensusEngine) runTxMessageHandler() {
-	for e.state < consensus.EngineStateStopping {
+	for e.GetState() < consensus.EngineStateStopping {
 		select {
 		case message := <-e.txMessageProcessorCh:
 			e.logger.Debug("handling tx message")
@@ -127,7 +127,7 @@ func (e *DataClockConsensusEngine) runTxMessageHandler() {
 }
 
 func (e *DataClockConsensusEngine) runInfoMessageHandler() {
-	for e.state < consensus.EngineStateStopping {
+	for e.GetState() < consensus.EngineStateStopping {
 		select {
 		case message := <-e.infoMessageProcessorCh:
 			e.logger.Debug("handling info message")

@@ -212,7 +212,6 @@ func NewTokenExecutionEngine(
 		report,
 		intrinsicFilter,
 		seed,
-		peerSeniority,
 	)
 
 	peerId := e.pubSub.GetPeerID()

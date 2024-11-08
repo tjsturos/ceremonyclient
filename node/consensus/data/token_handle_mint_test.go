@@ -130,7 +130,6 @@ func TestHandlePreMidnightMint(t *testing.T) {
 		masterTimeReel:            nil,
 		dataTimeReel:              &qtime.DataTimeReel{},
 		peerInfoManager:           nil,
-		peerSeniority:             newFromMap(map[string]uint64{}),
 		frameMessageProcessorCh:   make(chan *pb.Message),
 		txMessageProcessorCh:      make(chan *pb.Message),
 		infoMessageProcessorCh:    make(chan *pb.Message),

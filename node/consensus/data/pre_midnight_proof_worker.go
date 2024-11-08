@@ -36,7 +36,7 @@ func (e *DataClockConsensusEngine) runPreMidnightProofWorker() {
 	}
 
 	for {
-		if e.state < consensus.EngineStateCollecting {
+		if e.GetState() < consensus.EngineStateCollecting {
 			e.logger.Info("waiting for node to finish starting")
 			time.Sleep(10 * time.Second)
 			continue
@@ -95,7 +95,8 @@ func (e *DataClockConsensusEngine) runPreMidnightProofWorker() {
 		time.Sleep(10 * time.Second)
 	}
 	for {
-		if e.state >= consensus.EngineStateStopping || e.state == consensus.EngineStateStopped {
+		state := e.GetState()
+		if state >= consensus.EngineStateStopping || state == consensus.EngineStateStopped {
 			break
 		}
 		_, prfs, err := e.coinStore.GetPreCoinProofsForOwner(addr)

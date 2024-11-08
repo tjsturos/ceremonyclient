@@ -6,7 +6,6 @@ import (
 	"crypto"
 	"encoding/binary"
 	"fmt"
-	"math/big"
 	"math/rand"
 	"sync"
 	"time"
@@ -71,6 +70,7 @@ type DataClockConsensusEngine struct {
 	config                      *config.Config
 	logger                      *zap.Logger
 	state                       consensus.EngineState
+	stateMx                     sync.RWMutex
 	clockStore                  store.ClockStore
 	coinStore                   store.CoinStore
 	dataProofStore              store.DataProofStore
@@ -119,35 +119,12 @@ type DataClockConsensusEngine struct {
 	peerMapMx                      sync.RWMutex
 	peerAnnounceMapMx              sync.Mutex
 	lastKeyBundleAnnouncementFrame uint64
-	peerSeniority                  *peerSeniority
 	peerMap                        map[string]*peerInfo
 	uncooperativePeersMap          map[string]*peerInfo
 	frameMessageProcessorCh        chan *pb.Message
 	txMessageProcessorCh           chan *pb.Message
 	infoMessageProcessorCh         chan *pb.Message
 	report                         *protobufs.SelfTestReport
-}
-
-type peerSeniorityItem struct {
-	seniority uint64
-	addr      string
-}
-
-type peerSeniority map[string]peerSeniorityItem
-
-func newFromMap(m map[string]uint64) *peerSeniority {
-	s := &peerSeniority{}
-	for k, v := range m {
-		(*s)[k] = peerSeniorityItem{
-			seniority: v,
-			addr:      k,
-		}
-	}
-	return s
-}
-
-func (p peerSeniorityItem) Priority() *big.Int {
-	return big.NewInt(int64(p.seniority))
 }
 
 var _ consensus.DataConsensusEngine = (*DataClockConsensusEngine)(nil)
@@ -169,7 +146,6 @@ func NewDataClockConsensusEngine(
 	report *protobufs.SelfTestReport,
 	filter []byte,
 	seed []byte,
-	peerSeniority map[string]uint64,
 ) *DataClockConsensusEngine {
 	if logger == nil {
 		panic(errors.New("logger is nil"))
@@ -276,7 +252,6 @@ func NewDataClockConsensusEngine(
 		masterTimeReel:            masterTimeReel,
 		dataTimeReel:              dataTimeReel,
 		peerInfoManager:           peerInfoManager,
-		peerSeniority:             newFromMap(peerSeniority),
 		frameMessageProcessorCh:   make(chan *pb.Message),
 		txMessageProcessorCh:      make(chan *pb.Message),
 		infoMessageProcessorCh:    make(chan *pb.Message),
@@ -305,9 +280,13 @@ func NewDataClockConsensusEngine(
 
 func (e *DataClockConsensusEngine) Start() <-chan error {
 	e.logger.Info("starting data consensus engine")
+	e.stateMx.Lock()
 	e.state = consensus.EngineStateStarting
+	e.stateMx.Unlock()
 	errChan := make(chan error)
+	e.stateMx.Lock()
 	e.state = consensus.EngineStateLoading
+	e.stateMx.Unlock()
 
 	e.logger.Info("loading last seen state")
 	err := e.dataTimeReel.Start()
@@ -363,7 +342,9 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 		}
 	}()
 
+	e.stateMx.Lock()
 	e.state = consensus.EngineStateCollecting
+	e.stateMx.Unlock()
 
 	go func() {
 		const baseDuration = 2 * time.Minute
@@ -374,7 +355,7 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 			panic(err)
 		}
 		source := rand.New(rand.NewSource(rand.Int63()))
-		for e.state < consensus.EngineStateStopping {
+		for e.GetState() < consensus.EngineStateStopping {
 			// Use exponential backoff with jitter in order to avoid hammering the bootstrappers.
 			time.Sleep(
 				backoff.FullJitter(
@@ -574,7 +555,7 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 
 		var previousTree *mt.MerkleTree
 
-		for e.state < consensus.EngineStateStopping {
+		for e.GetState() < consensus.EngineStateStopping {
 			nextFrame, err := e.dataTimeReel.Head()
 			if err != nil {
 				panic(err)
@@ -728,7 +709,9 @@ func (e *DataClockConsensusEngine) PerformTimeProof(
 
 func (e *DataClockConsensusEngine) Stop(force bool) <-chan error {
 	e.logger.Info("stopping ceremony consensus engine")
+	e.stateMx.Lock()
 	e.state = consensus.EngineStateStopping
+	e.stateMx.Unlock()
 	errChan := make(chan error)
 
 	msg := []byte("pause")
@@ -777,7 +760,9 @@ func (e *DataClockConsensusEngine) Stop(force bool) <-chan error {
 	e.logger.Info("execution engines stopped")
 
 	e.dataTimeReel.Stop()
+	e.stateMx.Lock()
 	e.state = consensus.EngineStateStopped
+	e.stateMx.Unlock()
 
 	e.engineMx.Lock()
 	defer e.engineMx.Unlock()
@@ -801,6 +786,8 @@ func (e *DataClockConsensusEngine) GetFrame() *protobufs.ClockFrame {
 }
 
 func (e *DataClockConsensusEngine) GetState() consensus.EngineState {
+	e.stateMx.RLock()
+	defer e.stateMx.RUnlock()
 	return e.state
 }
 

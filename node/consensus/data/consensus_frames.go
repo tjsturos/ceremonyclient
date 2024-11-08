@@ -3,7 +3,6 @@ package data
 import (
 	"bytes"
 	"context"
-	"encoding/binary"
 	"time"
 
 	"golang.org/x/crypto/sha3"
@@ -108,41 +107,6 @@ func (e *DataClockConsensusEngine) prove(
 		zap.Int("failed", len(invalidTransactions.Requests)),
 	)
 	e.stagedTransactions = &protobufs.TokenRequests{}
-	// reapply failed mints caused by two sends in the same frame
-	minters := map[string]uint64{}
-	for _, suc := range validTransactions.Requests {
-		switch t := suc.Request.(type) {
-		case *protobufs.TokenRequest_Mint:
-			if len(t.Mint.Proofs) >= 3 {
-				minters[string(t.Mint.Signature.PublicKey.KeyValue)] =
-					binary.BigEndian.Uint64(t.Mint.Proofs[2])
-			}
-		}
-	}
-	next := map[string]*protobufs.TokenRequest{}
-	for _, inv := range invalidTransactions.Requests {
-		switch t := inv.Request.(type) {
-		case *protobufs.TokenRequest_Mint:
-			if t.Mint != nil && t.Mint.Signature != nil &&
-				t.Mint.Signature.PublicKey != nil &&
-				t.Mint.Signature.PublicKey.KeyValue != nil && len(t.Mint.Proofs) >= 3 {
-				frameNumber := binary.BigEndian.Uint64(t.Mint.Proofs[2])
-				if priorFrame, ok := minters[string(
-					t.Mint.Signature.PublicKey.KeyValue,
-				)]; ok && priorFrame < frameNumber {
-					next[string(
-						t.Mint.Signature.PublicKey.KeyValue,
-					)] = inv
-				}
-			}
-		}
-	}
-	for _, v := range next {
-		e.stagedTransactions.Requests = append(
-			e.stagedTransactions.Requests,
-			v,
-		)
-	}
 	e.stagedTransactionsMx.Unlock()
 
 	outputState, err := app.MaterializeStateFromApplication()

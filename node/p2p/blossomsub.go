@@ -398,7 +398,7 @@ func NewBlossomSub(
 			BitmaskScoreCap:             0,
 			IPColocationFactorWeight:    0,
 			IPColocationFactorThreshold: 6,
-			BehaviourPenaltyWeight:      0,
+			BehaviourPenaltyWeight:      -10,
 			BehaviourPenaltyThreshold:   100,
 			BehaviourPenaltyDecay:       .5,
 			DecayInterval:               10 * time.Second,
