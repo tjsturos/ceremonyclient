@@ -2434,6 +2434,61 @@ func (x *PreCoinProof) GetOwner() *AccountRef {
 	return nil
 }
 
+type ProverPenalty struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Quantity uint64      `protobuf:"varint,1,opt,name=quantity,proto3" json:"quantity,omitempty"`
+	Account  *AccountRef `protobuf:"bytes,2,opt,name=account,proto3" json:"account,omitempty"`
+}
+
+func (x *ProverPenalty) Reset() {
+	*x = ProverPenalty{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_node_proto_msgTypes[38]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ProverPenalty) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProverPenalty) ProtoMessage() {}
+
+func (x *ProverPenalty) ProtoReflect() protoreflect.Message {
+	mi := &file_node_proto_msgTypes[38]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProverPenalty.ProtoReflect.Descriptor instead.
+func (*ProverPenalty) Descriptor() ([]byte, []int) {
+	return file_node_proto_rawDescGZIP(), []int{38}
+}
+
+func (x *ProverPenalty) GetQuantity() uint64 {
+	if x != nil {
+		return x.Quantity
+	}
+	return 0
+}
+
+func (x *ProverPenalty) GetAccount() *AccountRef {
+	if x != nil {
+		return x.Account
+	}
+	return nil
+}
+
 type TokenOutput struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -2450,13 +2505,14 @@ type TokenOutput struct {
 	//	*TokenOutput_Leave
 	//	*TokenOutput_Pause
 	//	*TokenOutput_Resume
+	//	*TokenOutput_Penalty
 	Output isTokenOutput_Output `protobuf_oneof:"output"`
 }
 
 func (x *TokenOutput) Reset() {
 	*x = TokenOutput{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[38]
+		mi := &file_node_proto_msgTypes[39]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2469,7 +2525,7 @@ func (x *TokenOutput) String() string {
 func (*TokenOutput) ProtoMessage() {}
 
 func (x *TokenOutput) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[38]
+	mi := &file_node_proto_msgTypes[39]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2482,7 +2538,7 @@ func (x *TokenOutput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TokenOutput.ProtoReflect.Descriptor instead.
 func (*TokenOutput) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{38}
+	return file_node_proto_rawDescGZIP(), []int{39}
 }
 
 func (m *TokenOutput) GetOutput() isTokenOutput_Output {
@@ -2555,6 +2611,13 @@ func (x *TokenOutput) GetResume() *AnnounceProverResume {
 	return nil
 }
 
+func (x *TokenOutput) GetPenalty() *ProverPenalty {
+	if x, ok := x.GetOutput().(*TokenOutput_Penalty); ok {
+		return x.Penalty
+	}
+	return nil
+}
+
 type isTokenOutput_Output interface {
 	isTokenOutput_Output()
 }
@@ -2595,6 +2658,10 @@ type TokenOutput_Resume struct {
 	Resume *AnnounceProverResume `protobuf:"bytes,9,opt,name=resume,proto3,oneof"`
 }
 
+type TokenOutput_Penalty struct {
+	Penalty *ProverPenalty `protobuf:"bytes,10,opt,name=penalty,proto3,oneof"`
+}
+
 func (*TokenOutput_Coin) isTokenOutput_Output() {}
 
 func (*TokenOutput_Proof) isTokenOutput_Output() {}
@@ -2613,6 +2680,8 @@ func (*TokenOutput_Pause) isTokenOutput_Output() {}
 
 func (*TokenOutput_Resume) isTokenOutput_Output() {}
 
+func (*TokenOutput_Penalty) isTokenOutput_Output() {}
+
 type TokenOutputs struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -2624,7 +2693,7 @@ type TokenOutputs struct {
 func (x *TokenOutputs) Reset() {
 	*x = TokenOutputs{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[39]
+		mi := &file_node_proto_msgTypes[40]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2637,7 +2706,7 @@ func (x *TokenOutputs) String() string {
 func (*TokenOutputs) ProtoMessage() {}
 
 func (x *TokenOutputs) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[39]
+	mi := &file_node_proto_msgTypes[40]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2650,7 +2719,7 @@ func (x *TokenOutputs) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TokenOutputs.ProtoReflect.Descriptor instead.
 func (*TokenOutputs) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{39}
+	return file_node_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *TokenOutputs) GetOutputs() []*TokenOutput {
@@ -2671,7 +2740,7 @@ type CoinRef struct {
 func (x *CoinRef) Reset() {
 	*x = CoinRef{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[40]
+		mi := &file_node_proto_msgTypes[41]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2684,7 +2753,7 @@ func (x *CoinRef) String() string {
 func (*CoinRef) ProtoMessage() {}
 
 func (x *CoinRef) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[40]
+	mi := &file_node_proto_msgTypes[41]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2697,7 +2766,7 @@ func (x *CoinRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CoinRef.ProtoReflect.Descriptor instead.
 func (*CoinRef) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{40}
+	return file_node_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *CoinRef) GetAddress() []byte {
@@ -2718,7 +2787,7 @@ type PendingTransactionRef struct {
 func (x *PendingTransactionRef) Reset() {
 	*x = PendingTransactionRef{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[41]
+		mi := &file_node_proto_msgTypes[42]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2731,7 +2800,7 @@ func (x *PendingTransactionRef) String() string {
 func (*PendingTransactionRef) ProtoMessage() {}
 
 func (x *PendingTransactionRef) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[41]
+	mi := &file_node_proto_msgTypes[42]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2744,7 +2813,7 @@ func (x *PendingTransactionRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PendingTransactionRef.ProtoReflect.Descriptor instead.
 func (*PendingTransactionRef) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{41}
+	return file_node_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *PendingTransactionRef) GetAddress() []byte {
@@ -2765,7 +2834,7 @@ type KeyRef struct {
 func (x *KeyRef) Reset() {
 	*x = KeyRef{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[42]
+		mi := &file_node_proto_msgTypes[43]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2778,7 +2847,7 @@ func (x *KeyRef) String() string {
 func (*KeyRef) ProtoMessage() {}
 
 func (x *KeyRef) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[42]
+	mi := &file_node_proto_msgTypes[43]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2791,7 +2860,7 @@ func (x *KeyRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyRef.ProtoReflect.Descriptor instead.
 func (*KeyRef) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{42}
+	return file_node_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *KeyRef) GetAddress() []byte {
@@ -2814,7 +2883,7 @@ type Signature struct {
 func (x *Signature) Reset() {
 	*x = Signature{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[43]
+		mi := &file_node_proto_msgTypes[44]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2827,7 +2896,7 @@ func (x *Signature) String() string {
 func (*Signature) ProtoMessage() {}
 
 func (x *Signature) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[43]
+	mi := &file_node_proto_msgTypes[44]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2840,7 +2909,7 @@ func (x *Signature) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Signature.ProtoReflect.Descriptor instead.
 func (*Signature) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{43}
+	return file_node_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *Signature) GetSignatureType() uint32 {
@@ -2875,7 +2944,7 @@ type PeerManifestsResponse struct {
 func (x *PeerManifestsResponse) Reset() {
 	*x = PeerManifestsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[44]
+		mi := &file_node_proto_msgTypes[45]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2888,7 +2957,7 @@ func (x *PeerManifestsResponse) String() string {
 func (*PeerManifestsResponse) ProtoMessage() {}
 
 func (x *PeerManifestsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[44]
+	mi := &file_node_proto_msgTypes[45]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2901,7 +2970,7 @@ func (x *PeerManifestsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PeerManifestsResponse.ProtoReflect.Descriptor instead.
 func (*PeerManifestsResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{44}
+	return file_node_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *PeerManifestsResponse) GetPeerManifests() []*PeerManifest {
@@ -2923,7 +2992,7 @@ type AcceptPendingTransactionRequest struct {
 func (x *AcceptPendingTransactionRequest) Reset() {
 	*x = AcceptPendingTransactionRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[45]
+		mi := &file_node_proto_msgTypes[46]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2936,7 +3005,7 @@ func (x *AcceptPendingTransactionRequest) String() string {
 func (*AcceptPendingTransactionRequest) ProtoMessage() {}
 
 func (x *AcceptPendingTransactionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[45]
+	mi := &file_node_proto_msgTypes[46]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2949,7 +3018,7 @@ func (x *AcceptPendingTransactionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AcceptPendingTransactionRequest.ProtoReflect.Descriptor instead.
 func (*AcceptPendingTransactionRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{45}
+	return file_node_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *AcceptPendingTransactionRequest) GetPendingTransaction() *PendingTransactionRef {
@@ -2981,7 +3050,7 @@ type AllowAccountRequest struct {
 func (x *AllowAccountRequest) Reset() {
 	*x = AllowAccountRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[46]
+		mi := &file_node_proto_msgTypes[47]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2994,7 +3063,7 @@ func (x *AllowAccountRequest) String() string {
 func (*AllowAccountRequest) ProtoMessage() {}
 
 func (x *AllowAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[46]
+	mi := &file_node_proto_msgTypes[47]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3007,7 +3076,7 @@ func (x *AllowAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AllowAccountRequest.ProtoReflect.Descriptor instead.
 func (*AllowAccountRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{46}
+	return file_node_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *AllowAccountRequest) GetOfAccount() *AccountRef {
@@ -3061,7 +3130,7 @@ type AllowCoinRequest struct {
 func (x *AllowCoinRequest) Reset() {
 	*x = AllowCoinRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[47]
+		mi := &file_node_proto_msgTypes[48]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3074,7 +3143,7 @@ func (x *AllowCoinRequest) String() string {
 func (*AllowCoinRequest) ProtoMessage() {}
 
 func (x *AllowCoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[47]
+	mi := &file_node_proto_msgTypes[48]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3087,7 +3156,7 @@ func (x *AllowCoinRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AllowCoinRequest.ProtoReflect.Descriptor instead.
 func (*AllowCoinRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{47}
+	return file_node_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *AllowCoinRequest) GetOfCoin() *CoinRef {
@@ -3145,7 +3214,7 @@ type BalanceAccountRequest struct {
 func (x *BalanceAccountRequest) Reset() {
 	*x = BalanceAccountRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[48]
+		mi := &file_node_proto_msgTypes[49]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3158,7 +3227,7 @@ func (x *BalanceAccountRequest) String() string {
 func (*BalanceAccountRequest) ProtoMessage() {}
 
 func (x *BalanceAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[48]
+	mi := &file_node_proto_msgTypes[49]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3171,7 +3240,7 @@ func (x *BalanceAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BalanceAccountRequest.ProtoReflect.Descriptor instead.
 func (*BalanceAccountRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{48}
+	return file_node_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *BalanceAccountRequest) GetAccount() *AccountRef {
@@ -3208,7 +3277,7 @@ type CoinsAccountRequest struct {
 func (x *CoinsAccountRequest) Reset() {
 	*x = CoinsAccountRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[49]
+		mi := &file_node_proto_msgTypes[50]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3221,7 +3290,7 @@ func (x *CoinsAccountRequest) String() string {
 func (*CoinsAccountRequest) ProtoMessage() {}
 
 func (x *CoinsAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[49]
+	mi := &file_node_proto_msgTypes[50]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3234,7 +3303,7 @@ func (x *CoinsAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CoinsAccountRequest.ProtoReflect.Descriptor instead.
 func (*CoinsAccountRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{49}
+	return file_node_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *CoinsAccountRequest) GetAccount() *AccountRef {
@@ -3271,7 +3340,7 @@ type PendingTransactionsAccountRequest struct {
 func (x *PendingTransactionsAccountRequest) Reset() {
 	*x = PendingTransactionsAccountRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[50]
+		mi := &file_node_proto_msgTypes[51]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3284,7 +3353,7 @@ func (x *PendingTransactionsAccountRequest) String() string {
 func (*PendingTransactionsAccountRequest) ProtoMessage() {}
 
 func (x *PendingTransactionsAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[50]
+	mi := &file_node_proto_msgTypes[51]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3297,7 +3366,7 @@ func (x *PendingTransactionsAccountRequest) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use PendingTransactionsAccountRequest.ProtoReflect.Descriptor instead.
 func (*PendingTransactionsAccountRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{50}
+	return file_node_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *PendingTransactionsAccountRequest) GetAccount() *AccountRef {
@@ -3335,7 +3404,7 @@ type IntersectCoinRequest struct {
 func (x *IntersectCoinRequest) Reset() {
 	*x = IntersectCoinRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[51]
+		mi := &file_node_proto_msgTypes[52]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3348,7 +3417,7 @@ func (x *IntersectCoinRequest) String() string {
 func (*IntersectCoinRequest) ProtoMessage() {}
 
 func (x *IntersectCoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[51]
+	mi := &file_node_proto_msgTypes[52]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3361,7 +3430,7 @@ func (x *IntersectCoinRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IntersectCoinRequest.ProtoReflect.Descriptor instead.
 func (*IntersectCoinRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{51}
+	return file_node_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *IntersectCoinRequest) GetAddresses() [][]byte {
@@ -3406,7 +3475,7 @@ type MergeCoinRequest struct {
 func (x *MergeCoinRequest) Reset() {
 	*x = MergeCoinRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[52]
+		mi := &file_node_proto_msgTypes[53]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3419,7 +3488,7 @@ func (x *MergeCoinRequest) String() string {
 func (*MergeCoinRequest) ProtoMessage() {}
 
 func (x *MergeCoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[52]
+	mi := &file_node_proto_msgTypes[53]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3432,7 +3501,7 @@ func (x *MergeCoinRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MergeCoinRequest.ProtoReflect.Descriptor instead.
 func (*MergeCoinRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{52}
+	return file_node_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *MergeCoinRequest) GetCoins() []*CoinRef {
@@ -3476,7 +3545,7 @@ type MintCoinRequest struct {
 func (x *MintCoinRequest) Reset() {
 	*x = MintCoinRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[53]
+		mi := &file_node_proto_msgTypes[54]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3489,7 +3558,7 @@ func (x *MintCoinRequest) String() string {
 func (*MintCoinRequest) ProtoMessage() {}
 
 func (x *MintCoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[53]
+	mi := &file_node_proto_msgTypes[54]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3502,7 +3571,7 @@ func (x *MintCoinRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MintCoinRequest.ProtoReflect.Descriptor instead.
 func (*MintCoinRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{53}
+	return file_node_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *MintCoinRequest) GetProofs() [][]byte {
@@ -3539,7 +3608,7 @@ type MutualReceiveCoinRequest struct {
 func (x *MutualReceiveCoinRequest) Reset() {
 	*x = MutualReceiveCoinRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[54]
+		mi := &file_node_proto_msgTypes[55]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3552,7 +3621,7 @@ func (x *MutualReceiveCoinRequest) String() string {
 func (*MutualReceiveCoinRequest) ProtoMessage() {}
 
 func (x *MutualReceiveCoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[54]
+	mi := &file_node_proto_msgTypes[55]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3565,7 +3634,7 @@ func (x *MutualReceiveCoinRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutualReceiveCoinRequest.ProtoReflect.Descriptor instead.
 func (*MutualReceiveCoinRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{54}
+	return file_node_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *MutualReceiveCoinRequest) GetToAccount() *AccountRef {
@@ -3604,7 +3673,7 @@ type MutualTransferCoinRequest struct {
 func (x *MutualTransferCoinRequest) Reset() {
 	*x = MutualTransferCoinRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[55]
+		mi := &file_node_proto_msgTypes[56]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3617,7 +3686,7 @@ func (x *MutualTransferCoinRequest) String() string {
 func (*MutualTransferCoinRequest) ProtoMessage() {}
 
 func (x *MutualTransferCoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[55]
+	mi := &file_node_proto_msgTypes[56]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3630,7 +3699,7 @@ func (x *MutualTransferCoinRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutualTransferCoinRequest.ProtoReflect.Descriptor instead.
 func (*MutualTransferCoinRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{55}
+	return file_node_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *MutualTransferCoinRequest) GetRendezvous() []byte {
@@ -3682,7 +3751,7 @@ type RevokeAccountRequest struct {
 func (x *RevokeAccountRequest) Reset() {
 	*x = RevokeAccountRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[56]
+		mi := &file_node_proto_msgTypes[57]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3695,7 +3764,7 @@ func (x *RevokeAccountRequest) String() string {
 func (*RevokeAccountRequest) ProtoMessage() {}
 
 func (x *RevokeAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[56]
+	mi := &file_node_proto_msgTypes[57]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3708,7 +3777,7 @@ func (x *RevokeAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevokeAccountRequest.ProtoReflect.Descriptor instead.
 func (*RevokeAccountRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{56}
+	return file_node_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *RevokeAccountRequest) GetOfAccount() *AccountRef {
@@ -3754,7 +3823,7 @@ type RevokeCoinRequest struct {
 func (x *RevokeCoinRequest) Reset() {
 	*x = RevokeCoinRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[57]
+		mi := &file_node_proto_msgTypes[58]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3767,7 +3836,7 @@ func (x *RevokeCoinRequest) String() string {
 func (*RevokeCoinRequest) ProtoMessage() {}
 
 func (x *RevokeCoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[57]
+	mi := &file_node_proto_msgTypes[58]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3780,7 +3849,7 @@ func (x *RevokeCoinRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevokeCoinRequest.ProtoReflect.Descriptor instead.
 func (*RevokeCoinRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{57}
+	return file_node_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *RevokeCoinRequest) GetOfCoin() *CoinRef {
@@ -3833,7 +3902,7 @@ type SplitCoinRequest struct {
 func (x *SplitCoinRequest) Reset() {
 	*x = SplitCoinRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[58]
+		mi := &file_node_proto_msgTypes[59]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3846,7 +3915,7 @@ func (x *SplitCoinRequest) String() string {
 func (*SplitCoinRequest) ProtoMessage() {}
 
 func (x *SplitCoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[58]
+	mi := &file_node_proto_msgTypes[59]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3859,7 +3928,7 @@ func (x *SplitCoinRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SplitCoinRequest.ProtoReflect.Descriptor instead.
 func (*SplitCoinRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{58}
+	return file_node_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *SplitCoinRequest) GetOfCoin() *CoinRef {
@@ -3914,7 +3983,7 @@ type TransferCoinRequest struct {
 func (x *TransferCoinRequest) Reset() {
 	*x = TransferCoinRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[59]
+		mi := &file_node_proto_msgTypes[60]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3927,7 +3996,7 @@ func (x *TransferCoinRequest) String() string {
 func (*TransferCoinRequest) ProtoMessage() {}
 
 func (x *TransferCoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[59]
+	mi := &file_node_proto_msgTypes[60]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3940,7 +4009,7 @@ func (x *TransferCoinRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TransferCoinRequest.ProtoReflect.Descriptor instead.
 func (*TransferCoinRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{59}
+	return file_node_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *TransferCoinRequest) GetToAccount() *AccountRef {
@@ -4005,7 +4074,7 @@ type ApprovePendingTransactionRequest struct {
 func (x *ApprovePendingTransactionRequest) Reset() {
 	*x = ApprovePendingTransactionRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[60]
+		mi := &file_node_proto_msgTypes[61]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4018,7 +4087,7 @@ func (x *ApprovePendingTransactionRequest) String() string {
 func (*ApprovePendingTransactionRequest) ProtoMessage() {}
 
 func (x *ApprovePendingTransactionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[60]
+	mi := &file_node_proto_msgTypes[61]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4031,7 +4100,7 @@ func (x *ApprovePendingTransactionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApprovePendingTransactionRequest.ProtoReflect.Descriptor instead.
 func (*ApprovePendingTransactionRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{60}
+	return file_node_proto_rawDescGZIP(), []int{61}
 }
 
 func (x *ApprovePendingTransactionRequest) GetPendingTransaction() *PendingTransactionRef {
@@ -4068,7 +4137,7 @@ type RejectPendingTransactionRequest struct {
 func (x *RejectPendingTransactionRequest) Reset() {
 	*x = RejectPendingTransactionRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[61]
+		mi := &file_node_proto_msgTypes[62]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4081,7 +4150,7 @@ func (x *RejectPendingTransactionRequest) String() string {
 func (*RejectPendingTransactionRequest) ProtoMessage() {}
 
 func (x *RejectPendingTransactionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[61]
+	mi := &file_node_proto_msgTypes[62]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4094,7 +4163,7 @@ func (x *RejectPendingTransactionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RejectPendingTransactionRequest.ProtoReflect.Descriptor instead.
 func (*RejectPendingTransactionRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{61}
+	return file_node_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *RejectPendingTransactionRequest) GetPendingTransaction() *PendingTransactionRef {
@@ -4130,7 +4199,7 @@ type InlineKey struct {
 func (x *InlineKey) Reset() {
 	*x = InlineKey{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[62]
+		mi := &file_node_proto_msgTypes[63]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4143,7 +4212,7 @@ func (x *InlineKey) String() string {
 func (*InlineKey) ProtoMessage() {}
 
 func (x *InlineKey) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[62]
+	mi := &file_node_proto_msgTypes[63]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4156,7 +4225,7 @@ func (x *InlineKey) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InlineKey.ProtoReflect.Descriptor instead.
 func (*InlineKey) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{62}
+	return file_node_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *InlineKey) GetRef() []byte {
@@ -4184,7 +4253,7 @@ type KeyRing struct {
 func (x *KeyRing) Reset() {
 	*x = KeyRing{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[63]
+		mi := &file_node_proto_msgTypes[64]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4197,7 +4266,7 @@ func (x *KeyRing) String() string {
 func (*KeyRing) ProtoMessage() {}
 
 func (x *KeyRing) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[63]
+	mi := &file_node_proto_msgTypes[64]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4210,7 +4279,7 @@ func (x *KeyRing) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyRing.ProtoReflect.Descriptor instead.
 func (*KeyRing) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{63}
+	return file_node_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *KeyRing) GetKeys() []*InlineKey {
@@ -4232,7 +4301,7 @@ type Confirmation struct {
 func (x *Confirmation) Reset() {
 	*x = Confirmation{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[64]
+		mi := &file_node_proto_msgTypes[65]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4245,7 +4314,7 @@ func (x *Confirmation) String() string {
 func (*Confirmation) ProtoMessage() {}
 
 func (x *Confirmation) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[64]
+	mi := &file_node_proto_msgTypes[65]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4258,7 +4327,7 @@ func (x *Confirmation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Confirmation.ProtoReflect.Descriptor instead.
 func (*Confirmation) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{64}
+	return file_node_proto_rawDescGZIP(), []int{65}
 }
 
 func (x *Confirmation) GetMessageId() []byte {
@@ -4287,7 +4356,7 @@ type DeliveryData struct {
 func (x *DeliveryData) Reset() {
 	*x = DeliveryData{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[65]
+		mi := &file_node_proto_msgTypes[66]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4300,7 +4369,7 @@ func (x *DeliveryData) String() string {
 func (*DeliveryData) ProtoMessage() {}
 
 func (x *DeliveryData) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[65]
+	mi := &file_node_proto_msgTypes[66]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4313,7 +4382,7 @@ func (x *DeliveryData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryData.ProtoReflect.Descriptor instead.
 func (*DeliveryData) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{65}
+	return file_node_proto_rawDescGZIP(), []int{66}
 }
 
 func (x *DeliveryData) GetSharedKey() *InlineKey {
@@ -4342,7 +4411,7 @@ type DeliveryMethod struct {
 func (x *DeliveryMethod) Reset() {
 	*x = DeliveryMethod{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[66]
+		mi := &file_node_proto_msgTypes[67]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4355,7 +4424,7 @@ func (x *DeliveryMethod) String() string {
 func (*DeliveryMethod) ProtoMessage() {}
 
 func (x *DeliveryMethod) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[66]
+	mi := &file_node_proto_msgTypes[67]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4368,7 +4437,7 @@ func (x *DeliveryMethod) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryMethod.ProtoReflect.Descriptor instead.
 func (*DeliveryMethod) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{66}
+	return file_node_proto_rawDescGZIP(), []int{67}
 }
 
 func (x *DeliveryMethod) GetDeliveryType() uint32 {
@@ -4398,7 +4467,7 @@ type DecryptableAllowAccountRequest struct {
 func (x *DecryptableAllowAccountRequest) Reset() {
 	*x = DecryptableAllowAccountRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[67]
+		mi := &file_node_proto_msgTypes[68]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4411,7 +4480,7 @@ func (x *DecryptableAllowAccountRequest) String() string {
 func (*DecryptableAllowAccountRequest) ProtoMessage() {}
 
 func (x *DecryptableAllowAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[67]
+	mi := &file_node_proto_msgTypes[68]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4424,7 +4493,7 @@ func (x *DecryptableAllowAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DecryptableAllowAccountRequest.ProtoReflect.Descriptor instead.
 func (*DecryptableAllowAccountRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{67}
+	return file_node_proto_rawDescGZIP(), []int{68}
 }
 
 func (x *DecryptableAllowAccountRequest) GetRequest() *AllowAccountRequest {
@@ -4460,7 +4529,7 @@ type DecryptableBalanceAccountRequest struct {
 func (x *DecryptableBalanceAccountRequest) Reset() {
 	*x = DecryptableBalanceAccountRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[68]
+		mi := &file_node_proto_msgTypes[69]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4473,7 +4542,7 @@ func (x *DecryptableBalanceAccountRequest) String() string {
 func (*DecryptableBalanceAccountRequest) ProtoMessage() {}
 
 func (x *DecryptableBalanceAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[68]
+	mi := &file_node_proto_msgTypes[69]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4486,7 +4555,7 @@ func (x *DecryptableBalanceAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DecryptableBalanceAccountRequest.ProtoReflect.Descriptor instead.
 func (*DecryptableBalanceAccountRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{68}
+	return file_node_proto_rawDescGZIP(), []int{69}
 }
 
 func (x *DecryptableBalanceAccountRequest) GetRequest() *BalanceAccountRequest {
@@ -4515,7 +4584,7 @@ type DecryptableCoinsAccountRequest struct {
 func (x *DecryptableCoinsAccountRequest) Reset() {
 	*x = DecryptableCoinsAccountRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[69]
+		mi := &file_node_proto_msgTypes[70]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4528,7 +4597,7 @@ func (x *DecryptableCoinsAccountRequest) String() string {
 func (*DecryptableCoinsAccountRequest) ProtoMessage() {}
 
 func (x *DecryptableCoinsAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[69]
+	mi := &file_node_proto_msgTypes[70]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4541,7 +4610,7 @@ func (x *DecryptableCoinsAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DecryptableCoinsAccountRequest.ProtoReflect.Descriptor instead.
 func (*DecryptableCoinsAccountRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{69}
+	return file_node_proto_rawDescGZIP(), []int{70}
 }
 
 func (x *DecryptableCoinsAccountRequest) GetRequest() *CoinsAccountRequest {
@@ -4571,7 +4640,7 @@ type DecryptableRevokeAccountRequest struct {
 func (x *DecryptableRevokeAccountRequest) Reset() {
 	*x = DecryptableRevokeAccountRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[70]
+		mi := &file_node_proto_msgTypes[71]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4584,7 +4653,7 @@ func (x *DecryptableRevokeAccountRequest) String() string {
 func (*DecryptableRevokeAccountRequest) ProtoMessage() {}
 
 func (x *DecryptableRevokeAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[70]
+	mi := &file_node_proto_msgTypes[71]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4597,7 +4666,7 @@ func (x *DecryptableRevokeAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DecryptableRevokeAccountRequest.ProtoReflect.Descriptor instead.
 func (*DecryptableRevokeAccountRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{70}
+	return file_node_proto_rawDescGZIP(), []int{71}
 }
 
 func (x *DecryptableRevokeAccountRequest) GetRequest() *RevokeAccountRequest {
@@ -4634,7 +4703,7 @@ type DecryptablePendingTransactionsAccountRequest struct {
 func (x *DecryptablePendingTransactionsAccountRequest) Reset() {
 	*x = DecryptablePendingTransactionsAccountRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[71]
+		mi := &file_node_proto_msgTypes[72]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4647,7 +4716,7 @@ func (x *DecryptablePendingTransactionsAccountRequest) String() string {
 func (*DecryptablePendingTransactionsAccountRequest) ProtoMessage() {}
 
 func (x *DecryptablePendingTransactionsAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[71]
+	mi := &file_node_proto_msgTypes[72]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4660,7 +4729,7 @@ func (x *DecryptablePendingTransactionsAccountRequest) ProtoReflect() protorefle
 
 // Deprecated: Use DecryptablePendingTransactionsAccountRequest.ProtoReflect.Descriptor instead.
 func (*DecryptablePendingTransactionsAccountRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{71}
+	return file_node_proto_rawDescGZIP(), []int{72}
 }
 
 func (x *DecryptablePendingTransactionsAccountRequest) GetRequest() *PendingTransactionsAccountRequest {
@@ -4697,7 +4766,7 @@ type DecryptableAllowCoinRequest struct {
 func (x *DecryptableAllowCoinRequest) Reset() {
 	*x = DecryptableAllowCoinRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[72]
+		mi := &file_node_proto_msgTypes[73]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4710,7 +4779,7 @@ func (x *DecryptableAllowCoinRequest) String() string {
 func (*DecryptableAllowCoinRequest) ProtoMessage() {}
 
 func (x *DecryptableAllowCoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[72]
+	mi := &file_node_proto_msgTypes[73]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4723,7 +4792,7 @@ func (x *DecryptableAllowCoinRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DecryptableAllowCoinRequest.ProtoReflect.Descriptor instead.
 func (*DecryptableAllowCoinRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{72}
+	return file_node_proto_rawDescGZIP(), []int{73}
 }
 
 func (x *DecryptableAllowCoinRequest) GetRequest() *AllowCoinRequest {
@@ -4760,7 +4829,7 @@ type DecryptableIntersectCoinRequest struct {
 func (x *DecryptableIntersectCoinRequest) Reset() {
 	*x = DecryptableIntersectCoinRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[73]
+		mi := &file_node_proto_msgTypes[74]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4773,7 +4842,7 @@ func (x *DecryptableIntersectCoinRequest) String() string {
 func (*DecryptableIntersectCoinRequest) ProtoMessage() {}
 
 func (x *DecryptableIntersectCoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[73]
+	mi := &file_node_proto_msgTypes[74]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4786,7 +4855,7 @@ func (x *DecryptableIntersectCoinRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DecryptableIntersectCoinRequest.ProtoReflect.Descriptor instead.
 func (*DecryptableIntersectCoinRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{73}
+	return file_node_proto_rawDescGZIP(), []int{74}
 }
 
 func (x *DecryptableIntersectCoinRequest) GetRequest() *IntersectCoinRequest {
@@ -4823,7 +4892,7 @@ type DecryptableMergeCoinRequest struct {
 func (x *DecryptableMergeCoinRequest) Reset() {
 	*x = DecryptableMergeCoinRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[74]
+		mi := &file_node_proto_msgTypes[75]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4836,7 +4905,7 @@ func (x *DecryptableMergeCoinRequest) String() string {
 func (*DecryptableMergeCoinRequest) ProtoMessage() {}
 
 func (x *DecryptableMergeCoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[74]
+	mi := &file_node_proto_msgTypes[75]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4849,7 +4918,7 @@ func (x *DecryptableMergeCoinRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DecryptableMergeCoinRequest.ProtoReflect.Descriptor instead.
 func (*DecryptableMergeCoinRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{74}
+	return file_node_proto_rawDescGZIP(), []int{75}
 }
 
 func (x *DecryptableMergeCoinRequest) GetRequest() *MergeCoinRequest {
@@ -4886,7 +4955,7 @@ type DecryptableMintCoinRequest struct {
 func (x *DecryptableMintCoinRequest) Reset() {
 	*x = DecryptableMintCoinRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[75]
+		mi := &file_node_proto_msgTypes[76]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4899,7 +4968,7 @@ func (x *DecryptableMintCoinRequest) String() string {
 func (*DecryptableMintCoinRequest) ProtoMessage() {}
 
 func (x *DecryptableMintCoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[75]
+	mi := &file_node_proto_msgTypes[76]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4912,7 +4981,7 @@ func (x *DecryptableMintCoinRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DecryptableMintCoinRequest.ProtoReflect.Descriptor instead.
 func (*DecryptableMintCoinRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{75}
+	return file_node_proto_rawDescGZIP(), []int{76}
 }
 
 func (x *DecryptableMintCoinRequest) GetRequest() *MintCoinRequest {
@@ -4949,7 +5018,7 @@ type DecryptableMutualReceiveCoinRequest struct {
 func (x *DecryptableMutualReceiveCoinRequest) Reset() {
 	*x = DecryptableMutualReceiveCoinRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[76]
+		mi := &file_node_proto_msgTypes[77]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4962,7 +5031,7 @@ func (x *DecryptableMutualReceiveCoinRequest) String() string {
 func (*DecryptableMutualReceiveCoinRequest) ProtoMessage() {}
 
 func (x *DecryptableMutualReceiveCoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[76]
+	mi := &file_node_proto_msgTypes[77]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4975,7 +5044,7 @@ func (x *DecryptableMutualReceiveCoinRequest) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use DecryptableMutualReceiveCoinRequest.ProtoReflect.Descriptor instead.
 func (*DecryptableMutualReceiveCoinRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{76}
+	return file_node_proto_rawDescGZIP(), []int{77}
 }
 
 func (x *DecryptableMutualReceiveCoinRequest) GetRequest() *MutualReceiveCoinRequest {
@@ -5012,7 +5081,7 @@ type DecryptableMutualTransferCoinRequest struct {
 func (x *DecryptableMutualTransferCoinRequest) Reset() {
 	*x = DecryptableMutualTransferCoinRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[77]
+		mi := &file_node_proto_msgTypes[78]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5025,7 +5094,7 @@ func (x *DecryptableMutualTransferCoinRequest) String() string {
 func (*DecryptableMutualTransferCoinRequest) ProtoMessage() {}
 
 func (x *DecryptableMutualTransferCoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[77]
+	mi := &file_node_proto_msgTypes[78]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5038,7 +5107,7 @@ func (x *DecryptableMutualTransferCoinRequest) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use DecryptableMutualTransferCoinRequest.ProtoReflect.Descriptor instead.
 func (*DecryptableMutualTransferCoinRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{77}
+	return file_node_proto_rawDescGZIP(), []int{78}
 }
 
 func (x *DecryptableMutualTransferCoinRequest) GetRequest() *MutualTransferCoinRequest {
@@ -5075,7 +5144,7 @@ type DecryptableRevokeCoinRequest struct {
 func (x *DecryptableRevokeCoinRequest) Reset() {
 	*x = DecryptableRevokeCoinRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[78]
+		mi := &file_node_proto_msgTypes[79]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5088,7 +5157,7 @@ func (x *DecryptableRevokeCoinRequest) String() string {
 func (*DecryptableRevokeCoinRequest) ProtoMessage() {}
 
 func (x *DecryptableRevokeCoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[78]
+	mi := &file_node_proto_msgTypes[79]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5101,7 +5170,7 @@ func (x *DecryptableRevokeCoinRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DecryptableRevokeCoinRequest.ProtoReflect.Descriptor instead.
 func (*DecryptableRevokeCoinRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{78}
+	return file_node_proto_rawDescGZIP(), []int{79}
 }
 
 func (x *DecryptableRevokeCoinRequest) GetRequest() *RevokeCoinRequest {
@@ -5138,7 +5207,7 @@ type DecryptableSplitCoinRequest struct {
 func (x *DecryptableSplitCoinRequest) Reset() {
 	*x = DecryptableSplitCoinRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[79]
+		mi := &file_node_proto_msgTypes[80]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5151,7 +5220,7 @@ func (x *DecryptableSplitCoinRequest) String() string {
 func (*DecryptableSplitCoinRequest) ProtoMessage() {}
 
 func (x *DecryptableSplitCoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[79]
+	mi := &file_node_proto_msgTypes[80]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5164,7 +5233,7 @@ func (x *DecryptableSplitCoinRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DecryptableSplitCoinRequest.ProtoReflect.Descriptor instead.
 func (*DecryptableSplitCoinRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{79}
+	return file_node_proto_rawDescGZIP(), []int{80}
 }
 
 func (x *DecryptableSplitCoinRequest) GetRequest() *SplitCoinRequest {
@@ -5201,7 +5270,7 @@ type DecryptableTransferCoinRequest struct {
 func (x *DecryptableTransferCoinRequest) Reset() {
 	*x = DecryptableTransferCoinRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[80]
+		mi := &file_node_proto_msgTypes[81]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5214,7 +5283,7 @@ func (x *DecryptableTransferCoinRequest) String() string {
 func (*DecryptableTransferCoinRequest) ProtoMessage() {}
 
 func (x *DecryptableTransferCoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[80]
+	mi := &file_node_proto_msgTypes[81]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5227,7 +5296,7 @@ func (x *DecryptableTransferCoinRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DecryptableTransferCoinRequest.ProtoReflect.Descriptor instead.
 func (*DecryptableTransferCoinRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{80}
+	return file_node_proto_rawDescGZIP(), []int{81}
 }
 
 func (x *DecryptableTransferCoinRequest) GetRequest() *TransferCoinRequest {
@@ -5264,7 +5333,7 @@ type DecryptableApprovePendingTransactionRequest struct {
 func (x *DecryptableApprovePendingTransactionRequest) Reset() {
 	*x = DecryptableApprovePendingTransactionRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[81]
+		mi := &file_node_proto_msgTypes[82]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5277,7 +5346,7 @@ func (x *DecryptableApprovePendingTransactionRequest) String() string {
 func (*DecryptableApprovePendingTransactionRequest) ProtoMessage() {}
 
 func (x *DecryptableApprovePendingTransactionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[81]
+	mi := &file_node_proto_msgTypes[82]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5290,7 +5359,7 @@ func (x *DecryptableApprovePendingTransactionRequest) ProtoReflect() protoreflec
 
 // Deprecated: Use DecryptableApprovePendingTransactionRequest.ProtoReflect.Descriptor instead.
 func (*DecryptableApprovePendingTransactionRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{81}
+	return file_node_proto_rawDescGZIP(), []int{82}
 }
 
 func (x *DecryptableApprovePendingTransactionRequest) GetRequest() *ApprovePendingTransactionRequest {
@@ -5327,7 +5396,7 @@ type DecryptableRejectPendingTransactionRequest struct {
 func (x *DecryptableRejectPendingTransactionRequest) Reset() {
 	*x = DecryptableRejectPendingTransactionRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[82]
+		mi := &file_node_proto_msgTypes[83]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5340,7 +5409,7 @@ func (x *DecryptableRejectPendingTransactionRequest) String() string {
 func (*DecryptableRejectPendingTransactionRequest) ProtoMessage() {}
 
 func (x *DecryptableRejectPendingTransactionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[82]
+	mi := &file_node_proto_msgTypes[83]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5353,7 +5422,7 @@ func (x *DecryptableRejectPendingTransactionRequest) ProtoReflect() protoreflect
 
 // Deprecated: Use DecryptableRejectPendingTransactionRequest.ProtoReflect.Descriptor instead.
 func (*DecryptableRejectPendingTransactionRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{82}
+	return file_node_proto_rawDescGZIP(), []int{83}
 }
 
 func (x *DecryptableRejectPendingTransactionRequest) GetRequest() *RejectPendingTransactionRequest {
@@ -5389,7 +5458,7 @@ type CoinInfo struct {
 func (x *CoinInfo) Reset() {
 	*x = CoinInfo{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[83]
+		mi := &file_node_proto_msgTypes[84]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5402,7 +5471,7 @@ func (x *CoinInfo) String() string {
 func (*CoinInfo) ProtoMessage() {}
 
 func (x *CoinInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[83]
+	mi := &file_node_proto_msgTypes[84]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5415,7 +5484,7 @@ func (x *CoinInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CoinInfo.ProtoReflect.Descriptor instead.
 func (*CoinInfo) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{83}
+	return file_node_proto_rawDescGZIP(), []int{84}
 }
 
 func (x *CoinInfo) GetCoin() *CoinRef {
@@ -5445,7 +5514,7 @@ type PendingTransactionInfo struct {
 func (x *PendingTransactionInfo) Reset() {
 	*x = PendingTransactionInfo{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[84]
+		mi := &file_node_proto_msgTypes[85]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5458,7 +5527,7 @@ func (x *PendingTransactionInfo) String() string {
 func (*PendingTransactionInfo) ProtoMessage() {}
 
 func (x *PendingTransactionInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[84]
+	mi := &file_node_proto_msgTypes[85]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5471,7 +5540,7 @@ func (x *PendingTransactionInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PendingTransactionInfo.ProtoReflect.Descriptor instead.
 func (*PendingTransactionInfo) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{84}
+	return file_node_proto_rawDescGZIP(), []int{85}
 }
 
 func (x *PendingTransactionInfo) GetPendingTransaction() *PendingTransactionRef {
@@ -5507,7 +5576,7 @@ type AllowAccountResponse struct {
 func (x *AllowAccountResponse) Reset() {
 	*x = AllowAccountResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[85]
+		mi := &file_node_proto_msgTypes[86]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5520,7 +5589,7 @@ func (x *AllowAccountResponse) String() string {
 func (*AllowAccountResponse) ProtoMessage() {}
 
 func (x *AllowAccountResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[85]
+	mi := &file_node_proto_msgTypes[86]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5533,7 +5602,7 @@ func (x *AllowAccountResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AllowAccountResponse.ProtoReflect.Descriptor instead.
 func (*AllowAccountResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{85}
+	return file_node_proto_rawDescGZIP(), []int{86}
 }
 
 func (x *AllowAccountResponse) GetAllowance() *AccountAllowanceRef {
@@ -5561,7 +5630,7 @@ type BalanceAccountResponse struct {
 func (x *BalanceAccountResponse) Reset() {
 	*x = BalanceAccountResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[86]
+		mi := &file_node_proto_msgTypes[87]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5574,7 +5643,7 @@ func (x *BalanceAccountResponse) String() string {
 func (*BalanceAccountResponse) ProtoMessage() {}
 
 func (x *BalanceAccountResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[86]
+	mi := &file_node_proto_msgTypes[87]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5587,7 +5656,7 @@ func (x *BalanceAccountResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BalanceAccountResponse.ProtoReflect.Descriptor instead.
 func (*BalanceAccountResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{86}
+	return file_node_proto_rawDescGZIP(), []int{87}
 }
 
 func (x *BalanceAccountResponse) GetBalance() []byte {
@@ -5608,7 +5677,7 @@ type CoinsAccountResponse struct {
 func (x *CoinsAccountResponse) Reset() {
 	*x = CoinsAccountResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[87]
+		mi := &file_node_proto_msgTypes[88]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5621,7 +5690,7 @@ func (x *CoinsAccountResponse) String() string {
 func (*CoinsAccountResponse) ProtoMessage() {}
 
 func (x *CoinsAccountResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[87]
+	mi := &file_node_proto_msgTypes[88]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5634,7 +5703,7 @@ func (x *CoinsAccountResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CoinsAccountResponse.ProtoReflect.Descriptor instead.
 func (*CoinsAccountResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{87}
+	return file_node_proto_rawDescGZIP(), []int{88}
 }
 
 func (x *CoinsAccountResponse) GetCoins() []*CoinInfo {
@@ -5655,7 +5724,7 @@ type PendingTransactionsAccountResponse struct {
 func (x *PendingTransactionsAccountResponse) Reset() {
 	*x = PendingTransactionsAccountResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[88]
+		mi := &file_node_proto_msgTypes[89]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5668,7 +5737,7 @@ func (x *PendingTransactionsAccountResponse) String() string {
 func (*PendingTransactionsAccountResponse) ProtoMessage() {}
 
 func (x *PendingTransactionsAccountResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[88]
+	mi := &file_node_proto_msgTypes[89]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5681,7 +5750,7 @@ func (x *PendingTransactionsAccountResponse) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use PendingTransactionsAccountResponse.ProtoReflect.Descriptor instead.
 func (*PendingTransactionsAccountResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{88}
+	return file_node_proto_rawDescGZIP(), []int{89}
 }
 
 func (x *PendingTransactionsAccountResponse) GetPendingTransactions() []*PendingTransactionInfo {
@@ -5702,7 +5771,7 @@ type RevokeAccountResponse struct {
 func (x *RevokeAccountResponse) Reset() {
 	*x = RevokeAccountResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[89]
+		mi := &file_node_proto_msgTypes[90]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5715,7 +5784,7 @@ func (x *RevokeAccountResponse) String() string {
 func (*RevokeAccountResponse) ProtoMessage() {}
 
 func (x *RevokeAccountResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[89]
+	mi := &file_node_proto_msgTypes[90]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5728,7 +5797,7 @@ func (x *RevokeAccountResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevokeAccountResponse.ProtoReflect.Descriptor instead.
 func (*RevokeAccountResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{89}
+	return file_node_proto_rawDescGZIP(), []int{90}
 }
 
 func (x *RevokeAccountResponse) GetDeliveries() []*DeliveryData {
@@ -5750,7 +5819,7 @@ type AllowCoinResponse struct {
 func (x *AllowCoinResponse) Reset() {
 	*x = AllowCoinResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[90]
+		mi := &file_node_proto_msgTypes[91]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5763,7 +5832,7 @@ func (x *AllowCoinResponse) String() string {
 func (*AllowCoinResponse) ProtoMessage() {}
 
 func (x *AllowCoinResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[90]
+	mi := &file_node_proto_msgTypes[91]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5776,7 +5845,7 @@ func (x *AllowCoinResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AllowCoinResponse.ProtoReflect.Descriptor instead.
 func (*AllowCoinResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{90}
+	return file_node_proto_rawDescGZIP(), []int{91}
 }
 
 func (x *AllowCoinResponse) GetAllowance() *CoinAllowanceRef {
@@ -5804,7 +5873,7 @@ type IntersectCoinResponse struct {
 func (x *IntersectCoinResponse) Reset() {
 	*x = IntersectCoinResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[91]
+		mi := &file_node_proto_msgTypes[92]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5817,7 +5886,7 @@ func (x *IntersectCoinResponse) String() string {
 func (*IntersectCoinResponse) ProtoMessage() {}
 
 func (x *IntersectCoinResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[91]
+	mi := &file_node_proto_msgTypes[92]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5830,7 +5899,7 @@ func (x *IntersectCoinResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IntersectCoinResponse.ProtoReflect.Descriptor instead.
 func (*IntersectCoinResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{91}
+	return file_node_proto_rawDescGZIP(), []int{92}
 }
 
 func (x *IntersectCoinResponse) GetIntersects() bool {
@@ -5852,7 +5921,7 @@ type MergeCoinResponse struct {
 func (x *MergeCoinResponse) Reset() {
 	*x = MergeCoinResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[92]
+		mi := &file_node_proto_msgTypes[93]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5865,7 +5934,7 @@ func (x *MergeCoinResponse) String() string {
 func (*MergeCoinResponse) ProtoMessage() {}
 
 func (x *MergeCoinResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[92]
+	mi := &file_node_proto_msgTypes[93]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5878,7 +5947,7 @@ func (x *MergeCoinResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MergeCoinResponse.ProtoReflect.Descriptor instead.
 func (*MergeCoinResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{92}
+	return file_node_proto_rawDescGZIP(), []int{93}
 }
 
 func (x *MergeCoinResponse) GetCoin() *CoinRef {
@@ -5907,7 +5976,7 @@ type MintCoinResponse struct {
 func (x *MintCoinResponse) Reset() {
 	*x = MintCoinResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[93]
+		mi := &file_node_proto_msgTypes[94]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5920,7 +5989,7 @@ func (x *MintCoinResponse) String() string {
 func (*MintCoinResponse) ProtoMessage() {}
 
 func (x *MintCoinResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[93]
+	mi := &file_node_proto_msgTypes[94]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5933,7 +6002,7 @@ func (x *MintCoinResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MintCoinResponse.ProtoReflect.Descriptor instead.
 func (*MintCoinResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{93}
+	return file_node_proto_rawDescGZIP(), []int{94}
 }
 
 func (x *MintCoinResponse) GetCoins() []*CoinInfo {
@@ -5964,7 +6033,7 @@ type MutualReceiveCoinResponse struct {
 func (x *MutualReceiveCoinResponse) Reset() {
 	*x = MutualReceiveCoinResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[94]
+		mi := &file_node_proto_msgTypes[95]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5977,7 +6046,7 @@ func (x *MutualReceiveCoinResponse) String() string {
 func (*MutualReceiveCoinResponse) ProtoMessage() {}
 
 func (x *MutualReceiveCoinResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[94]
+	mi := &file_node_proto_msgTypes[95]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5990,7 +6059,7 @@ func (x *MutualReceiveCoinResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutualReceiveCoinResponse.ProtoReflect.Descriptor instead.
 func (*MutualReceiveCoinResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{94}
+	return file_node_proto_rawDescGZIP(), []int{95}
 }
 
 func (x *MutualReceiveCoinResponse) GetStatus() uint32 {
@@ -6033,7 +6102,7 @@ type MutualTransferCoinResponse struct {
 func (x *MutualTransferCoinResponse) Reset() {
 	*x = MutualTransferCoinResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[95]
+		mi := &file_node_proto_msgTypes[96]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6046,7 +6115,7 @@ func (x *MutualTransferCoinResponse) String() string {
 func (*MutualTransferCoinResponse) ProtoMessage() {}
 
 func (x *MutualTransferCoinResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[95]
+	mi := &file_node_proto_msgTypes[96]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6059,7 +6128,7 @@ func (x *MutualTransferCoinResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutualTransferCoinResponse.ProtoReflect.Descriptor instead.
 func (*MutualTransferCoinResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{95}
+	return file_node_proto_rawDescGZIP(), []int{96}
 }
 
 func (x *MutualTransferCoinResponse) GetStatus() uint32 {
@@ -6087,7 +6156,7 @@ type RevokeCoinResponse struct {
 func (x *RevokeCoinResponse) Reset() {
 	*x = RevokeCoinResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[96]
+		mi := &file_node_proto_msgTypes[97]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6100,7 +6169,7 @@ func (x *RevokeCoinResponse) String() string {
 func (*RevokeCoinResponse) ProtoMessage() {}
 
 func (x *RevokeCoinResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[96]
+	mi := &file_node_proto_msgTypes[97]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6113,7 +6182,7 @@ func (x *RevokeCoinResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevokeCoinResponse.ProtoReflect.Descriptor instead.
 func (*RevokeCoinResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{96}
+	return file_node_proto_rawDescGZIP(), []int{97}
 }
 
 func (x *RevokeCoinResponse) GetDeliveries() []*DeliveryData {
@@ -6135,7 +6204,7 @@ type SplitCoinResponse struct {
 func (x *SplitCoinResponse) Reset() {
 	*x = SplitCoinResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[97]
+		mi := &file_node_proto_msgTypes[98]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6148,7 +6217,7 @@ func (x *SplitCoinResponse) String() string {
 func (*SplitCoinResponse) ProtoMessage() {}
 
 func (x *SplitCoinResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[97]
+	mi := &file_node_proto_msgTypes[98]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6161,7 +6230,7 @@ func (x *SplitCoinResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SplitCoinResponse.ProtoReflect.Descriptor instead.
 func (*SplitCoinResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{97}
+	return file_node_proto_rawDescGZIP(), []int{98}
 }
 
 func (x *SplitCoinResponse) GetCoins() []*CoinRef {
@@ -6190,7 +6259,7 @@ type TransferCoinResponse struct {
 func (x *TransferCoinResponse) Reset() {
 	*x = TransferCoinResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[98]
+		mi := &file_node_proto_msgTypes[99]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6203,7 +6272,7 @@ func (x *TransferCoinResponse) String() string {
 func (*TransferCoinResponse) ProtoMessage() {}
 
 func (x *TransferCoinResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[98]
+	mi := &file_node_proto_msgTypes[99]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6216,7 +6285,7 @@ func (x *TransferCoinResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TransferCoinResponse.ProtoReflect.Descriptor instead.
 func (*TransferCoinResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{98}
+	return file_node_proto_rawDescGZIP(), []int{99}
 }
 
 func (x *TransferCoinResponse) GetPendingTransaction() *PendingTransactionRef {
@@ -6245,7 +6314,7 @@ type ApprovePendingTransactionResponse struct {
 func (x *ApprovePendingTransactionResponse) Reset() {
 	*x = ApprovePendingTransactionResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[99]
+		mi := &file_node_proto_msgTypes[100]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6258,7 +6327,7 @@ func (x *ApprovePendingTransactionResponse) String() string {
 func (*ApprovePendingTransactionResponse) ProtoMessage() {}
 
 func (x *ApprovePendingTransactionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[99]
+	mi := &file_node_proto_msgTypes[100]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6271,7 +6340,7 @@ func (x *ApprovePendingTransactionResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use ApprovePendingTransactionResponse.ProtoReflect.Descriptor instead.
 func (*ApprovePendingTransactionResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{99}
+	return file_node_proto_rawDescGZIP(), []int{100}
 }
 
 func (x *ApprovePendingTransactionResponse) GetCoin() *CoinRef {
@@ -6299,7 +6368,7 @@ type RejectPendingTransactionResponse struct {
 func (x *RejectPendingTransactionResponse) Reset() {
 	*x = RejectPendingTransactionResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[100]
+		mi := &file_node_proto_msgTypes[101]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6312,7 +6381,7 @@ func (x *RejectPendingTransactionResponse) String() string {
 func (*RejectPendingTransactionResponse) ProtoMessage() {}
 
 func (x *RejectPendingTransactionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[100]
+	mi := &file_node_proto_msgTypes[101]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6325,7 +6394,7 @@ func (x *RejectPendingTransactionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RejectPendingTransactionResponse.ProtoReflect.Descriptor instead.
 func (*RejectPendingTransactionResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{100}
+	return file_node_proto_rawDescGZIP(), []int{101}
 }
 
 func (x *RejectPendingTransactionResponse) GetDeliveries() []*DeliveryData {
@@ -6344,7 +6413,7 @@ type SendMessageResponse struct {
 func (x *SendMessageResponse) Reset() {
 	*x = SendMessageResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[101]
+		mi := &file_node_proto_msgTypes[102]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6357,7 +6426,7 @@ func (x *SendMessageResponse) String() string {
 func (*SendMessageResponse) ProtoMessage() {}
 
 func (x *SendMessageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[101]
+	mi := &file_node_proto_msgTypes[102]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6370,7 +6439,7 @@ func (x *SendMessageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendMessageResponse.ProtoReflect.Descriptor instead.
 func (*SendMessageResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{101}
+	return file_node_proto_rawDescGZIP(), []int{102}
 }
 
 type GetTokensByAccountRequest struct {
@@ -6384,7 +6453,7 @@ type GetTokensByAccountRequest struct {
 func (x *GetTokensByAccountRequest) Reset() {
 	*x = GetTokensByAccountRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[102]
+		mi := &file_node_proto_msgTypes[103]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6397,7 +6466,7 @@ func (x *GetTokensByAccountRequest) String() string {
 func (*GetTokensByAccountRequest) ProtoMessage() {}
 
 func (x *GetTokensByAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[102]
+	mi := &file_node_proto_msgTypes[103]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6410,7 +6479,7 @@ func (x *GetTokensByAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTokensByAccountRequest.ProtoReflect.Descriptor instead.
 func (*GetTokensByAccountRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{102}
+	return file_node_proto_rawDescGZIP(), []int{103}
 }
 
 func (x *GetTokensByAccountRequest) GetAddress() []byte {
@@ -6433,7 +6502,7 @@ type TokensByAccountResponse struct {
 func (x *TokensByAccountResponse) Reset() {
 	*x = TokensByAccountResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[103]
+		mi := &file_node_proto_msgTypes[104]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6446,7 +6515,7 @@ func (x *TokensByAccountResponse) String() string {
 func (*TokensByAccountResponse) ProtoMessage() {}
 
 func (x *TokensByAccountResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[103]
+	mi := &file_node_proto_msgTypes[104]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6459,7 +6528,7 @@ func (x *TokensByAccountResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TokensByAccountResponse.ProtoReflect.Descriptor instead.
 func (*TokensByAccountResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{103}
+	return file_node_proto_rawDescGZIP(), []int{104}
 }
 
 func (x *TokensByAccountResponse) GetCoins() []*Coin {
@@ -6494,7 +6563,7 @@ type GetPreCoinProofsByAccountRequest struct {
 func (x *GetPreCoinProofsByAccountRequest) Reset() {
 	*x = GetPreCoinProofsByAccountRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[104]
+		mi := &file_node_proto_msgTypes[105]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6507,7 +6576,7 @@ func (x *GetPreCoinProofsByAccountRequest) String() string {
 func (*GetPreCoinProofsByAccountRequest) ProtoMessage() {}
 
 func (x *GetPreCoinProofsByAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[104]
+	mi := &file_node_proto_msgTypes[105]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6520,7 +6589,7 @@ func (x *GetPreCoinProofsByAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPreCoinProofsByAccountRequest.ProtoReflect.Descriptor instead.
 func (*GetPreCoinProofsByAccountRequest) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{104}
+	return file_node_proto_rawDescGZIP(), []int{105}
 }
 
 func (x *GetPreCoinProofsByAccountRequest) GetAddress() []byte {
@@ -6542,7 +6611,7 @@ type PreCoinProofsByAccountResponse struct {
 func (x *PreCoinProofsByAccountResponse) Reset() {
 	*x = PreCoinProofsByAccountResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[105]
+		mi := &file_node_proto_msgTypes[106]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6555,7 +6624,7 @@ func (x *PreCoinProofsByAccountResponse) String() string {
 func (*PreCoinProofsByAccountResponse) ProtoMessage() {}
 
 func (x *PreCoinProofsByAccountResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[105]
+	mi := &file_node_proto_msgTypes[106]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6568,7 +6637,7 @@ func (x *PreCoinProofsByAccountResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PreCoinProofsByAccountResponse.ProtoReflect.Descriptor instead.
 func (*PreCoinProofsByAccountResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{105}
+	return file_node_proto_rawDescGZIP(), []int{106}
 }
 
 func (x *PreCoinProofsByAccountResponse) GetProofs() []*PreCoinProof {
@@ -6929,47 +6998,58 @@ var file_node_proto_rawDesc = []byte{
 	0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x71, 0x75,
 	0x69, 0x6c, 0x69, 0x62, 0x72, 0x69, 0x75, 0x6d, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x6e, 0x6f,
 	0x64, 0x65, 0x2e, 0x70, 0x62, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x66,
-	0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x22, 0x86, 0x05, 0x0a, 0x0b, 0x54, 0x6f, 0x6b, 0x65,
-	0x6e, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x33, 0x0a, 0x04, 0x63, 0x6f, 0x69, 0x6e, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x71, 0x75, 0x69, 0x6c, 0x69, 0x62, 0x72, 0x69,
+	0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x22, 0x6a, 0x0a, 0x0d, 0x50, 0x72, 0x6f, 0x76, 0x65,
+	0x72, 0x50, 0x65, 0x6e, 0x61, 0x6c, 0x74, 0x79, 0x12, 0x1a, 0x0a, 0x08, 0x71, 0x75, 0x61, 0x6e,
+	0x74, 0x69, 0x74, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x08, 0x71, 0x75, 0x61, 0x6e,
+	0x74, 0x69, 0x74, 0x79, 0x12, 0x3d, 0x0a, 0x07, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x71, 0x75, 0x69, 0x6c, 0x69, 0x62, 0x72, 0x69,
 	0x75, 0x6d, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x70, 0x62, 0x2e,
-	0x43, 0x6f, 0x69, 0x6e, 0x48, 0x00, 0x52, 0x04, 0x63, 0x6f, 0x69, 0x6e, 0x12, 0x3d, 0x0a, 0x05,
-	0x70, 0x72, 0x6f, 0x6f, 0x66, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x71, 0x75,
-	0x69, 0x6c, 0x69, 0x62, 0x72, 0x69, 0x75, 0x6d, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x6e, 0x6f,
-	0x64, 0x65, 0x2e, 0x70, 0x62, 0x2e, 0x50, 0x72, 0x65, 0x43, 0x6f, 0x69, 0x6e, 0x50, 0x72, 0x6f,
-	0x6f, 0x66, 0x48, 0x00, 0x52, 0x05, 0x70, 0x72, 0x6f, 0x6f, 0x66, 0x12, 0x45, 0x0a, 0x0c, 0x64,
-	0x65, 0x6c, 0x65, 0x74, 0x65, 0x64, 0x5f, 0x63, 0x6f, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x20, 0x2e, 0x71, 0x75, 0x69, 0x6c, 0x69, 0x62, 0x72, 0x69, 0x75, 0x6d, 0x2e, 0x6e,
+	0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x66, 0x52, 0x07, 0x61, 0x63, 0x63, 0x6f,
+	0x75, 0x6e, 0x74, 0x22, 0xca, 0x05, 0x0a, 0x0b, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x4f, 0x75, 0x74,
+	0x70, 0x75, 0x74, 0x12, 0x33, 0x0a, 0x04, 0x63, 0x6f, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x1d, 0x2e, 0x71, 0x75, 0x69, 0x6c, 0x69, 0x62, 0x72, 0x69, 0x75, 0x6d, 0x2e, 0x6e,
 	0x6f, 0x64, 0x65, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x70, 0x62, 0x2e, 0x43, 0x6f, 0x69, 0x6e,
-	0x52, 0x65, 0x66, 0x48, 0x00, 0x52, 0x0b, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x64, 0x43, 0x6f,
-	0x69, 0x6e, 0x12, 0x4c, 0x0a, 0x0d, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x64, 0x5f, 0x70, 0x72,
-	0x6f, 0x6f, 0x66, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x71, 0x75, 0x69, 0x6c,
-	0x69, 0x62, 0x72, 0x69, 0x75, 0x6d, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x6e, 0x6f, 0x64, 0x65,
-	0x2e, 0x70, 0x62, 0x2e, 0x50, 0x72, 0x65, 0x43, 0x6f, 0x69, 0x6e, 0x50, 0x72, 0x6f, 0x6f, 0x66,
-	0x48, 0x00, 0x52, 0x0c, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x64, 0x50, 0x72, 0x6f, 0x6f, 0x66,
-	0x12, 0x4c, 0x0a, 0x08, 0x61, 0x6e, 0x6e, 0x6f, 0x75, 0x6e, 0x63, 0x65, 0x18, 0x05, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x2e, 0x2e, 0x71, 0x75, 0x69, 0x6c, 0x69, 0x62, 0x72, 0x69, 0x75, 0x6d, 0x2e,
-	0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x70, 0x62, 0x2e, 0x41, 0x6e, 0x6e,
-	0x6f, 0x75, 0x6e, 0x63, 0x65, 0x50, 0x72, 0x6f, 0x76, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x48, 0x00, 0x52, 0x08, 0x61, 0x6e, 0x6e, 0x6f, 0x75, 0x6e, 0x63, 0x65, 0x12, 0x41,
-	0x0a, 0x04, 0x6a, 0x6f, 0x69, 0x6e, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2b, 0x2e, 0x71,
+	0x48, 0x00, 0x52, 0x04, 0x63, 0x6f, 0x69, 0x6e, 0x12, 0x3d, 0x0a, 0x05, 0x70, 0x72, 0x6f, 0x6f,
+	0x66, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x71, 0x75, 0x69, 0x6c, 0x69, 0x62,
+	0x72, 0x69, 0x75, 0x6d, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x70,
+	0x62, 0x2e, 0x50, 0x72, 0x65, 0x43, 0x6f, 0x69, 0x6e, 0x50, 0x72, 0x6f, 0x6f, 0x66, 0x48, 0x00,
+	0x52, 0x05, 0x70, 0x72, 0x6f, 0x6f, 0x66, 0x12, 0x45, 0x0a, 0x0c, 0x64, 0x65, 0x6c, 0x65, 0x74,
+	0x65, 0x64, 0x5f, 0x63, 0x6f, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e,
+	0x71, 0x75, 0x69, 0x6c, 0x69, 0x62, 0x72, 0x69, 0x75, 0x6d, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e,
+	0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x70, 0x62, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x52, 0x65, 0x66, 0x48,
+	0x00, 0x52, 0x0b, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x64, 0x43, 0x6f, 0x69, 0x6e, 0x12, 0x4c,
+	0x0a, 0x0d, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x64, 0x5f, 0x70, 0x72, 0x6f, 0x6f, 0x66, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x71, 0x75, 0x69, 0x6c, 0x69, 0x62, 0x72, 0x69,
+	0x75, 0x6d, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x70, 0x62, 0x2e,
+	0x50, 0x72, 0x65, 0x43, 0x6f, 0x69, 0x6e, 0x50, 0x72, 0x6f, 0x6f, 0x66, 0x48, 0x00, 0x52, 0x0c,
+	0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x64, 0x50, 0x72, 0x6f, 0x6f, 0x66, 0x12, 0x4c, 0x0a, 0x08,
+	0x61, 0x6e, 0x6e, 0x6f, 0x75, 0x6e, 0x63, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2e,
+	0x2e, 0x71, 0x75, 0x69, 0x6c, 0x69, 0x62, 0x72, 0x69, 0x75, 0x6d, 0x2e, 0x6e, 0x6f, 0x64, 0x65,
+	0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x70, 0x62, 0x2e, 0x41, 0x6e, 0x6e, 0x6f, 0x75, 0x6e, 0x63,
+	0x65, 0x50, 0x72, 0x6f, 0x76, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x48, 0x00,
+	0x52, 0x08, 0x61, 0x6e, 0x6e, 0x6f, 0x75, 0x6e, 0x63, 0x65, 0x12, 0x41, 0x0a, 0x04, 0x6a, 0x6f,
+	0x69, 0x6e, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2b, 0x2e, 0x71, 0x75, 0x69, 0x6c, 0x69,
+	0x62, 0x72, 0x69, 0x75, 0x6d, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e,
+	0x70, 0x62, 0x2e, 0x41, 0x6e, 0x6e, 0x6f, 0x75, 0x6e, 0x63, 0x65, 0x50, 0x72, 0x6f, 0x76, 0x65,
+	0x72, 0x4a, 0x6f, 0x69, 0x6e, 0x48, 0x00, 0x52, 0x04, 0x6a, 0x6f, 0x69, 0x6e, 0x12, 0x44, 0x0a,
+	0x05, 0x6c, 0x65, 0x61, 0x76, 0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x71,
 	0x75, 0x69, 0x6c, 0x69, 0x62, 0x72, 0x69, 0x75, 0x6d, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x6e,
 	0x6f, 0x64, 0x65, 0x2e, 0x70, 0x62, 0x2e, 0x41, 0x6e, 0x6e, 0x6f, 0x75, 0x6e, 0x63, 0x65, 0x50,
-	0x72, 0x6f, 0x76, 0x65, 0x72, 0x4a, 0x6f, 0x69, 0x6e, 0x48, 0x00, 0x52, 0x04, 0x6a, 0x6f, 0x69,
-	0x6e, 0x12, 0x44, 0x0a, 0x05, 0x6c, 0x65, 0x61, 0x76, 0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x2c, 0x2e, 0x71, 0x75, 0x69, 0x6c, 0x69, 0x62, 0x72, 0x69, 0x75, 0x6d, 0x2e, 0x6e, 0x6f,
-	0x64, 0x65, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x70, 0x62, 0x2e, 0x41, 0x6e, 0x6e, 0x6f, 0x75,
-	0x6e, 0x63, 0x65, 0x50, 0x72, 0x6f, 0x76, 0x65, 0x72, 0x4c, 0x65, 0x61, 0x76, 0x65, 0x48, 0x00,
-	0x52, 0x05, 0x6c, 0x65, 0x61, 0x76, 0x65, 0x12, 0x44, 0x0a, 0x05, 0x70, 0x61, 0x75, 0x73, 0x65,
-	0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x71, 0x75, 0x69, 0x6c, 0x69, 0x62, 0x72,
-	0x69, 0x75, 0x6d, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x70, 0x62,
-	0x2e, 0x41, 0x6e, 0x6e, 0x6f, 0x75, 0x6e, 0x63, 0x65, 0x50, 0x72, 0x6f, 0x76, 0x65, 0x72, 0x50,
-	0x61, 0x75, 0x73, 0x65, 0x48, 0x00, 0x52, 0x05, 0x70, 0x61, 0x75, 0x73, 0x65, 0x12, 0x47, 0x0a,
-	0x06, 0x72, 0x65, 0x73, 0x75, 0x6d, 0x65, 0x18, 0x09, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2d, 0x2e,
-	0x71, 0x75, 0x69, 0x6c, 0x69, 0x62, 0x72, 0x69, 0x75, 0x6d, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e,
-	0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x70, 0x62, 0x2e, 0x41, 0x6e, 0x6e, 0x6f, 0x75, 0x6e, 0x63, 0x65,
-	0x50, 0x72, 0x6f, 0x76, 0x65, 0x72, 0x52, 0x65, 0x73, 0x75, 0x6d, 0x65, 0x48, 0x00, 0x52, 0x06,
-	0x72, 0x65, 0x73, 0x75, 0x6d, 0x65, 0x42, 0x08, 0x0a, 0x06, 0x6f, 0x75, 0x74, 0x70, 0x75, 0x74,
+	0x72, 0x6f, 0x76, 0x65, 0x72, 0x4c, 0x65, 0x61, 0x76, 0x65, 0x48, 0x00, 0x52, 0x05, 0x6c, 0x65,
+	0x61, 0x76, 0x65, 0x12, 0x44, 0x0a, 0x05, 0x70, 0x61, 0x75, 0x73, 0x65, 0x18, 0x08, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x71, 0x75, 0x69, 0x6c, 0x69, 0x62, 0x72, 0x69, 0x75, 0x6d, 0x2e,
+	0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x70, 0x62, 0x2e, 0x41, 0x6e, 0x6e,
+	0x6f, 0x75, 0x6e, 0x63, 0x65, 0x50, 0x72, 0x6f, 0x76, 0x65, 0x72, 0x50, 0x61, 0x75, 0x73, 0x65,
+	0x48, 0x00, 0x52, 0x05, 0x70, 0x61, 0x75, 0x73, 0x65, 0x12, 0x47, 0x0a, 0x06, 0x72, 0x65, 0x73,
+	0x75, 0x6d, 0x65, 0x18, 0x09, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2d, 0x2e, 0x71, 0x75, 0x69, 0x6c,
+	0x69, 0x62, 0x72, 0x69, 0x75, 0x6d, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x6e, 0x6f, 0x64, 0x65,
+	0x2e, 0x70, 0x62, 0x2e, 0x41, 0x6e, 0x6e, 0x6f, 0x75, 0x6e, 0x63, 0x65, 0x50, 0x72, 0x6f, 0x76,
+	0x65, 0x72, 0x52, 0x65, 0x73, 0x75, 0x6d, 0x65, 0x48, 0x00, 0x52, 0x06, 0x72, 0x65, 0x73, 0x75,
+	0x6d, 0x65, 0x12, 0x42, 0x0a, 0x07, 0x70, 0x65, 0x6e, 0x61, 0x6c, 0x74, 0x79, 0x18, 0x0a, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x71, 0x75, 0x69, 0x6c, 0x69, 0x62, 0x72, 0x69, 0x75, 0x6d,
+	0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x70, 0x62, 0x2e, 0x50, 0x72,
+	0x6f, 0x76, 0x65, 0x72, 0x50, 0x65, 0x6e, 0x61, 0x6c, 0x74, 0x79, 0x48, 0x00, 0x52, 0x07, 0x70,
+	0x65, 0x6e, 0x61, 0x6c, 0x74, 0x79, 0x42, 0x08, 0x0a, 0x06, 0x6f, 0x75, 0x74, 0x70, 0x75, 0x74,
 	0x22, 0x4e, 0x0a, 0x0c, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x73,
 	0x12, 0x3e, 0x0a, 0x07, 0x6f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28,
 	0x0b, 0x32, 0x24, 0x2e, 0x71, 0x75, 0x69, 0x6c, 0x69, 0x62, 0x72, 0x69, 0x75, 0x6d, 0x2e, 0x6e,
@@ -8020,7 +8100,7 @@ func file_node_proto_rawDescGZIP() []byte {
 	return file_node_proto_rawDescData
 }
 
-var file_node_proto_msgTypes = make([]protoimpl.MessageInfo, 106)
+var file_node_proto_msgTypes = make([]protoimpl.MessageInfo, 107)
 var file_node_proto_goTypes = []interface{}{
 	(*GetFramesRequest)(nil),                             // 0: quilibrium.node.node.pb.GetFramesRequest
 	(*GetFrameInfoRequest)(nil),                          // 1: quilibrium.node.node.pb.GetFrameInfoRequest
@@ -8060,103 +8140,104 @@ var file_node_proto_goTypes = []interface{}{
 	(*TokenRequest)(nil),                                 // 35: quilibrium.node.node.pb.TokenRequest
 	(*TokenRequests)(nil),                                // 36: quilibrium.node.node.pb.TokenRequests
 	(*PreCoinProof)(nil),                                 // 37: quilibrium.node.node.pb.PreCoinProof
-	(*TokenOutput)(nil),                                  // 38: quilibrium.node.node.pb.TokenOutput
-	(*TokenOutputs)(nil),                                 // 39: quilibrium.node.node.pb.TokenOutputs
-	(*CoinRef)(nil),                                      // 40: quilibrium.node.node.pb.CoinRef
-	(*PendingTransactionRef)(nil),                        // 41: quilibrium.node.node.pb.PendingTransactionRef
-	(*KeyRef)(nil),                                       // 42: quilibrium.node.node.pb.KeyRef
-	(*Signature)(nil),                                    // 43: quilibrium.node.node.pb.Signature
-	(*PeerManifestsResponse)(nil),                        // 44: quilibrium.node.node.pb.PeerManifestsResponse
-	(*AcceptPendingTransactionRequest)(nil),              // 45: quilibrium.node.node.pb.AcceptPendingTransactionRequest
-	(*AllowAccountRequest)(nil),                          // 46: quilibrium.node.node.pb.AllowAccountRequest
-	(*AllowCoinRequest)(nil),                             // 47: quilibrium.node.node.pb.AllowCoinRequest
-	(*BalanceAccountRequest)(nil),                        // 48: quilibrium.node.node.pb.BalanceAccountRequest
-	(*CoinsAccountRequest)(nil),                          // 49: quilibrium.node.node.pb.CoinsAccountRequest
-	(*PendingTransactionsAccountRequest)(nil),            // 50: quilibrium.node.node.pb.PendingTransactionsAccountRequest
-	(*IntersectCoinRequest)(nil),                         // 51: quilibrium.node.node.pb.IntersectCoinRequest
-	(*MergeCoinRequest)(nil),                             // 52: quilibrium.node.node.pb.MergeCoinRequest
-	(*MintCoinRequest)(nil),                              // 53: quilibrium.node.node.pb.MintCoinRequest
-	(*MutualReceiveCoinRequest)(nil),                     // 54: quilibrium.node.node.pb.MutualReceiveCoinRequest
-	(*MutualTransferCoinRequest)(nil),                    // 55: quilibrium.node.node.pb.MutualTransferCoinRequest
-	(*RevokeAccountRequest)(nil),                         // 56: quilibrium.node.node.pb.RevokeAccountRequest
-	(*RevokeCoinRequest)(nil),                            // 57: quilibrium.node.node.pb.RevokeCoinRequest
-	(*SplitCoinRequest)(nil),                             // 58: quilibrium.node.node.pb.SplitCoinRequest
-	(*TransferCoinRequest)(nil),                          // 59: quilibrium.node.node.pb.TransferCoinRequest
-	(*ApprovePendingTransactionRequest)(nil),             // 60: quilibrium.node.node.pb.ApprovePendingTransactionRequest
-	(*RejectPendingTransactionRequest)(nil),              // 61: quilibrium.node.node.pb.RejectPendingTransactionRequest
-	(*InlineKey)(nil),                                    // 62: quilibrium.node.node.pb.InlineKey
-	(*KeyRing)(nil),                                      // 63: quilibrium.node.node.pb.KeyRing
-	(*Confirmation)(nil),                                 // 64: quilibrium.node.node.pb.Confirmation
-	(*DeliveryData)(nil),                                 // 65: quilibrium.node.node.pb.DeliveryData
-	(*DeliveryMethod)(nil),                               // 66: quilibrium.node.node.pb.DeliveryMethod
-	(*DecryptableAllowAccountRequest)(nil),               // 67: quilibrium.node.node.pb.DecryptableAllowAccountRequest
-	(*DecryptableBalanceAccountRequest)(nil),             // 68: quilibrium.node.node.pb.DecryptableBalanceAccountRequest
-	(*DecryptableCoinsAccountRequest)(nil),               // 69: quilibrium.node.node.pb.DecryptableCoinsAccountRequest
-	(*DecryptableRevokeAccountRequest)(nil),              // 70: quilibrium.node.node.pb.DecryptableRevokeAccountRequest
-	(*DecryptablePendingTransactionsAccountRequest)(nil), // 71: quilibrium.node.node.pb.DecryptablePendingTransactionsAccountRequest
-	(*DecryptableAllowCoinRequest)(nil),                  // 72: quilibrium.node.node.pb.DecryptableAllowCoinRequest
-	(*DecryptableIntersectCoinRequest)(nil),              // 73: quilibrium.node.node.pb.DecryptableIntersectCoinRequest
-	(*DecryptableMergeCoinRequest)(nil),                  // 74: quilibrium.node.node.pb.DecryptableMergeCoinRequest
-	(*DecryptableMintCoinRequest)(nil),                   // 75: quilibrium.node.node.pb.DecryptableMintCoinRequest
-	(*DecryptableMutualReceiveCoinRequest)(nil),          // 76: quilibrium.node.node.pb.DecryptableMutualReceiveCoinRequest
-	(*DecryptableMutualTransferCoinRequest)(nil),         // 77: quilibrium.node.node.pb.DecryptableMutualTransferCoinRequest
-	(*DecryptableRevokeCoinRequest)(nil),                 // 78: quilibrium.node.node.pb.DecryptableRevokeCoinRequest
-	(*DecryptableSplitCoinRequest)(nil),                  // 79: quilibrium.node.node.pb.DecryptableSplitCoinRequest
-	(*DecryptableTransferCoinRequest)(nil),               // 80: quilibrium.node.node.pb.DecryptableTransferCoinRequest
-	(*DecryptableApprovePendingTransactionRequest)(nil),  // 81: quilibrium.node.node.pb.DecryptableApprovePendingTransactionRequest
-	(*DecryptableRejectPendingTransactionRequest)(nil),   // 82: quilibrium.node.node.pb.DecryptableRejectPendingTransactionRequest
-	(*CoinInfo)(nil),                                     // 83: quilibrium.node.node.pb.CoinInfo
-	(*PendingTransactionInfo)(nil),                       // 84: quilibrium.node.node.pb.PendingTransactionInfo
-	(*AllowAccountResponse)(nil),                         // 85: quilibrium.node.node.pb.AllowAccountResponse
-	(*BalanceAccountResponse)(nil),                       // 86: quilibrium.node.node.pb.BalanceAccountResponse
-	(*CoinsAccountResponse)(nil),                         // 87: quilibrium.node.node.pb.CoinsAccountResponse
-	(*PendingTransactionsAccountResponse)(nil),           // 88: quilibrium.node.node.pb.PendingTransactionsAccountResponse
-	(*RevokeAccountResponse)(nil),                        // 89: quilibrium.node.node.pb.RevokeAccountResponse
-	(*AllowCoinResponse)(nil),                            // 90: quilibrium.node.node.pb.AllowCoinResponse
-	(*IntersectCoinResponse)(nil),                        // 91: quilibrium.node.node.pb.IntersectCoinResponse
-	(*MergeCoinResponse)(nil),                            // 92: quilibrium.node.node.pb.MergeCoinResponse
-	(*MintCoinResponse)(nil),                             // 93: quilibrium.node.node.pb.MintCoinResponse
-	(*MutualReceiveCoinResponse)(nil),                    // 94: quilibrium.node.node.pb.MutualReceiveCoinResponse
-	(*MutualTransferCoinResponse)(nil),                   // 95: quilibrium.node.node.pb.MutualTransferCoinResponse
-	(*RevokeCoinResponse)(nil),                           // 96: quilibrium.node.node.pb.RevokeCoinResponse
-	(*SplitCoinResponse)(nil),                            // 97: quilibrium.node.node.pb.SplitCoinResponse
-	(*TransferCoinResponse)(nil),                         // 98: quilibrium.node.node.pb.TransferCoinResponse
-	(*ApprovePendingTransactionResponse)(nil),            // 99: quilibrium.node.node.pb.ApprovePendingTransactionResponse
-	(*RejectPendingTransactionResponse)(nil),             // 100: quilibrium.node.node.pb.RejectPendingTransactionResponse
-	(*SendMessageResponse)(nil),                          // 101: quilibrium.node.node.pb.SendMessageResponse
-	(*GetTokensByAccountRequest)(nil),                    // 102: quilibrium.node.node.pb.GetTokensByAccountRequest
-	(*TokensByAccountResponse)(nil),                      // 103: quilibrium.node.node.pb.TokensByAccountResponse
-	(*GetPreCoinProofsByAccountRequest)(nil),             // 104: quilibrium.node.node.pb.GetPreCoinProofsByAccountRequest
-	(*PreCoinProofsByAccountResponse)(nil),               // 105: quilibrium.node.node.pb.PreCoinProofsByAccountResponse
-	(*ClockFrame)(nil),                                   // 106: quilibrium.node.clock.pb.ClockFrame
-	(*ClockFramesRequest)(nil),                           // 107: quilibrium.node.clock.pb.ClockFramesRequest
-	(*ClockFramesResponse)(nil),                          // 108: quilibrium.node.clock.pb.ClockFramesResponse
-	(*Ed448Signature)(nil),                               // 109: quilibrium.node.keys.pb.Ed448Signature
+	(*ProverPenalty)(nil),                                // 38: quilibrium.node.node.pb.ProverPenalty
+	(*TokenOutput)(nil),                                  // 39: quilibrium.node.node.pb.TokenOutput
+	(*TokenOutputs)(nil),                                 // 40: quilibrium.node.node.pb.TokenOutputs
+	(*CoinRef)(nil),                                      // 41: quilibrium.node.node.pb.CoinRef
+	(*PendingTransactionRef)(nil),                        // 42: quilibrium.node.node.pb.PendingTransactionRef
+	(*KeyRef)(nil),                                       // 43: quilibrium.node.node.pb.KeyRef
+	(*Signature)(nil),                                    // 44: quilibrium.node.node.pb.Signature
+	(*PeerManifestsResponse)(nil),                        // 45: quilibrium.node.node.pb.PeerManifestsResponse
+	(*AcceptPendingTransactionRequest)(nil),              // 46: quilibrium.node.node.pb.AcceptPendingTransactionRequest
+	(*AllowAccountRequest)(nil),                          // 47: quilibrium.node.node.pb.AllowAccountRequest
+	(*AllowCoinRequest)(nil),                             // 48: quilibrium.node.node.pb.AllowCoinRequest
+	(*BalanceAccountRequest)(nil),                        // 49: quilibrium.node.node.pb.BalanceAccountRequest
+	(*CoinsAccountRequest)(nil),                          // 50: quilibrium.node.node.pb.CoinsAccountRequest
+	(*PendingTransactionsAccountRequest)(nil),            // 51: quilibrium.node.node.pb.PendingTransactionsAccountRequest
+	(*IntersectCoinRequest)(nil),                         // 52: quilibrium.node.node.pb.IntersectCoinRequest
+	(*MergeCoinRequest)(nil),                             // 53: quilibrium.node.node.pb.MergeCoinRequest
+	(*MintCoinRequest)(nil),                              // 54: quilibrium.node.node.pb.MintCoinRequest
+	(*MutualReceiveCoinRequest)(nil),                     // 55: quilibrium.node.node.pb.MutualReceiveCoinRequest
+	(*MutualTransferCoinRequest)(nil),                    // 56: quilibrium.node.node.pb.MutualTransferCoinRequest
+	(*RevokeAccountRequest)(nil),                         // 57: quilibrium.node.node.pb.RevokeAccountRequest
+	(*RevokeCoinRequest)(nil),                            // 58: quilibrium.node.node.pb.RevokeCoinRequest
+	(*SplitCoinRequest)(nil),                             // 59: quilibrium.node.node.pb.SplitCoinRequest
+	(*TransferCoinRequest)(nil),                          // 60: quilibrium.node.node.pb.TransferCoinRequest
+	(*ApprovePendingTransactionRequest)(nil),             // 61: quilibrium.node.node.pb.ApprovePendingTransactionRequest
+	(*RejectPendingTransactionRequest)(nil),              // 62: quilibrium.node.node.pb.RejectPendingTransactionRequest
+	(*InlineKey)(nil),                                    // 63: quilibrium.node.node.pb.InlineKey
+	(*KeyRing)(nil),                                      // 64: quilibrium.node.node.pb.KeyRing
+	(*Confirmation)(nil),                                 // 65: quilibrium.node.node.pb.Confirmation
+	(*DeliveryData)(nil),                                 // 66: quilibrium.node.node.pb.DeliveryData
+	(*DeliveryMethod)(nil),                               // 67: quilibrium.node.node.pb.DeliveryMethod
+	(*DecryptableAllowAccountRequest)(nil),               // 68: quilibrium.node.node.pb.DecryptableAllowAccountRequest
+	(*DecryptableBalanceAccountRequest)(nil),             // 69: quilibrium.node.node.pb.DecryptableBalanceAccountRequest
+	(*DecryptableCoinsAccountRequest)(nil),               // 70: quilibrium.node.node.pb.DecryptableCoinsAccountRequest
+	(*DecryptableRevokeAccountRequest)(nil),              // 71: quilibrium.node.node.pb.DecryptableRevokeAccountRequest
+	(*DecryptablePendingTransactionsAccountRequest)(nil), // 72: quilibrium.node.node.pb.DecryptablePendingTransactionsAccountRequest
+	(*DecryptableAllowCoinRequest)(nil),                  // 73: quilibrium.node.node.pb.DecryptableAllowCoinRequest
+	(*DecryptableIntersectCoinRequest)(nil),              // 74: quilibrium.node.node.pb.DecryptableIntersectCoinRequest
+	(*DecryptableMergeCoinRequest)(nil),                  // 75: quilibrium.node.node.pb.DecryptableMergeCoinRequest
+	(*DecryptableMintCoinRequest)(nil),                   // 76: quilibrium.node.node.pb.DecryptableMintCoinRequest
+	(*DecryptableMutualReceiveCoinRequest)(nil),          // 77: quilibrium.node.node.pb.DecryptableMutualReceiveCoinRequest
+	(*DecryptableMutualTransferCoinRequest)(nil),         // 78: quilibrium.node.node.pb.DecryptableMutualTransferCoinRequest
+	(*DecryptableRevokeCoinRequest)(nil),                 // 79: quilibrium.node.node.pb.DecryptableRevokeCoinRequest
+	(*DecryptableSplitCoinRequest)(nil),                  // 80: quilibrium.node.node.pb.DecryptableSplitCoinRequest
+	(*DecryptableTransferCoinRequest)(nil),               // 81: quilibrium.node.node.pb.DecryptableTransferCoinRequest
+	(*DecryptableApprovePendingTransactionRequest)(nil),  // 82: quilibrium.node.node.pb.DecryptableApprovePendingTransactionRequest
+	(*DecryptableRejectPendingTransactionRequest)(nil),   // 83: quilibrium.node.node.pb.DecryptableRejectPendingTransactionRequest
+	(*CoinInfo)(nil),                                     // 84: quilibrium.node.node.pb.CoinInfo
+	(*PendingTransactionInfo)(nil),                       // 85: quilibrium.node.node.pb.PendingTransactionInfo
+	(*AllowAccountResponse)(nil),                         // 86: quilibrium.node.node.pb.AllowAccountResponse
+	(*BalanceAccountResponse)(nil),                       // 87: quilibrium.node.node.pb.BalanceAccountResponse
+	(*CoinsAccountResponse)(nil),                         // 88: quilibrium.node.node.pb.CoinsAccountResponse
+	(*PendingTransactionsAccountResponse)(nil),           // 89: quilibrium.node.node.pb.PendingTransactionsAccountResponse
+	(*RevokeAccountResponse)(nil),                        // 90: quilibrium.node.node.pb.RevokeAccountResponse
+	(*AllowCoinResponse)(nil),                            // 91: quilibrium.node.node.pb.AllowCoinResponse
+	(*IntersectCoinResponse)(nil),                        // 92: quilibrium.node.node.pb.IntersectCoinResponse
+	(*MergeCoinResponse)(nil),                            // 93: quilibrium.node.node.pb.MergeCoinResponse
+	(*MintCoinResponse)(nil),                             // 94: quilibrium.node.node.pb.MintCoinResponse
+	(*MutualReceiveCoinResponse)(nil),                    // 95: quilibrium.node.node.pb.MutualReceiveCoinResponse
+	(*MutualTransferCoinResponse)(nil),                   // 96: quilibrium.node.node.pb.MutualTransferCoinResponse
+	(*RevokeCoinResponse)(nil),                           // 97: quilibrium.node.node.pb.RevokeCoinResponse
+	(*SplitCoinResponse)(nil),                            // 98: quilibrium.node.node.pb.SplitCoinResponse
+	(*TransferCoinResponse)(nil),                         // 99: quilibrium.node.node.pb.TransferCoinResponse
+	(*ApprovePendingTransactionResponse)(nil),            // 100: quilibrium.node.node.pb.ApprovePendingTransactionResponse
+	(*RejectPendingTransactionResponse)(nil),             // 101: quilibrium.node.node.pb.RejectPendingTransactionResponse
+	(*SendMessageResponse)(nil),                          // 102: quilibrium.node.node.pb.SendMessageResponse
+	(*GetTokensByAccountRequest)(nil),                    // 103: quilibrium.node.node.pb.GetTokensByAccountRequest
+	(*TokensByAccountResponse)(nil),                      // 104: quilibrium.node.node.pb.TokensByAccountResponse
+	(*GetPreCoinProofsByAccountRequest)(nil),             // 105: quilibrium.node.node.pb.GetPreCoinProofsByAccountRequest
+	(*PreCoinProofsByAccountResponse)(nil),               // 106: quilibrium.node.node.pb.PreCoinProofsByAccountResponse
+	(*ClockFrame)(nil),                                   // 107: quilibrium.node.clock.pb.ClockFrame
+	(*ClockFramesRequest)(nil),                           // 108: quilibrium.node.clock.pb.ClockFramesRequest
+	(*ClockFramesResponse)(nil),                          // 109: quilibrium.node.clock.pb.ClockFramesResponse
+	(*Ed448Signature)(nil),                               // 110: quilibrium.node.keys.pb.Ed448Signature
 }
 var file_node_proto_depIdxs = []int32{
-	106, // 0: quilibrium.node.node.pb.FramesResponse.truncated_clock_frames:type_name -> quilibrium.node.clock.pb.ClockFrame
-	106, // 1: quilibrium.node.node.pb.FrameInfoResponse.clock_frame:type_name -> quilibrium.node.clock.pb.ClockFrame
+	107, // 0: quilibrium.node.node.pb.FramesResponse.truncated_clock_frames:type_name -> quilibrium.node.clock.pb.ClockFrame
+	107, // 1: quilibrium.node.node.pb.FrameInfoResponse.clock_frame:type_name -> quilibrium.node.clock.pb.ClockFrame
 	7,   // 2: quilibrium.node.node.pb.PeerInfoResponse.peer_info:type_name -> quilibrium.node.node.pb.PeerInfo
 	7,   // 3: quilibrium.node.node.pb.PeerInfoResponse.uncooperative_peer_info:type_name -> quilibrium.node.node.pb.PeerInfo
 	7,   // 4: quilibrium.node.node.pb.PutPeerInfoRequest.peer_info:type_name -> quilibrium.node.node.pb.PeerInfo
 	7,   // 5: quilibrium.node.node.pb.PutPeerInfoRequest.uncooperative_peer_info:type_name -> quilibrium.node.node.pb.PeerInfo
 	9,   // 6: quilibrium.node.node.pb.NetworkInfoResponse.network_info:type_name -> quilibrium.node.node.pb.NetworkInfo
 	17,  // 7: quilibrium.node.node.pb.SelfTestReport.capabilities:type_name -> quilibrium.node.node.pb.Capability
-	107, // 8: quilibrium.node.node.pb.SyncRequest.frames_request:type_name -> quilibrium.node.clock.pb.ClockFramesRequest
-	108, // 9: quilibrium.node.node.pb.SyncResponse.frames_response:type_name -> quilibrium.node.clock.pb.ClockFramesResponse
+	108, // 8: quilibrium.node.node.pb.SyncRequest.frames_request:type_name -> quilibrium.node.clock.pb.ClockFramesRequest
+	109, // 9: quilibrium.node.node.pb.SyncResponse.frames_response:type_name -> quilibrium.node.clock.pb.ClockFramesResponse
 	17,  // 10: quilibrium.node.node.pb.PeerManifest.capabilities:type_name -> quilibrium.node.node.pb.Capability
-	109, // 11: quilibrium.node.node.pb.AnnounceProverRequest.public_key_signatures_ed448:type_name -> quilibrium.node.keys.pb.Ed448Signature
-	109, // 12: quilibrium.node.node.pb.AnnounceProverJoin.public_key_signature_ed448:type_name -> quilibrium.node.keys.pb.Ed448Signature
-	109, // 13: quilibrium.node.node.pb.AnnounceProverLeave.public_key_signature_ed448:type_name -> quilibrium.node.keys.pb.Ed448Signature
-	109, // 14: quilibrium.node.node.pb.AnnounceProverPause.public_key_signature_ed448:type_name -> quilibrium.node.keys.pb.Ed448Signature
-	109, // 15: quilibrium.node.node.pb.AnnounceProverResume.public_key_signature_ed448:type_name -> quilibrium.node.keys.pb.Ed448Signature
+	110, // 11: quilibrium.node.node.pb.AnnounceProverRequest.public_key_signatures_ed448:type_name -> quilibrium.node.keys.pb.Ed448Signature
+	110, // 12: quilibrium.node.node.pb.AnnounceProverJoin.public_key_signature_ed448:type_name -> quilibrium.node.keys.pb.Ed448Signature
+	110, // 13: quilibrium.node.node.pb.AnnounceProverLeave.public_key_signature_ed448:type_name -> quilibrium.node.keys.pb.Ed448Signature
+	110, // 14: quilibrium.node.node.pb.AnnounceProverPause.public_key_signature_ed448:type_name -> quilibrium.node.keys.pb.Ed448Signature
+	110, // 15: quilibrium.node.node.pb.AnnounceProverResume.public_key_signature_ed448:type_name -> quilibrium.node.keys.pb.Ed448Signature
 	29,  // 16: quilibrium.node.node.pb.AccountRef.originated_account:type_name -> quilibrium.node.node.pb.OriginatedAccountRef
 	30,  // 17: quilibrium.node.node.pb.AccountRef.implicit_account:type_name -> quilibrium.node.node.pb.ImplicitAccount
 	31,  // 18: quilibrium.node.node.pb.Coin.owner:type_name -> quilibrium.node.node.pb.AccountRef
-	59,  // 19: quilibrium.node.node.pb.TokenRequest.transfer:type_name -> quilibrium.node.node.pb.TransferCoinRequest
-	58,  // 20: quilibrium.node.node.pb.TokenRequest.split:type_name -> quilibrium.node.node.pb.SplitCoinRequest
-	52,  // 21: quilibrium.node.node.pb.TokenRequest.merge:type_name -> quilibrium.node.node.pb.MergeCoinRequest
-	53,  // 22: quilibrium.node.node.pb.TokenRequest.mint:type_name -> quilibrium.node.node.pb.MintCoinRequest
+	60,  // 19: quilibrium.node.node.pb.TokenRequest.transfer:type_name -> quilibrium.node.node.pb.TransferCoinRequest
+	59,  // 20: quilibrium.node.node.pb.TokenRequest.split:type_name -> quilibrium.node.node.pb.SplitCoinRequest
+	53,  // 21: quilibrium.node.node.pb.TokenRequest.merge:type_name -> quilibrium.node.node.pb.MergeCoinRequest
+	54,  // 22: quilibrium.node.node.pb.TokenRequest.mint:type_name -> quilibrium.node.node.pb.MintCoinRequest
 	24,  // 23: quilibrium.node.node.pb.TokenRequest.announce:type_name -> quilibrium.node.node.pb.AnnounceProverRequest
 	25,  // 24: quilibrium.node.node.pb.TokenRequest.join:type_name -> quilibrium.node.node.pb.AnnounceProverJoin
 	26,  // 25: quilibrium.node.node.pb.TokenRequest.leave:type_name -> quilibrium.node.node.pb.AnnounceProverLeave
@@ -8164,221 +8245,223 @@ var file_node_proto_depIdxs = []int32{
 	28,  // 27: quilibrium.node.node.pb.TokenRequest.resume:type_name -> quilibrium.node.node.pb.AnnounceProverResume
 	35,  // 28: quilibrium.node.node.pb.TokenRequests.requests:type_name -> quilibrium.node.node.pb.TokenRequest
 	31,  // 29: quilibrium.node.node.pb.PreCoinProof.owner:type_name -> quilibrium.node.node.pb.AccountRef
-	34,  // 30: quilibrium.node.node.pb.TokenOutput.coin:type_name -> quilibrium.node.node.pb.Coin
-	37,  // 31: quilibrium.node.node.pb.TokenOutput.proof:type_name -> quilibrium.node.node.pb.PreCoinProof
-	40,  // 32: quilibrium.node.node.pb.TokenOutput.deleted_coin:type_name -> quilibrium.node.node.pb.CoinRef
-	37,  // 33: quilibrium.node.node.pb.TokenOutput.deleted_proof:type_name -> quilibrium.node.node.pb.PreCoinProof
-	24,  // 34: quilibrium.node.node.pb.TokenOutput.announce:type_name -> quilibrium.node.node.pb.AnnounceProverRequest
-	25,  // 35: quilibrium.node.node.pb.TokenOutput.join:type_name -> quilibrium.node.node.pb.AnnounceProverJoin
-	26,  // 36: quilibrium.node.node.pb.TokenOutput.leave:type_name -> quilibrium.node.node.pb.AnnounceProverLeave
-	27,  // 37: quilibrium.node.node.pb.TokenOutput.pause:type_name -> quilibrium.node.node.pb.AnnounceProverPause
-	28,  // 38: quilibrium.node.node.pb.TokenOutput.resume:type_name -> quilibrium.node.node.pb.AnnounceProverResume
-	38,  // 39: quilibrium.node.node.pb.TokenOutputs.outputs:type_name -> quilibrium.node.node.pb.TokenOutput
-	42,  // 40: quilibrium.node.node.pb.Signature.key:type_name -> quilibrium.node.node.pb.KeyRef
-	23,  // 41: quilibrium.node.node.pb.PeerManifestsResponse.peer_manifests:type_name -> quilibrium.node.node.pb.PeerManifest
-	41,  // 42: quilibrium.node.node.pb.AcceptPendingTransactionRequest.pending_transaction:type_name -> quilibrium.node.node.pb.PendingTransactionRef
-	43,  // 43: quilibrium.node.node.pb.AcceptPendingTransactionRequest.signature:type_name -> quilibrium.node.node.pb.Signature
-	31,  // 44: quilibrium.node.node.pb.AllowAccountRequest.of_account:type_name -> quilibrium.node.node.pb.AccountRef
-	31,  // 45: quilibrium.node.node.pb.AllowAccountRequest.permitted_account:type_name -> quilibrium.node.node.pb.AccountRef
-	32,  // 46: quilibrium.node.node.pb.AllowAccountRequest.allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
-	43,  // 47: quilibrium.node.node.pb.AllowAccountRequest.signature:type_name -> quilibrium.node.node.pb.Signature
-	40,  // 48: quilibrium.node.node.pb.AllowCoinRequest.of_coin:type_name -> quilibrium.node.node.pb.CoinRef
-	31,  // 49: quilibrium.node.node.pb.AllowCoinRequest.permitted_account:type_name -> quilibrium.node.node.pb.AccountRef
-	32,  // 50: quilibrium.node.node.pb.AllowCoinRequest.account_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
-	33,  // 51: quilibrium.node.node.pb.AllowCoinRequest.coin_allowance:type_name -> quilibrium.node.node.pb.CoinAllowanceRef
-	43,  // 52: quilibrium.node.node.pb.AllowCoinRequest.signature:type_name -> quilibrium.node.node.pb.Signature
-	31,  // 53: quilibrium.node.node.pb.BalanceAccountRequest.account:type_name -> quilibrium.node.node.pb.AccountRef
-	32,  // 54: quilibrium.node.node.pb.BalanceAccountRequest.allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
-	43,  // 55: quilibrium.node.node.pb.BalanceAccountRequest.signature:type_name -> quilibrium.node.node.pb.Signature
-	31,  // 56: quilibrium.node.node.pb.CoinsAccountRequest.account:type_name -> quilibrium.node.node.pb.AccountRef
-	32,  // 57: quilibrium.node.node.pb.CoinsAccountRequest.allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
-	43,  // 58: quilibrium.node.node.pb.CoinsAccountRequest.signature:type_name -> quilibrium.node.node.pb.Signature
-	31,  // 59: quilibrium.node.node.pb.PendingTransactionsAccountRequest.account:type_name -> quilibrium.node.node.pb.AccountRef
-	32,  // 60: quilibrium.node.node.pb.PendingTransactionsAccountRequest.allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
-	43,  // 61: quilibrium.node.node.pb.PendingTransactionsAccountRequest.signature:type_name -> quilibrium.node.node.pb.Signature
-	32,  // 62: quilibrium.node.node.pb.IntersectCoinRequest.account_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
-	33,  // 63: quilibrium.node.node.pb.IntersectCoinRequest.coin_allowance:type_name -> quilibrium.node.node.pb.CoinAllowanceRef
-	40,  // 64: quilibrium.node.node.pb.IntersectCoinRequest.of_coin:type_name -> quilibrium.node.node.pb.CoinRef
-	40,  // 65: quilibrium.node.node.pb.MergeCoinRequest.coins:type_name -> quilibrium.node.node.pb.CoinRef
-	32,  // 66: quilibrium.node.node.pb.MergeCoinRequest.account_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
-	33,  // 67: quilibrium.node.node.pb.MergeCoinRequest.coin_allowances:type_name -> quilibrium.node.node.pb.CoinAllowanceRef
-	109, // 68: quilibrium.node.node.pb.MergeCoinRequest.signature:type_name -> quilibrium.node.keys.pb.Ed448Signature
-	32,  // 69: quilibrium.node.node.pb.MintCoinRequest.allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
-	109, // 70: quilibrium.node.node.pb.MintCoinRequest.signature:type_name -> quilibrium.node.keys.pb.Ed448Signature
-	31,  // 71: quilibrium.node.node.pb.MutualReceiveCoinRequest.to_account:type_name -> quilibrium.node.node.pb.AccountRef
-	32,  // 72: quilibrium.node.node.pb.MutualReceiveCoinRequest.allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
-	43,  // 73: quilibrium.node.node.pb.MutualReceiveCoinRequest.signature:type_name -> quilibrium.node.node.pb.Signature
-	40,  // 74: quilibrium.node.node.pb.MutualTransferCoinRequest.of_coin:type_name -> quilibrium.node.node.pb.CoinRef
-	32,  // 75: quilibrium.node.node.pb.MutualTransferCoinRequest.account_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
-	33,  // 76: quilibrium.node.node.pb.MutualTransferCoinRequest.coin_allowance:type_name -> quilibrium.node.node.pb.CoinAllowanceRef
-	43,  // 77: quilibrium.node.node.pb.MutualTransferCoinRequest.signature:type_name -> quilibrium.node.node.pb.Signature
-	31,  // 78: quilibrium.node.node.pb.RevokeAccountRequest.of_account:type_name -> quilibrium.node.node.pb.AccountRef
-	32,  // 79: quilibrium.node.node.pb.RevokeAccountRequest.revoked_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
-	32,  // 80: quilibrium.node.node.pb.RevokeAccountRequest.allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
-	43,  // 81: quilibrium.node.node.pb.RevokeAccountRequest.signature:type_name -> quilibrium.node.node.pb.Signature
-	40,  // 82: quilibrium.node.node.pb.RevokeCoinRequest.of_coin:type_name -> quilibrium.node.node.pb.CoinRef
-	33,  // 83: quilibrium.node.node.pb.RevokeCoinRequest.revoked_allowance:type_name -> quilibrium.node.node.pb.CoinAllowanceRef
-	32,  // 84: quilibrium.node.node.pb.RevokeCoinRequest.account_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
-	33,  // 85: quilibrium.node.node.pb.RevokeCoinRequest.coin_allowance:type_name -> quilibrium.node.node.pb.CoinAllowanceRef
-	43,  // 86: quilibrium.node.node.pb.RevokeCoinRequest.signature:type_name -> quilibrium.node.node.pb.Signature
-	40,  // 87: quilibrium.node.node.pb.SplitCoinRequest.of_coin:type_name -> quilibrium.node.node.pb.CoinRef
-	32,  // 88: quilibrium.node.node.pb.SplitCoinRequest.account_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
-	33,  // 89: quilibrium.node.node.pb.SplitCoinRequest.coin_allowance:type_name -> quilibrium.node.node.pb.CoinAllowanceRef
-	109, // 90: quilibrium.node.node.pb.SplitCoinRequest.signature:type_name -> quilibrium.node.keys.pb.Ed448Signature
-	31,  // 91: quilibrium.node.node.pb.TransferCoinRequest.to_account:type_name -> quilibrium.node.node.pb.AccountRef
-	31,  // 92: quilibrium.node.node.pb.TransferCoinRequest.refund_account:type_name -> quilibrium.node.node.pb.AccountRef
-	40,  // 93: quilibrium.node.node.pb.TransferCoinRequest.of_coin:type_name -> quilibrium.node.node.pb.CoinRef
-	32,  // 94: quilibrium.node.node.pb.TransferCoinRequest.account_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
-	33,  // 95: quilibrium.node.node.pb.TransferCoinRequest.coin_allowance:type_name -> quilibrium.node.node.pb.CoinAllowanceRef
-	109, // 96: quilibrium.node.node.pb.TransferCoinRequest.signature:type_name -> quilibrium.node.keys.pb.Ed448Signature
-	41,  // 97: quilibrium.node.node.pb.ApprovePendingTransactionRequest.pending_transaction:type_name -> quilibrium.node.node.pb.PendingTransactionRef
-	32,  // 98: quilibrium.node.node.pb.ApprovePendingTransactionRequest.account_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
-	43,  // 99: quilibrium.node.node.pb.ApprovePendingTransactionRequest.signature:type_name -> quilibrium.node.node.pb.Signature
-	41,  // 100: quilibrium.node.node.pb.RejectPendingTransactionRequest.pending_transaction:type_name -> quilibrium.node.node.pb.PendingTransactionRef
-	32,  // 101: quilibrium.node.node.pb.RejectPendingTransactionRequest.account_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
-	43,  // 102: quilibrium.node.node.pb.RejectPendingTransactionRequest.signature:type_name -> quilibrium.node.node.pb.Signature
-	62,  // 103: quilibrium.node.node.pb.KeyRing.keys:type_name -> quilibrium.node.node.pb.InlineKey
-	62,  // 104: quilibrium.node.node.pb.DeliveryData.shared_key:type_name -> quilibrium.node.node.pb.InlineKey
-	64,  // 105: quilibrium.node.node.pb.DeliveryData.confirmation:type_name -> quilibrium.node.node.pb.Confirmation
-	46,  // 106: quilibrium.node.node.pb.DecryptableAllowAccountRequest.request:type_name -> quilibrium.node.node.pb.AllowAccountRequest
-	63,  // 107: quilibrium.node.node.pb.DecryptableAllowAccountRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
-	66,  // 108: quilibrium.node.node.pb.DecryptableAllowAccountRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
-	48,  // 109: quilibrium.node.node.pb.DecryptableBalanceAccountRequest.request:type_name -> quilibrium.node.node.pb.BalanceAccountRequest
-	63,  // 110: quilibrium.node.node.pb.DecryptableBalanceAccountRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
-	49,  // 111: quilibrium.node.node.pb.DecryptableCoinsAccountRequest.request:type_name -> quilibrium.node.node.pb.CoinsAccountRequest
-	63,  // 112: quilibrium.node.node.pb.DecryptableCoinsAccountRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
-	56,  // 113: quilibrium.node.node.pb.DecryptableRevokeAccountRequest.request:type_name -> quilibrium.node.node.pb.RevokeAccountRequest
-	63,  // 114: quilibrium.node.node.pb.DecryptableRevokeAccountRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
-	66,  // 115: quilibrium.node.node.pb.DecryptableRevokeAccountRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
-	50,  // 116: quilibrium.node.node.pb.DecryptablePendingTransactionsAccountRequest.request:type_name -> quilibrium.node.node.pb.PendingTransactionsAccountRequest
-	63,  // 117: quilibrium.node.node.pb.DecryptablePendingTransactionsAccountRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
-	66,  // 118: quilibrium.node.node.pb.DecryptablePendingTransactionsAccountRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
-	47,  // 119: quilibrium.node.node.pb.DecryptableAllowCoinRequest.request:type_name -> quilibrium.node.node.pb.AllowCoinRequest
-	63,  // 120: quilibrium.node.node.pb.DecryptableAllowCoinRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
-	66,  // 121: quilibrium.node.node.pb.DecryptableAllowCoinRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
-	51,  // 122: quilibrium.node.node.pb.DecryptableIntersectCoinRequest.request:type_name -> quilibrium.node.node.pb.IntersectCoinRequest
-	63,  // 123: quilibrium.node.node.pb.DecryptableIntersectCoinRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
-	66,  // 124: quilibrium.node.node.pb.DecryptableIntersectCoinRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
-	52,  // 125: quilibrium.node.node.pb.DecryptableMergeCoinRequest.request:type_name -> quilibrium.node.node.pb.MergeCoinRequest
-	63,  // 126: quilibrium.node.node.pb.DecryptableMergeCoinRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
-	66,  // 127: quilibrium.node.node.pb.DecryptableMergeCoinRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
-	53,  // 128: quilibrium.node.node.pb.DecryptableMintCoinRequest.request:type_name -> quilibrium.node.node.pb.MintCoinRequest
-	63,  // 129: quilibrium.node.node.pb.DecryptableMintCoinRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
-	66,  // 130: quilibrium.node.node.pb.DecryptableMintCoinRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
-	54,  // 131: quilibrium.node.node.pb.DecryptableMutualReceiveCoinRequest.request:type_name -> quilibrium.node.node.pb.MutualReceiveCoinRequest
-	63,  // 132: quilibrium.node.node.pb.DecryptableMutualReceiveCoinRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
-	66,  // 133: quilibrium.node.node.pb.DecryptableMutualReceiveCoinRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
-	55,  // 134: quilibrium.node.node.pb.DecryptableMutualTransferCoinRequest.request:type_name -> quilibrium.node.node.pb.MutualTransferCoinRequest
-	63,  // 135: quilibrium.node.node.pb.DecryptableMutualTransferCoinRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
-	66,  // 136: quilibrium.node.node.pb.DecryptableMutualTransferCoinRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
-	57,  // 137: quilibrium.node.node.pb.DecryptableRevokeCoinRequest.request:type_name -> quilibrium.node.node.pb.RevokeCoinRequest
-	63,  // 138: quilibrium.node.node.pb.DecryptableRevokeCoinRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
-	66,  // 139: quilibrium.node.node.pb.DecryptableRevokeCoinRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
-	58,  // 140: quilibrium.node.node.pb.DecryptableSplitCoinRequest.request:type_name -> quilibrium.node.node.pb.SplitCoinRequest
-	63,  // 141: quilibrium.node.node.pb.DecryptableSplitCoinRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
-	66,  // 142: quilibrium.node.node.pb.DecryptableSplitCoinRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
-	59,  // 143: quilibrium.node.node.pb.DecryptableTransferCoinRequest.request:type_name -> quilibrium.node.node.pb.TransferCoinRequest
-	63,  // 144: quilibrium.node.node.pb.DecryptableTransferCoinRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
-	66,  // 145: quilibrium.node.node.pb.DecryptableTransferCoinRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
-	60,  // 146: quilibrium.node.node.pb.DecryptableApprovePendingTransactionRequest.request:type_name -> quilibrium.node.node.pb.ApprovePendingTransactionRequest
-	63,  // 147: quilibrium.node.node.pb.DecryptableApprovePendingTransactionRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
-	66,  // 148: quilibrium.node.node.pb.DecryptableApprovePendingTransactionRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
-	61,  // 149: quilibrium.node.node.pb.DecryptableRejectPendingTransactionRequest.request:type_name -> quilibrium.node.node.pb.RejectPendingTransactionRequest
-	63,  // 150: quilibrium.node.node.pb.DecryptableRejectPendingTransactionRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
-	66,  // 151: quilibrium.node.node.pb.DecryptableRejectPendingTransactionRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
-	40,  // 152: quilibrium.node.node.pb.CoinInfo.coin:type_name -> quilibrium.node.node.pb.CoinRef
-	41,  // 153: quilibrium.node.node.pb.PendingTransactionInfo.pending_transaction:type_name -> quilibrium.node.node.pb.PendingTransactionRef
-	83,  // 154: quilibrium.node.node.pb.PendingTransactionInfo.coin:type_name -> quilibrium.node.node.pb.CoinInfo
-	31,  // 155: quilibrium.node.node.pb.PendingTransactionInfo.refund_account:type_name -> quilibrium.node.node.pb.AccountRef
-	32,  // 156: quilibrium.node.node.pb.AllowAccountResponse.allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
-	65,  // 157: quilibrium.node.node.pb.AllowAccountResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
-	83,  // 158: quilibrium.node.node.pb.CoinsAccountResponse.coins:type_name -> quilibrium.node.node.pb.CoinInfo
-	84,  // 159: quilibrium.node.node.pb.PendingTransactionsAccountResponse.pending_transactions:type_name -> quilibrium.node.node.pb.PendingTransactionInfo
-	65,  // 160: quilibrium.node.node.pb.RevokeAccountResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
-	33,  // 161: quilibrium.node.node.pb.AllowCoinResponse.allowance:type_name -> quilibrium.node.node.pb.CoinAllowanceRef
-	65,  // 162: quilibrium.node.node.pb.AllowCoinResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
-	40,  // 163: quilibrium.node.node.pb.MergeCoinResponse.coin:type_name -> quilibrium.node.node.pb.CoinRef
-	65,  // 164: quilibrium.node.node.pb.MergeCoinResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
-	83,  // 165: quilibrium.node.node.pb.MintCoinResponse.coins:type_name -> quilibrium.node.node.pb.CoinInfo
-	65,  // 166: quilibrium.node.node.pb.MintCoinResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
-	40,  // 167: quilibrium.node.node.pb.MutualReceiveCoinResponse.coin:type_name -> quilibrium.node.node.pb.CoinRef
-	65,  // 168: quilibrium.node.node.pb.MutualReceiveCoinResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
-	65,  // 169: quilibrium.node.node.pb.MutualTransferCoinResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
-	65,  // 170: quilibrium.node.node.pb.RevokeCoinResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
-	40,  // 171: quilibrium.node.node.pb.SplitCoinResponse.coins:type_name -> quilibrium.node.node.pb.CoinRef
-	65,  // 172: quilibrium.node.node.pb.SplitCoinResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
-	41,  // 173: quilibrium.node.node.pb.TransferCoinResponse.pending_transaction:type_name -> quilibrium.node.node.pb.PendingTransactionRef
-	65,  // 174: quilibrium.node.node.pb.TransferCoinResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
-	40,  // 175: quilibrium.node.node.pb.ApprovePendingTransactionResponse.coin:type_name -> quilibrium.node.node.pb.CoinRef
-	65,  // 176: quilibrium.node.node.pb.ApprovePendingTransactionResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
-	65,  // 177: quilibrium.node.node.pb.RejectPendingTransactionResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
-	34,  // 178: quilibrium.node.node.pb.TokensByAccountResponse.coins:type_name -> quilibrium.node.node.pb.Coin
-	37,  // 179: quilibrium.node.node.pb.PreCoinProofsByAccountResponse.proofs:type_name -> quilibrium.node.node.pb.PreCoinProof
-	19,  // 180: quilibrium.node.node.pb.ValidationService.PerformValidation:input_type -> quilibrium.node.node.pb.ValidationMessage
-	20,  // 181: quilibrium.node.node.pb.ValidationService.Sync:input_type -> quilibrium.node.node.pb.SyncRequest
-	0,   // 182: quilibrium.node.node.pb.NodeService.GetFrames:input_type -> quilibrium.node.node.pb.GetFramesRequest
-	1,   // 183: quilibrium.node.node.pb.NodeService.GetFrameInfo:input_type -> quilibrium.node.node.pb.GetFrameInfoRequest
-	2,   // 184: quilibrium.node.node.pb.NodeService.GetPeerInfo:input_type -> quilibrium.node.node.pb.GetPeerInfoRequest
-	3,   // 185: quilibrium.node.node.pb.NodeService.GetNodeInfo:input_type -> quilibrium.node.node.pb.GetNodeInfoRequest
-	4,   // 186: quilibrium.node.node.pb.NodeService.GetNetworkInfo:input_type -> quilibrium.node.node.pb.GetNetworkInfoRequest
-	15,  // 187: quilibrium.node.node.pb.NodeService.GetTokenInfo:input_type -> quilibrium.node.node.pb.GetTokenInfoRequest
-	22,  // 188: quilibrium.node.node.pb.NodeService.GetPeerManifests:input_type -> quilibrium.node.node.pb.GetPeerManifestsRequest
-	35,  // 189: quilibrium.node.node.pb.NodeService.SendMessage:input_type -> quilibrium.node.node.pb.TokenRequest
-	102, // 190: quilibrium.node.node.pb.NodeService.GetTokensByAccount:input_type -> quilibrium.node.node.pb.GetTokensByAccountRequest
-	104, // 191: quilibrium.node.node.pb.NodeService.GetPreCoinProofsByAccount:input_type -> quilibrium.node.node.pb.GetPreCoinProofsByAccountRequest
-	67,  // 192: quilibrium.node.node.pb.AccountService.Allow:input_type -> quilibrium.node.node.pb.DecryptableAllowAccountRequest
-	68,  // 193: quilibrium.node.node.pb.AccountService.GetBalance:input_type -> quilibrium.node.node.pb.DecryptableBalanceAccountRequest
-	69,  // 194: quilibrium.node.node.pb.AccountService.ListCoins:input_type -> quilibrium.node.node.pb.DecryptableCoinsAccountRequest
-	71,  // 195: quilibrium.node.node.pb.AccountService.ListPendingTransactions:input_type -> quilibrium.node.node.pb.DecryptablePendingTransactionsAccountRequest
-	70,  // 196: quilibrium.node.node.pb.AccountService.Revoke:input_type -> quilibrium.node.node.pb.DecryptableRevokeAccountRequest
-	72,  // 197: quilibrium.node.node.pb.CoinService.Allow:input_type -> quilibrium.node.node.pb.DecryptableAllowCoinRequest
-	73,  // 198: quilibrium.node.node.pb.CoinService.Intersect:input_type -> quilibrium.node.node.pb.DecryptableIntersectCoinRequest
-	74,  // 199: quilibrium.node.node.pb.CoinService.Merge:input_type -> quilibrium.node.node.pb.DecryptableMergeCoinRequest
-	75,  // 200: quilibrium.node.node.pb.CoinService.Mint:input_type -> quilibrium.node.node.pb.DecryptableMintCoinRequest
-	76,  // 201: quilibrium.node.node.pb.CoinService.MutualReceive:input_type -> quilibrium.node.node.pb.DecryptableMutualReceiveCoinRequest
-	77,  // 202: quilibrium.node.node.pb.CoinService.MutualTransfer:input_type -> quilibrium.node.node.pb.DecryptableMutualTransferCoinRequest
-	78,  // 203: quilibrium.node.node.pb.CoinService.Revoke:input_type -> quilibrium.node.node.pb.DecryptableRevokeCoinRequest
-	79,  // 204: quilibrium.node.node.pb.CoinService.Split:input_type -> quilibrium.node.node.pb.DecryptableSplitCoinRequest
-	80,  // 205: quilibrium.node.node.pb.CoinService.Transfer:input_type -> quilibrium.node.node.pb.DecryptableTransferCoinRequest
-	81,  // 206: quilibrium.node.node.pb.TransactionService.Approve:input_type -> quilibrium.node.node.pb.DecryptableApprovePendingTransactionRequest
-	82,  // 207: quilibrium.node.node.pb.TransactionService.Reject:input_type -> quilibrium.node.node.pb.DecryptableRejectPendingTransactionRequest
-	12,  // 208: quilibrium.node.node.pb.NodeStats.PutNodeInfo:input_type -> quilibrium.node.node.pb.PutNodeInfoRequest
-	11,  // 209: quilibrium.node.node.pb.NodeStats.PutPeerInfo:input_type -> quilibrium.node.node.pb.PutPeerInfoRequest
-	19,  // 210: quilibrium.node.node.pb.ValidationService.PerformValidation:output_type -> quilibrium.node.node.pb.ValidationMessage
-	21,  // 211: quilibrium.node.node.pb.ValidationService.Sync:output_type -> quilibrium.node.node.pb.SyncResponse
-	5,   // 212: quilibrium.node.node.pb.NodeService.GetFrames:output_type -> quilibrium.node.node.pb.FramesResponse
-	6,   // 213: quilibrium.node.node.pb.NodeService.GetFrameInfo:output_type -> quilibrium.node.node.pb.FrameInfoResponse
-	8,   // 214: quilibrium.node.node.pb.NodeService.GetPeerInfo:output_type -> quilibrium.node.node.pb.PeerInfoResponse
-	10,  // 215: quilibrium.node.node.pb.NodeService.GetNodeInfo:output_type -> quilibrium.node.node.pb.NodeInfoResponse
-	14,  // 216: quilibrium.node.node.pb.NodeService.GetNetworkInfo:output_type -> quilibrium.node.node.pb.NetworkInfoResponse
-	16,  // 217: quilibrium.node.node.pb.NodeService.GetTokenInfo:output_type -> quilibrium.node.node.pb.TokenInfoResponse
-	44,  // 218: quilibrium.node.node.pb.NodeService.GetPeerManifests:output_type -> quilibrium.node.node.pb.PeerManifestsResponse
-	101, // 219: quilibrium.node.node.pb.NodeService.SendMessage:output_type -> quilibrium.node.node.pb.SendMessageResponse
-	103, // 220: quilibrium.node.node.pb.NodeService.GetTokensByAccount:output_type -> quilibrium.node.node.pb.TokensByAccountResponse
-	105, // 221: quilibrium.node.node.pb.NodeService.GetPreCoinProofsByAccount:output_type -> quilibrium.node.node.pb.PreCoinProofsByAccountResponse
-	85,  // 222: quilibrium.node.node.pb.AccountService.Allow:output_type -> quilibrium.node.node.pb.AllowAccountResponse
-	86,  // 223: quilibrium.node.node.pb.AccountService.GetBalance:output_type -> quilibrium.node.node.pb.BalanceAccountResponse
-	87,  // 224: quilibrium.node.node.pb.AccountService.ListCoins:output_type -> quilibrium.node.node.pb.CoinsAccountResponse
-	88,  // 225: quilibrium.node.node.pb.AccountService.ListPendingTransactions:output_type -> quilibrium.node.node.pb.PendingTransactionsAccountResponse
-	89,  // 226: quilibrium.node.node.pb.AccountService.Revoke:output_type -> quilibrium.node.node.pb.RevokeAccountResponse
-	90,  // 227: quilibrium.node.node.pb.CoinService.Allow:output_type -> quilibrium.node.node.pb.AllowCoinResponse
-	91,  // 228: quilibrium.node.node.pb.CoinService.Intersect:output_type -> quilibrium.node.node.pb.IntersectCoinResponse
-	92,  // 229: quilibrium.node.node.pb.CoinService.Merge:output_type -> quilibrium.node.node.pb.MergeCoinResponse
-	93,  // 230: quilibrium.node.node.pb.CoinService.Mint:output_type -> quilibrium.node.node.pb.MintCoinResponse
-	94,  // 231: quilibrium.node.node.pb.CoinService.MutualReceive:output_type -> quilibrium.node.node.pb.MutualReceiveCoinResponse
-	95,  // 232: quilibrium.node.node.pb.CoinService.MutualTransfer:output_type -> quilibrium.node.node.pb.MutualTransferCoinResponse
-	96,  // 233: quilibrium.node.node.pb.CoinService.Revoke:output_type -> quilibrium.node.node.pb.RevokeCoinResponse
-	97,  // 234: quilibrium.node.node.pb.CoinService.Split:output_type -> quilibrium.node.node.pb.SplitCoinResponse
-	98,  // 235: quilibrium.node.node.pb.CoinService.Transfer:output_type -> quilibrium.node.node.pb.TransferCoinResponse
-	99,  // 236: quilibrium.node.node.pb.TransactionService.Approve:output_type -> quilibrium.node.node.pb.ApprovePendingTransactionResponse
-	100, // 237: quilibrium.node.node.pb.TransactionService.Reject:output_type -> quilibrium.node.node.pb.RejectPendingTransactionResponse
-	13,  // 238: quilibrium.node.node.pb.NodeStats.PutNodeInfo:output_type -> quilibrium.node.node.pb.PutResponse
-	13,  // 239: quilibrium.node.node.pb.NodeStats.PutPeerInfo:output_type -> quilibrium.node.node.pb.PutResponse
-	210, // [210:240] is the sub-list for method output_type
-	180, // [180:210] is the sub-list for method input_type
-	180, // [180:180] is the sub-list for extension type_name
-	180, // [180:180] is the sub-list for extension extendee
-	0,   // [0:180] is the sub-list for field type_name
+	31,  // 30: quilibrium.node.node.pb.ProverPenalty.account:type_name -> quilibrium.node.node.pb.AccountRef
+	34,  // 31: quilibrium.node.node.pb.TokenOutput.coin:type_name -> quilibrium.node.node.pb.Coin
+	37,  // 32: quilibrium.node.node.pb.TokenOutput.proof:type_name -> quilibrium.node.node.pb.PreCoinProof
+	41,  // 33: quilibrium.node.node.pb.TokenOutput.deleted_coin:type_name -> quilibrium.node.node.pb.CoinRef
+	37,  // 34: quilibrium.node.node.pb.TokenOutput.deleted_proof:type_name -> quilibrium.node.node.pb.PreCoinProof
+	24,  // 35: quilibrium.node.node.pb.TokenOutput.announce:type_name -> quilibrium.node.node.pb.AnnounceProverRequest
+	25,  // 36: quilibrium.node.node.pb.TokenOutput.join:type_name -> quilibrium.node.node.pb.AnnounceProverJoin
+	26,  // 37: quilibrium.node.node.pb.TokenOutput.leave:type_name -> quilibrium.node.node.pb.AnnounceProverLeave
+	27,  // 38: quilibrium.node.node.pb.TokenOutput.pause:type_name -> quilibrium.node.node.pb.AnnounceProverPause
+	28,  // 39: quilibrium.node.node.pb.TokenOutput.resume:type_name -> quilibrium.node.node.pb.AnnounceProverResume
+	38,  // 40: quilibrium.node.node.pb.TokenOutput.penalty:type_name -> quilibrium.node.node.pb.ProverPenalty
+	39,  // 41: quilibrium.node.node.pb.TokenOutputs.outputs:type_name -> quilibrium.node.node.pb.TokenOutput
+	43,  // 42: quilibrium.node.node.pb.Signature.key:type_name -> quilibrium.node.node.pb.KeyRef
+	23,  // 43: quilibrium.node.node.pb.PeerManifestsResponse.peer_manifests:type_name -> quilibrium.node.node.pb.PeerManifest
+	42,  // 44: quilibrium.node.node.pb.AcceptPendingTransactionRequest.pending_transaction:type_name -> quilibrium.node.node.pb.PendingTransactionRef
+	44,  // 45: quilibrium.node.node.pb.AcceptPendingTransactionRequest.signature:type_name -> quilibrium.node.node.pb.Signature
+	31,  // 46: quilibrium.node.node.pb.AllowAccountRequest.of_account:type_name -> quilibrium.node.node.pb.AccountRef
+	31,  // 47: quilibrium.node.node.pb.AllowAccountRequest.permitted_account:type_name -> quilibrium.node.node.pb.AccountRef
+	32,  // 48: quilibrium.node.node.pb.AllowAccountRequest.allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
+	44,  // 49: quilibrium.node.node.pb.AllowAccountRequest.signature:type_name -> quilibrium.node.node.pb.Signature
+	41,  // 50: quilibrium.node.node.pb.AllowCoinRequest.of_coin:type_name -> quilibrium.node.node.pb.CoinRef
+	31,  // 51: quilibrium.node.node.pb.AllowCoinRequest.permitted_account:type_name -> quilibrium.node.node.pb.AccountRef
+	32,  // 52: quilibrium.node.node.pb.AllowCoinRequest.account_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
+	33,  // 53: quilibrium.node.node.pb.AllowCoinRequest.coin_allowance:type_name -> quilibrium.node.node.pb.CoinAllowanceRef
+	44,  // 54: quilibrium.node.node.pb.AllowCoinRequest.signature:type_name -> quilibrium.node.node.pb.Signature
+	31,  // 55: quilibrium.node.node.pb.BalanceAccountRequest.account:type_name -> quilibrium.node.node.pb.AccountRef
+	32,  // 56: quilibrium.node.node.pb.BalanceAccountRequest.allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
+	44,  // 57: quilibrium.node.node.pb.BalanceAccountRequest.signature:type_name -> quilibrium.node.node.pb.Signature
+	31,  // 58: quilibrium.node.node.pb.CoinsAccountRequest.account:type_name -> quilibrium.node.node.pb.AccountRef
+	32,  // 59: quilibrium.node.node.pb.CoinsAccountRequest.allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
+	44,  // 60: quilibrium.node.node.pb.CoinsAccountRequest.signature:type_name -> quilibrium.node.node.pb.Signature
+	31,  // 61: quilibrium.node.node.pb.PendingTransactionsAccountRequest.account:type_name -> quilibrium.node.node.pb.AccountRef
+	32,  // 62: quilibrium.node.node.pb.PendingTransactionsAccountRequest.allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
+	44,  // 63: quilibrium.node.node.pb.PendingTransactionsAccountRequest.signature:type_name -> quilibrium.node.node.pb.Signature
+	32,  // 64: quilibrium.node.node.pb.IntersectCoinRequest.account_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
+	33,  // 65: quilibrium.node.node.pb.IntersectCoinRequest.coin_allowance:type_name -> quilibrium.node.node.pb.CoinAllowanceRef
+	41,  // 66: quilibrium.node.node.pb.IntersectCoinRequest.of_coin:type_name -> quilibrium.node.node.pb.CoinRef
+	41,  // 67: quilibrium.node.node.pb.MergeCoinRequest.coins:type_name -> quilibrium.node.node.pb.CoinRef
+	32,  // 68: quilibrium.node.node.pb.MergeCoinRequest.account_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
+	33,  // 69: quilibrium.node.node.pb.MergeCoinRequest.coin_allowances:type_name -> quilibrium.node.node.pb.CoinAllowanceRef
+	110, // 70: quilibrium.node.node.pb.MergeCoinRequest.signature:type_name -> quilibrium.node.keys.pb.Ed448Signature
+	32,  // 71: quilibrium.node.node.pb.MintCoinRequest.allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
+	110, // 72: quilibrium.node.node.pb.MintCoinRequest.signature:type_name -> quilibrium.node.keys.pb.Ed448Signature
+	31,  // 73: quilibrium.node.node.pb.MutualReceiveCoinRequest.to_account:type_name -> quilibrium.node.node.pb.AccountRef
+	32,  // 74: quilibrium.node.node.pb.MutualReceiveCoinRequest.allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
+	44,  // 75: quilibrium.node.node.pb.MutualReceiveCoinRequest.signature:type_name -> quilibrium.node.node.pb.Signature
+	41,  // 76: quilibrium.node.node.pb.MutualTransferCoinRequest.of_coin:type_name -> quilibrium.node.node.pb.CoinRef
+	32,  // 77: quilibrium.node.node.pb.MutualTransferCoinRequest.account_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
+	33,  // 78: quilibrium.node.node.pb.MutualTransferCoinRequest.coin_allowance:type_name -> quilibrium.node.node.pb.CoinAllowanceRef
+	44,  // 79: quilibrium.node.node.pb.MutualTransferCoinRequest.signature:type_name -> quilibrium.node.node.pb.Signature
+	31,  // 80: quilibrium.node.node.pb.RevokeAccountRequest.of_account:type_name -> quilibrium.node.node.pb.AccountRef
+	32,  // 81: quilibrium.node.node.pb.RevokeAccountRequest.revoked_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
+	32,  // 82: quilibrium.node.node.pb.RevokeAccountRequest.allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
+	44,  // 83: quilibrium.node.node.pb.RevokeAccountRequest.signature:type_name -> quilibrium.node.node.pb.Signature
+	41,  // 84: quilibrium.node.node.pb.RevokeCoinRequest.of_coin:type_name -> quilibrium.node.node.pb.CoinRef
+	33,  // 85: quilibrium.node.node.pb.RevokeCoinRequest.revoked_allowance:type_name -> quilibrium.node.node.pb.CoinAllowanceRef
+	32,  // 86: quilibrium.node.node.pb.RevokeCoinRequest.account_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
+	33,  // 87: quilibrium.node.node.pb.RevokeCoinRequest.coin_allowance:type_name -> quilibrium.node.node.pb.CoinAllowanceRef
+	44,  // 88: quilibrium.node.node.pb.RevokeCoinRequest.signature:type_name -> quilibrium.node.node.pb.Signature
+	41,  // 89: quilibrium.node.node.pb.SplitCoinRequest.of_coin:type_name -> quilibrium.node.node.pb.CoinRef
+	32,  // 90: quilibrium.node.node.pb.SplitCoinRequest.account_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
+	33,  // 91: quilibrium.node.node.pb.SplitCoinRequest.coin_allowance:type_name -> quilibrium.node.node.pb.CoinAllowanceRef
+	110, // 92: quilibrium.node.node.pb.SplitCoinRequest.signature:type_name -> quilibrium.node.keys.pb.Ed448Signature
+	31,  // 93: quilibrium.node.node.pb.TransferCoinRequest.to_account:type_name -> quilibrium.node.node.pb.AccountRef
+	31,  // 94: quilibrium.node.node.pb.TransferCoinRequest.refund_account:type_name -> quilibrium.node.node.pb.AccountRef
+	41,  // 95: quilibrium.node.node.pb.TransferCoinRequest.of_coin:type_name -> quilibrium.node.node.pb.CoinRef
+	32,  // 96: quilibrium.node.node.pb.TransferCoinRequest.account_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
+	33,  // 97: quilibrium.node.node.pb.TransferCoinRequest.coin_allowance:type_name -> quilibrium.node.node.pb.CoinAllowanceRef
+	110, // 98: quilibrium.node.node.pb.TransferCoinRequest.signature:type_name -> quilibrium.node.keys.pb.Ed448Signature
+	42,  // 99: quilibrium.node.node.pb.ApprovePendingTransactionRequest.pending_transaction:type_name -> quilibrium.node.node.pb.PendingTransactionRef
+	32,  // 100: quilibrium.node.node.pb.ApprovePendingTransactionRequest.account_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
+	44,  // 101: quilibrium.node.node.pb.ApprovePendingTransactionRequest.signature:type_name -> quilibrium.node.node.pb.Signature
+	42,  // 102: quilibrium.node.node.pb.RejectPendingTransactionRequest.pending_transaction:type_name -> quilibrium.node.node.pb.PendingTransactionRef
+	32,  // 103: quilibrium.node.node.pb.RejectPendingTransactionRequest.account_allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
+	44,  // 104: quilibrium.node.node.pb.RejectPendingTransactionRequest.signature:type_name -> quilibrium.node.node.pb.Signature
+	63,  // 105: quilibrium.node.node.pb.KeyRing.keys:type_name -> quilibrium.node.node.pb.InlineKey
+	63,  // 106: quilibrium.node.node.pb.DeliveryData.shared_key:type_name -> quilibrium.node.node.pb.InlineKey
+	65,  // 107: quilibrium.node.node.pb.DeliveryData.confirmation:type_name -> quilibrium.node.node.pb.Confirmation
+	47,  // 108: quilibrium.node.node.pb.DecryptableAllowAccountRequest.request:type_name -> quilibrium.node.node.pb.AllowAccountRequest
+	64,  // 109: quilibrium.node.node.pb.DecryptableAllowAccountRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
+	67,  // 110: quilibrium.node.node.pb.DecryptableAllowAccountRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
+	49,  // 111: quilibrium.node.node.pb.DecryptableBalanceAccountRequest.request:type_name -> quilibrium.node.node.pb.BalanceAccountRequest
+	64,  // 112: quilibrium.node.node.pb.DecryptableBalanceAccountRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
+	50,  // 113: quilibrium.node.node.pb.DecryptableCoinsAccountRequest.request:type_name -> quilibrium.node.node.pb.CoinsAccountRequest
+	64,  // 114: quilibrium.node.node.pb.DecryptableCoinsAccountRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
+	57,  // 115: quilibrium.node.node.pb.DecryptableRevokeAccountRequest.request:type_name -> quilibrium.node.node.pb.RevokeAccountRequest
+	64,  // 116: quilibrium.node.node.pb.DecryptableRevokeAccountRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
+	67,  // 117: quilibrium.node.node.pb.DecryptableRevokeAccountRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
+	51,  // 118: quilibrium.node.node.pb.DecryptablePendingTransactionsAccountRequest.request:type_name -> quilibrium.node.node.pb.PendingTransactionsAccountRequest
+	64,  // 119: quilibrium.node.node.pb.DecryptablePendingTransactionsAccountRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
+	67,  // 120: quilibrium.node.node.pb.DecryptablePendingTransactionsAccountRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
+	48,  // 121: quilibrium.node.node.pb.DecryptableAllowCoinRequest.request:type_name -> quilibrium.node.node.pb.AllowCoinRequest
+	64,  // 122: quilibrium.node.node.pb.DecryptableAllowCoinRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
+	67,  // 123: quilibrium.node.node.pb.DecryptableAllowCoinRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
+	52,  // 124: quilibrium.node.node.pb.DecryptableIntersectCoinRequest.request:type_name -> quilibrium.node.node.pb.IntersectCoinRequest
+	64,  // 125: quilibrium.node.node.pb.DecryptableIntersectCoinRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
+	67,  // 126: quilibrium.node.node.pb.DecryptableIntersectCoinRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
+	53,  // 127: quilibrium.node.node.pb.DecryptableMergeCoinRequest.request:type_name -> quilibrium.node.node.pb.MergeCoinRequest
+	64,  // 128: quilibrium.node.node.pb.DecryptableMergeCoinRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
+	67,  // 129: quilibrium.node.node.pb.DecryptableMergeCoinRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
+	54,  // 130: quilibrium.node.node.pb.DecryptableMintCoinRequest.request:type_name -> quilibrium.node.node.pb.MintCoinRequest
+	64,  // 131: quilibrium.node.node.pb.DecryptableMintCoinRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
+	67,  // 132: quilibrium.node.node.pb.DecryptableMintCoinRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
+	55,  // 133: quilibrium.node.node.pb.DecryptableMutualReceiveCoinRequest.request:type_name -> quilibrium.node.node.pb.MutualReceiveCoinRequest
+	64,  // 134: quilibrium.node.node.pb.DecryptableMutualReceiveCoinRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
+	67,  // 135: quilibrium.node.node.pb.DecryptableMutualReceiveCoinRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
+	56,  // 136: quilibrium.node.node.pb.DecryptableMutualTransferCoinRequest.request:type_name -> quilibrium.node.node.pb.MutualTransferCoinRequest
+	64,  // 137: quilibrium.node.node.pb.DecryptableMutualTransferCoinRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
+	67,  // 138: quilibrium.node.node.pb.DecryptableMutualTransferCoinRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
+	58,  // 139: quilibrium.node.node.pb.DecryptableRevokeCoinRequest.request:type_name -> quilibrium.node.node.pb.RevokeCoinRequest
+	64,  // 140: quilibrium.node.node.pb.DecryptableRevokeCoinRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
+	67,  // 141: quilibrium.node.node.pb.DecryptableRevokeCoinRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
+	59,  // 142: quilibrium.node.node.pb.DecryptableSplitCoinRequest.request:type_name -> quilibrium.node.node.pb.SplitCoinRequest
+	64,  // 143: quilibrium.node.node.pb.DecryptableSplitCoinRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
+	67,  // 144: quilibrium.node.node.pb.DecryptableSplitCoinRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
+	60,  // 145: quilibrium.node.node.pb.DecryptableTransferCoinRequest.request:type_name -> quilibrium.node.node.pb.TransferCoinRequest
+	64,  // 146: quilibrium.node.node.pb.DecryptableTransferCoinRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
+	67,  // 147: quilibrium.node.node.pb.DecryptableTransferCoinRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
+	61,  // 148: quilibrium.node.node.pb.DecryptableApprovePendingTransactionRequest.request:type_name -> quilibrium.node.node.pb.ApprovePendingTransactionRequest
+	64,  // 149: quilibrium.node.node.pb.DecryptableApprovePendingTransactionRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
+	67,  // 150: quilibrium.node.node.pb.DecryptableApprovePendingTransactionRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
+	62,  // 151: quilibrium.node.node.pb.DecryptableRejectPendingTransactionRequest.request:type_name -> quilibrium.node.node.pb.RejectPendingTransactionRequest
+	64,  // 152: quilibrium.node.node.pb.DecryptableRejectPendingTransactionRequest.key_ring:type_name -> quilibrium.node.node.pb.KeyRing
+	67,  // 153: quilibrium.node.node.pb.DecryptableRejectPendingTransactionRequest.delivery_method:type_name -> quilibrium.node.node.pb.DeliveryMethod
+	41,  // 154: quilibrium.node.node.pb.CoinInfo.coin:type_name -> quilibrium.node.node.pb.CoinRef
+	42,  // 155: quilibrium.node.node.pb.PendingTransactionInfo.pending_transaction:type_name -> quilibrium.node.node.pb.PendingTransactionRef
+	84,  // 156: quilibrium.node.node.pb.PendingTransactionInfo.coin:type_name -> quilibrium.node.node.pb.CoinInfo
+	31,  // 157: quilibrium.node.node.pb.PendingTransactionInfo.refund_account:type_name -> quilibrium.node.node.pb.AccountRef
+	32,  // 158: quilibrium.node.node.pb.AllowAccountResponse.allowance:type_name -> quilibrium.node.node.pb.AccountAllowanceRef
+	66,  // 159: quilibrium.node.node.pb.AllowAccountResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
+	84,  // 160: quilibrium.node.node.pb.CoinsAccountResponse.coins:type_name -> quilibrium.node.node.pb.CoinInfo
+	85,  // 161: quilibrium.node.node.pb.PendingTransactionsAccountResponse.pending_transactions:type_name -> quilibrium.node.node.pb.PendingTransactionInfo
+	66,  // 162: quilibrium.node.node.pb.RevokeAccountResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
+	33,  // 163: quilibrium.node.node.pb.AllowCoinResponse.allowance:type_name -> quilibrium.node.node.pb.CoinAllowanceRef
+	66,  // 164: quilibrium.node.node.pb.AllowCoinResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
+	41,  // 165: quilibrium.node.node.pb.MergeCoinResponse.coin:type_name -> quilibrium.node.node.pb.CoinRef
+	66,  // 166: quilibrium.node.node.pb.MergeCoinResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
+	84,  // 167: quilibrium.node.node.pb.MintCoinResponse.coins:type_name -> quilibrium.node.node.pb.CoinInfo
+	66,  // 168: quilibrium.node.node.pb.MintCoinResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
+	41,  // 169: quilibrium.node.node.pb.MutualReceiveCoinResponse.coin:type_name -> quilibrium.node.node.pb.CoinRef
+	66,  // 170: quilibrium.node.node.pb.MutualReceiveCoinResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
+	66,  // 171: quilibrium.node.node.pb.MutualTransferCoinResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
+	66,  // 172: quilibrium.node.node.pb.RevokeCoinResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
+	41,  // 173: quilibrium.node.node.pb.SplitCoinResponse.coins:type_name -> quilibrium.node.node.pb.CoinRef
+	66,  // 174: quilibrium.node.node.pb.SplitCoinResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
+	42,  // 175: quilibrium.node.node.pb.TransferCoinResponse.pending_transaction:type_name -> quilibrium.node.node.pb.PendingTransactionRef
+	66,  // 176: quilibrium.node.node.pb.TransferCoinResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
+	41,  // 177: quilibrium.node.node.pb.ApprovePendingTransactionResponse.coin:type_name -> quilibrium.node.node.pb.CoinRef
+	66,  // 178: quilibrium.node.node.pb.ApprovePendingTransactionResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
+	66,  // 179: quilibrium.node.node.pb.RejectPendingTransactionResponse.deliveries:type_name -> quilibrium.node.node.pb.DeliveryData
+	34,  // 180: quilibrium.node.node.pb.TokensByAccountResponse.coins:type_name -> quilibrium.node.node.pb.Coin
+	37,  // 181: quilibrium.node.node.pb.PreCoinProofsByAccountResponse.proofs:type_name -> quilibrium.node.node.pb.PreCoinProof
+	19,  // 182: quilibrium.node.node.pb.ValidationService.PerformValidation:input_type -> quilibrium.node.node.pb.ValidationMessage
+	20,  // 183: quilibrium.node.node.pb.ValidationService.Sync:input_type -> quilibrium.node.node.pb.SyncRequest
+	0,   // 184: quilibrium.node.node.pb.NodeService.GetFrames:input_type -> quilibrium.node.node.pb.GetFramesRequest
+	1,   // 185: quilibrium.node.node.pb.NodeService.GetFrameInfo:input_type -> quilibrium.node.node.pb.GetFrameInfoRequest
+	2,   // 186: quilibrium.node.node.pb.NodeService.GetPeerInfo:input_type -> quilibrium.node.node.pb.GetPeerInfoRequest
+	3,   // 187: quilibrium.node.node.pb.NodeService.GetNodeInfo:input_type -> quilibrium.node.node.pb.GetNodeInfoRequest
+	4,   // 188: quilibrium.node.node.pb.NodeService.GetNetworkInfo:input_type -> quilibrium.node.node.pb.GetNetworkInfoRequest
+	15,  // 189: quilibrium.node.node.pb.NodeService.GetTokenInfo:input_type -> quilibrium.node.node.pb.GetTokenInfoRequest
+	22,  // 190: quilibrium.node.node.pb.NodeService.GetPeerManifests:input_type -> quilibrium.node.node.pb.GetPeerManifestsRequest
+	35,  // 191: quilibrium.node.node.pb.NodeService.SendMessage:input_type -> quilibrium.node.node.pb.TokenRequest
+	103, // 192: quilibrium.node.node.pb.NodeService.GetTokensByAccount:input_type -> quilibrium.node.node.pb.GetTokensByAccountRequest
+	105, // 193: quilibrium.node.node.pb.NodeService.GetPreCoinProofsByAccount:input_type -> quilibrium.node.node.pb.GetPreCoinProofsByAccountRequest
+	68,  // 194: quilibrium.node.node.pb.AccountService.Allow:input_type -> quilibrium.node.node.pb.DecryptableAllowAccountRequest
+	69,  // 195: quilibrium.node.node.pb.AccountService.GetBalance:input_type -> quilibrium.node.node.pb.DecryptableBalanceAccountRequest
+	70,  // 196: quilibrium.node.node.pb.AccountService.ListCoins:input_type -> quilibrium.node.node.pb.DecryptableCoinsAccountRequest
+	72,  // 197: quilibrium.node.node.pb.AccountService.ListPendingTransactions:input_type -> quilibrium.node.node.pb.DecryptablePendingTransactionsAccountRequest
+	71,  // 198: quilibrium.node.node.pb.AccountService.Revoke:input_type -> quilibrium.node.node.pb.DecryptableRevokeAccountRequest
+	73,  // 199: quilibrium.node.node.pb.CoinService.Allow:input_type -> quilibrium.node.node.pb.DecryptableAllowCoinRequest
+	74,  // 200: quilibrium.node.node.pb.CoinService.Intersect:input_type -> quilibrium.node.node.pb.DecryptableIntersectCoinRequest
+	75,  // 201: quilibrium.node.node.pb.CoinService.Merge:input_type -> quilibrium.node.node.pb.DecryptableMergeCoinRequest
+	76,  // 202: quilibrium.node.node.pb.CoinService.Mint:input_type -> quilibrium.node.node.pb.DecryptableMintCoinRequest
+	77,  // 203: quilibrium.node.node.pb.CoinService.MutualReceive:input_type -> quilibrium.node.node.pb.DecryptableMutualReceiveCoinRequest
+	78,  // 204: quilibrium.node.node.pb.CoinService.MutualTransfer:input_type -> quilibrium.node.node.pb.DecryptableMutualTransferCoinRequest
+	79,  // 205: quilibrium.node.node.pb.CoinService.Revoke:input_type -> quilibrium.node.node.pb.DecryptableRevokeCoinRequest
+	80,  // 206: quilibrium.node.node.pb.CoinService.Split:input_type -> quilibrium.node.node.pb.DecryptableSplitCoinRequest
+	81,  // 207: quilibrium.node.node.pb.CoinService.Transfer:input_type -> quilibrium.node.node.pb.DecryptableTransferCoinRequest
+	82,  // 208: quilibrium.node.node.pb.TransactionService.Approve:input_type -> quilibrium.node.node.pb.DecryptableApprovePendingTransactionRequest
+	83,  // 209: quilibrium.node.node.pb.TransactionService.Reject:input_type -> quilibrium.node.node.pb.DecryptableRejectPendingTransactionRequest
+	12,  // 210: quilibrium.node.node.pb.NodeStats.PutNodeInfo:input_type -> quilibrium.node.node.pb.PutNodeInfoRequest
+	11,  // 211: quilibrium.node.node.pb.NodeStats.PutPeerInfo:input_type -> quilibrium.node.node.pb.PutPeerInfoRequest
+	19,  // 212: quilibrium.node.node.pb.ValidationService.PerformValidation:output_type -> quilibrium.node.node.pb.ValidationMessage
+	21,  // 213: quilibrium.node.node.pb.ValidationService.Sync:output_type -> quilibrium.node.node.pb.SyncResponse
+	5,   // 214: quilibrium.node.node.pb.NodeService.GetFrames:output_type -> quilibrium.node.node.pb.FramesResponse
+	6,   // 215: quilibrium.node.node.pb.NodeService.GetFrameInfo:output_type -> quilibrium.node.node.pb.FrameInfoResponse
+	8,   // 216: quilibrium.node.node.pb.NodeService.GetPeerInfo:output_type -> quilibrium.node.node.pb.PeerInfoResponse
+	10,  // 217: quilibrium.node.node.pb.NodeService.GetNodeInfo:output_type -> quilibrium.node.node.pb.NodeInfoResponse
+	14,  // 218: quilibrium.node.node.pb.NodeService.GetNetworkInfo:output_type -> quilibrium.node.node.pb.NetworkInfoResponse
+	16,  // 219: quilibrium.node.node.pb.NodeService.GetTokenInfo:output_type -> quilibrium.node.node.pb.TokenInfoResponse
+	45,  // 220: quilibrium.node.node.pb.NodeService.GetPeerManifests:output_type -> quilibrium.node.node.pb.PeerManifestsResponse
+	102, // 221: quilibrium.node.node.pb.NodeService.SendMessage:output_type -> quilibrium.node.node.pb.SendMessageResponse
+	104, // 222: quilibrium.node.node.pb.NodeService.GetTokensByAccount:output_type -> quilibrium.node.node.pb.TokensByAccountResponse
+	106, // 223: quilibrium.node.node.pb.NodeService.GetPreCoinProofsByAccount:output_type -> quilibrium.node.node.pb.PreCoinProofsByAccountResponse
+	86,  // 224: quilibrium.node.node.pb.AccountService.Allow:output_type -> quilibrium.node.node.pb.AllowAccountResponse
+	87,  // 225: quilibrium.node.node.pb.AccountService.GetBalance:output_type -> quilibrium.node.node.pb.BalanceAccountResponse
+	88,  // 226: quilibrium.node.node.pb.AccountService.ListCoins:output_type -> quilibrium.node.node.pb.CoinsAccountResponse
+	89,  // 227: quilibrium.node.node.pb.AccountService.ListPendingTransactions:output_type -> quilibrium.node.node.pb.PendingTransactionsAccountResponse
+	90,  // 228: quilibrium.node.node.pb.AccountService.Revoke:output_type -> quilibrium.node.node.pb.RevokeAccountResponse
+	91,  // 229: quilibrium.node.node.pb.CoinService.Allow:output_type -> quilibrium.node.node.pb.AllowCoinResponse
+	92,  // 230: quilibrium.node.node.pb.CoinService.Intersect:output_type -> quilibrium.node.node.pb.IntersectCoinResponse
+	93,  // 231: quilibrium.node.node.pb.CoinService.Merge:output_type -> quilibrium.node.node.pb.MergeCoinResponse
+	94,  // 232: quilibrium.node.node.pb.CoinService.Mint:output_type -> quilibrium.node.node.pb.MintCoinResponse
+	95,  // 233: quilibrium.node.node.pb.CoinService.MutualReceive:output_type -> quilibrium.node.node.pb.MutualReceiveCoinResponse
+	96,  // 234: quilibrium.node.node.pb.CoinService.MutualTransfer:output_type -> quilibrium.node.node.pb.MutualTransferCoinResponse
+	97,  // 235: quilibrium.node.node.pb.CoinService.Revoke:output_type -> quilibrium.node.node.pb.RevokeCoinResponse
+	98,  // 236: quilibrium.node.node.pb.CoinService.Split:output_type -> quilibrium.node.node.pb.SplitCoinResponse
+	99,  // 237: quilibrium.node.node.pb.CoinService.Transfer:output_type -> quilibrium.node.node.pb.TransferCoinResponse
+	100, // 238: quilibrium.node.node.pb.TransactionService.Approve:output_type -> quilibrium.node.node.pb.ApprovePendingTransactionResponse
+	101, // 239: quilibrium.node.node.pb.TransactionService.Reject:output_type -> quilibrium.node.node.pb.RejectPendingTransactionResponse
+	13,  // 240: quilibrium.node.node.pb.NodeStats.PutNodeInfo:output_type -> quilibrium.node.node.pb.PutResponse
+	13,  // 241: quilibrium.node.node.pb.NodeStats.PutPeerInfo:output_type -> quilibrium.node.node.pb.PutResponse
+	212, // [212:242] is the sub-list for method output_type
+	182, // [182:212] is the sub-list for method input_type
+	182, // [182:182] is the sub-list for extension type_name
+	182, // [182:182] is the sub-list for extension extendee
+	0,   // [0:182] is the sub-list for field type_name
 }
 
 func init() { file_node_proto_init() }
@@ -8846,7 +8929,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[38].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*TokenOutput); i {
+			switch v := v.(*ProverPenalty); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8858,7 +8941,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[39].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*TokenOutputs); i {
+			switch v := v.(*TokenOutput); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8870,7 +8953,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[40].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CoinRef); i {
+			switch v := v.(*TokenOutputs); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8882,7 +8965,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[41].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PendingTransactionRef); i {
+			switch v := v.(*CoinRef); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8894,7 +8977,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[42].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*KeyRef); i {
+			switch v := v.(*PendingTransactionRef); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8906,7 +8989,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[43].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Signature); i {
+			switch v := v.(*KeyRef); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8918,7 +9001,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[44].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PeerManifestsResponse); i {
+			switch v := v.(*Signature); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8930,7 +9013,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[45].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AcceptPendingTransactionRequest); i {
+			switch v := v.(*PeerManifestsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8942,7 +9025,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[46].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AllowAccountRequest); i {
+			switch v := v.(*AcceptPendingTransactionRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8954,7 +9037,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[47].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AllowCoinRequest); i {
+			switch v := v.(*AllowAccountRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8966,7 +9049,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[48].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BalanceAccountRequest); i {
+			switch v := v.(*AllowCoinRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8978,7 +9061,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[49].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CoinsAccountRequest); i {
+			switch v := v.(*BalanceAccountRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8990,7 +9073,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[50].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PendingTransactionsAccountRequest); i {
+			switch v := v.(*CoinsAccountRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9002,7 +9085,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[51].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*IntersectCoinRequest); i {
+			switch v := v.(*PendingTransactionsAccountRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9014,7 +9097,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[52].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MergeCoinRequest); i {
+			switch v := v.(*IntersectCoinRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9026,7 +9109,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[53].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MintCoinRequest); i {
+			switch v := v.(*MergeCoinRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9038,7 +9121,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[54].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MutualReceiveCoinRequest); i {
+			switch v := v.(*MintCoinRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9050,7 +9133,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[55].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MutualTransferCoinRequest); i {
+			switch v := v.(*MutualReceiveCoinRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9062,7 +9145,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[56].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RevokeAccountRequest); i {
+			switch v := v.(*MutualTransferCoinRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9074,7 +9157,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[57].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RevokeCoinRequest); i {
+			switch v := v.(*RevokeAccountRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9086,7 +9169,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[58].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SplitCoinRequest); i {
+			switch v := v.(*RevokeCoinRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9098,7 +9181,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[59].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*TransferCoinRequest); i {
+			switch v := v.(*SplitCoinRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9110,7 +9193,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[60].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ApprovePendingTransactionRequest); i {
+			switch v := v.(*TransferCoinRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9122,7 +9205,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[61].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RejectPendingTransactionRequest); i {
+			switch v := v.(*ApprovePendingTransactionRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9134,7 +9217,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[62].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*InlineKey); i {
+			switch v := v.(*RejectPendingTransactionRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9146,7 +9229,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[63].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*KeyRing); i {
+			switch v := v.(*InlineKey); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9158,7 +9241,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[64].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Confirmation); i {
+			switch v := v.(*KeyRing); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9170,7 +9253,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[65].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DeliveryData); i {
+			switch v := v.(*Confirmation); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9182,7 +9265,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[66].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DeliveryMethod); i {
+			switch v := v.(*DeliveryData); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9194,7 +9277,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[67].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DecryptableAllowAccountRequest); i {
+			switch v := v.(*DeliveryMethod); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9206,7 +9289,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[68].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DecryptableBalanceAccountRequest); i {
+			switch v := v.(*DecryptableAllowAccountRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9218,7 +9301,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[69].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DecryptableCoinsAccountRequest); i {
+			switch v := v.(*DecryptableBalanceAccountRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9230,7 +9313,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[70].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DecryptableRevokeAccountRequest); i {
+			switch v := v.(*DecryptableCoinsAccountRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9242,7 +9325,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[71].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DecryptablePendingTransactionsAccountRequest); i {
+			switch v := v.(*DecryptableRevokeAccountRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9254,7 +9337,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[72].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DecryptableAllowCoinRequest); i {
+			switch v := v.(*DecryptablePendingTransactionsAccountRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9266,7 +9349,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[73].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DecryptableIntersectCoinRequest); i {
+			switch v := v.(*DecryptableAllowCoinRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9278,7 +9361,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[74].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DecryptableMergeCoinRequest); i {
+			switch v := v.(*DecryptableIntersectCoinRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9290,7 +9373,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[75].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DecryptableMintCoinRequest); i {
+			switch v := v.(*DecryptableMergeCoinRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9302,7 +9385,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[76].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DecryptableMutualReceiveCoinRequest); i {
+			switch v := v.(*DecryptableMintCoinRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9314,7 +9397,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[77].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DecryptableMutualTransferCoinRequest); i {
+			switch v := v.(*DecryptableMutualReceiveCoinRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9326,7 +9409,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[78].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DecryptableRevokeCoinRequest); i {
+			switch v := v.(*DecryptableMutualTransferCoinRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9338,7 +9421,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[79].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DecryptableSplitCoinRequest); i {
+			switch v := v.(*DecryptableRevokeCoinRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9350,7 +9433,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[80].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DecryptableTransferCoinRequest); i {
+			switch v := v.(*DecryptableSplitCoinRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9362,7 +9445,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[81].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DecryptableApprovePendingTransactionRequest); i {
+			switch v := v.(*DecryptableTransferCoinRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9374,7 +9457,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[82].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DecryptableRejectPendingTransactionRequest); i {
+			switch v := v.(*DecryptableApprovePendingTransactionRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9386,7 +9469,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[83].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CoinInfo); i {
+			switch v := v.(*DecryptableRejectPendingTransactionRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9398,7 +9481,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[84].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PendingTransactionInfo); i {
+			switch v := v.(*CoinInfo); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9410,7 +9493,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[85].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AllowAccountResponse); i {
+			switch v := v.(*PendingTransactionInfo); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9422,7 +9505,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[86].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BalanceAccountResponse); i {
+			switch v := v.(*AllowAccountResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9434,7 +9517,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[87].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CoinsAccountResponse); i {
+			switch v := v.(*BalanceAccountResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9446,7 +9529,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[88].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PendingTransactionsAccountResponse); i {
+			switch v := v.(*CoinsAccountResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9458,7 +9541,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[89].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RevokeAccountResponse); i {
+			switch v := v.(*PendingTransactionsAccountResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9470,7 +9553,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[90].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AllowCoinResponse); i {
+			switch v := v.(*RevokeAccountResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9482,7 +9565,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[91].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*IntersectCoinResponse); i {
+			switch v := v.(*AllowCoinResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9494,7 +9577,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[92].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MergeCoinResponse); i {
+			switch v := v.(*IntersectCoinResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9506,7 +9589,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[93].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MintCoinResponse); i {
+			switch v := v.(*MergeCoinResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9518,7 +9601,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[94].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MutualReceiveCoinResponse); i {
+			switch v := v.(*MintCoinResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9530,7 +9613,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[95].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MutualTransferCoinResponse); i {
+			switch v := v.(*MutualReceiveCoinResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9542,7 +9625,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[96].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RevokeCoinResponse); i {
+			switch v := v.(*MutualTransferCoinResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9554,7 +9637,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[97].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SplitCoinResponse); i {
+			switch v := v.(*RevokeCoinResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9566,7 +9649,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[98].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*TransferCoinResponse); i {
+			switch v := v.(*SplitCoinResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9578,7 +9661,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[99].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ApprovePendingTransactionResponse); i {
+			switch v := v.(*TransferCoinResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9590,7 +9673,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[100].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RejectPendingTransactionResponse); i {
+			switch v := v.(*ApprovePendingTransactionResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9602,7 +9685,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[101].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SendMessageResponse); i {
+			switch v := v.(*RejectPendingTransactionResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9614,7 +9697,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[102].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetTokensByAccountRequest); i {
+			switch v := v.(*SendMessageResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9626,7 +9709,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[103].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*TokensByAccountResponse); i {
+			switch v := v.(*GetTokensByAccountRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9638,7 +9721,7 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[104].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetPreCoinProofsByAccountRequest); i {
+			switch v := v.(*TokensByAccountResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9650,6 +9733,18 @@ func file_node_proto_init() {
 			}
 		}
 		file_node_proto_msgTypes[105].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetPreCoinProofsByAccountRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_node_proto_msgTypes[106].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PreCoinProofsByAccountResponse); i {
 			case 0:
 				return &v.state
@@ -9677,7 +9772,7 @@ func file_node_proto_init() {
 		(*TokenRequest_Pause)(nil),
 		(*TokenRequest_Resume)(nil),
 	}
-	file_node_proto_msgTypes[38].OneofWrappers = []interface{}{
+	file_node_proto_msgTypes[39].OneofWrappers = []interface{}{
 		(*TokenOutput_Coin)(nil),
 		(*TokenOutput_Proof)(nil),
 		(*TokenOutput_DeletedCoin)(nil),
@@ -9687,6 +9782,7 @@ func file_node_proto_init() {
 		(*TokenOutput_Leave)(nil),
 		(*TokenOutput_Pause)(nil),
 		(*TokenOutput_Resume)(nil),
+		(*TokenOutput_Penalty)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -9694,7 +9790,7 @@ func file_node_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_node_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   106,
+			NumMessages:   107,
 			NumExtensions: 0,
 			NumServices:   6,
 		},

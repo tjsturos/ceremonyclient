@@ -602,6 +602,48 @@ func (e *DataClockConsensusEngine) Start() <-chan error {
 							},
 						},
 					})
+
+					_, addrs, _, err := e.coinStore.GetCoinsForOwner(
+						peerProvingKeyAddress,
+					)
+					if err != nil {
+						e.logger.Error(
+							"received error while iterating coins",
+							zap.Error(err),
+						)
+						break
+					}
+
+					if len(addrs) > 10 {
+						message := []byte("merge")
+						refs := []*protobufs.CoinRef{}
+						for _, addr := range addrs {
+							message = append(message, addr...)
+							refs = append(refs, &protobufs.CoinRef{
+								Address: addr,
+							})
+						}
+
+						sig, _ := e.pubSub.SignMessage(
+							message,
+						)
+
+						e.publishMessage(e.txFilter, &protobufs.TokenRequest{
+							Request: &protobufs.TokenRequest_Merge{
+								Merge: &protobufs.MergeCoinRequest{
+									Coins: refs,
+									Signature: &protobufs.Ed448Signature{
+										PublicKey: &protobufs.Ed448PublicKey{
+											KeyValue: e.pubSub.GetPublicKey(),
+										},
+										Signature: sig,
+									},
+								},
+							},
+						})
+					}
+
+					break
 				}
 			}
 		}

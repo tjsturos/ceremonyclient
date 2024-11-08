@@ -35,7 +35,19 @@ func (e *DataClockConsensusEngine) runFrameMessageHandler() {
 				e.logger.Error("error while unmarshaling", zap.Error(err))
 				continue
 			}
-			e.logger.Debug("message type", zap.String("type", any.TypeUrl))
+
+			accepted := false
+			switch any.TypeUrl {
+			//expand for future message types
+			case protobufs.ClockFrameType:
+				accepted = true
+			default:
+			}
+
+			if !accepted {
+				e.pubSub.AddPeerScore(message.From, -100000)
+				continue
+			}
 
 			go func() {
 				switch any.TypeUrl {
@@ -63,6 +75,24 @@ func (e *DataClockConsensusEngine) runTxMessageHandler() {
 
 			if err := proto.Unmarshal(message.Data, msg); err != nil {
 				e.logger.Debug("bad message")
+				continue
+			}
+
+			any := &anypb.Any{}
+			if err := proto.Unmarshal(msg.Payload, any); err != nil {
+				continue
+			}
+
+			accepted := false
+			switch any.TypeUrl {
+			//expand for future message types
+			case protobufs.TokenRequestType:
+				accepted = true
+			default:
+			}
+
+			if !accepted {
+				e.pubSub.AddPeerScore(message.From, -100000)
 				continue
 			}
 
@@ -115,13 +145,6 @@ func (e *DataClockConsensusEngine) runTxMessageHandler() {
 					}()
 				}
 			}
-
-			any := &anypb.Any{}
-			if err := proto.Unmarshal(msg.Payload, any); err != nil {
-				e.logger.Error("error while unmarshaling", zap.Error(err))
-				continue
-			}
-			e.logger.Debug("message type", zap.String("type", any.TypeUrl))
 		}
 	}
 }
@@ -143,7 +166,19 @@ func (e *DataClockConsensusEngine) runInfoMessageHandler() {
 				e.logger.Error("error while unmarshaling", zap.Error(err))
 				continue
 			}
-			e.logger.Debug("message type", zap.String("type", any.TypeUrl))
+
+			accepted := false
+			switch any.TypeUrl {
+			//expand for future message types
+			case protobufs.DataPeerListAnnounceType:
+				accepted = true
+			default:
+			}
+
+			if !accepted {
+				e.pubSub.AddPeerScore(message.From, -100000)
+				continue
+			}
 
 			go func() {
 				switch any.TypeUrl {

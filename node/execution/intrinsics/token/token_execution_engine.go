@@ -50,6 +50,14 @@ func newFromMap(m map[string]uint64) *peerSeniority {
 	return s
 }
 
+func toSerializedMap(m *peerSeniority) map[string]uint64 {
+	s := map[string]uint64{}
+	for k, v := range *m {
+		s[k] = v.seniority
+	}
+	return s
+}
+
 func (p peerSeniorityItem) Priority() *big.Int {
 	return big.NewInt(int64(p.seniority))
 }
@@ -116,6 +124,7 @@ func NewTokenExecutionEngine(
 			cfg.Engine,
 			nil,
 			inclusionProver,
+			clockStore,
 			coinStore,
 			uint(cfg.P2P.Network),
 		)
@@ -142,10 +151,21 @@ func NewTokenExecutionEngine(
 				cfg.Engine,
 				nil,
 				inclusionProver,
+				clockStore,
 				coinStore,
 				uint(cfg.P2P.Network),
 			)
 			genesisCreated = true
+		}
+	}
+
+	if peerSeniority == nil {
+		peerSeniority, err = clockStore.GetPeerSeniorityMap(intrinsicFilter)
+		if err != nil && !errors.Is(err, store.ErrNotFound) {
+			panic(err)
+		}
+		if peerSeniority == nil {
+			RebuildPeerSeniority(clockStore)
 		}
 	}
 
@@ -569,6 +589,23 @@ func (e *TokenExecutionEngine) ProcessFrame(
 				txn.Abort()
 				return nil, errors.Wrap(err, "process frame")
 			}
+			// testnet:
+			if len(o.Proof.Amount) == 32 &&
+				!bytes.Equal(o.Proof.Amount, make([]byte, 32)) &&
+				frame.FrameNumber > 1300 {
+				addr := string(o.Proof.Owner.GetImplicitAccount().Address)
+				if _, ok := (*e.peerSeniority)[addr]; !ok {
+					(*e.peerSeniority)[addr] = peerSeniorityItem{
+						seniority: 10,
+						addr:      addr,
+					}
+				} else {
+					(*e.peerSeniority)[addr] = peerSeniorityItem{
+						seniority: (*e.peerSeniority)[addr].seniority + 10,
+						addr:      addr,
+					}
+				}
+			}
 		case *protobufs.TokenOutput_DeletedProof:
 			address, err := GetAddressOfPreCoinProof(o.DeletedProof)
 			if err != nil {
@@ -609,6 +646,28 @@ func (e *TokenExecutionEngine) ProcessFrame(
 			if err != nil {
 				txn.Abort()
 				return nil, errors.Wrap(err, "process frame")
+			}
+		case *protobufs.TokenOutput_Penalty:
+			addr := string(o.Penalty.Account.GetImplicitAccount().Address)
+			if _, ok := (*e.peerSeniority)[addr]; !ok {
+				(*e.peerSeniority)[addr] = peerSeniorityItem{
+					seniority: 0,
+					addr:      addr,
+				}
+				proverTrieLeaveRequests[addr] = addr
+			} else {
+				if (*e.peerSeniority)[addr].seniority > o.Penalty.Quantity {
+					(*e.peerSeniority)[addr] = peerSeniorityItem{
+						seniority: (*e.peerSeniority)[addr].seniority - o.Penalty.Quantity,
+						addr:      addr,
+					}
+				} else {
+					(*e.peerSeniority)[addr] = peerSeniorityItem{
+						seniority: 0,
+						addr:      addr,
+					}
+					proverTrieLeaveRequests[addr] = addr
+				}
 			}
 		}
 	}
@@ -665,6 +724,16 @@ func (e *TokenExecutionEngine) ProcessFrame(
 				break
 			}
 		}
+	}
+
+	err = e.clockStore.PutPeerSeniorityMap(
+		txn,
+		e.intrinsicFilter,
+		toSerializedMap(e.peerSeniority),
+	)
+	if err != nil {
+		txn.Abort()
+		return nil, errors.Wrap(err, "process frame")
 	}
 
 	err = e.coinStore.SetLatestFrameProcessed(txn, frame.FrameNumber)

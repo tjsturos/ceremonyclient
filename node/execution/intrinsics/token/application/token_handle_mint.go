@@ -177,7 +177,27 @@ func (a *TokenApplication) handleMint(
 						zap.String("peer_id", base58.Encode([]byte(peerId))),
 						zap.Uint64("frame_number", currentFrameNumber),
 					)
-					return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
+					// testnet only, this is inline for mainnet:
+					if currentFrameNumber > 1300 {
+						lockMap[string(t.Signature.PublicKey.KeyValue)] = struct{}{}
+						return []*protobufs.TokenOutput{&protobufs.TokenOutput{
+							Output: &protobufs.TokenOutput_Penalty{
+								Penalty: &protobufs.ProverPenalty{
+									Quantity: 10,
+									Account: &protobufs.AccountRef{
+										Account: &protobufs.AccountRef_ImplicitAccount{
+											ImplicitAccount: &protobufs.ImplicitAccount{
+												ImplicitType: 0,
+												Address:      altAddr.FillBytes(make([]byte, 32)),
+											},
+										},
+									},
+								},
+							},
+						}}, nil
+					} else {
+						return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
+					}
 				}
 			}
 		}
@@ -191,7 +211,27 @@ func (a *TokenApplication) handleMint(
 				zap.String("peer_id", base58.Encode([]byte(peerId))),
 				zap.Uint64("frame_number", currentFrameNumber),
 			)
-			return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
+			// testnet only, this is inline for mainnet:
+			if currentFrameNumber > 1300 {
+				lockMap[string(t.Signature.PublicKey.KeyValue)] = struct{}{}
+				return []*protobufs.TokenOutput{&protobufs.TokenOutput{
+					Output: &protobufs.TokenOutput_Penalty{
+						Penalty: &protobufs.ProverPenalty{
+							Quantity: 10,
+							Account: &protobufs.AccountRef{
+								Account: &protobufs.AccountRef_ImplicitAccount{
+									ImplicitAccount: &protobufs.ImplicitAccount{
+										ImplicitType: 0,
+										Address:      altAddr.FillBytes(make([]byte, 32)),
+									},
+								},
+							},
+						},
+					},
+				}}, nil
+			} else {
+				return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
+			}
 		}
 
 		if !verified {
@@ -232,7 +272,27 @@ func (a *TokenApplication) handleMint(
 					zap.String("peer_id", base58.Encode([]byte(peerId))),
 					zap.Uint64("frame_number", currentFrameNumber),
 				)
-				return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
+				// testnet only, this is inline for mainnet:
+				if currentFrameNumber > 1300 {
+					lockMap[string(t.Signature.PublicKey.KeyValue)] = struct{}{}
+					return []*protobufs.TokenOutput{&protobufs.TokenOutput{
+						Output: &protobufs.TokenOutput_Penalty{
+							Penalty: &protobufs.ProverPenalty{
+								Quantity: 10,
+								Account: &protobufs.AccountRef{
+									Account: &protobufs.AccountRef_ImplicitAccount{
+										ImplicitAccount: &protobufs.ImplicitAccount{
+											ImplicitType: 0,
+											Address:      altAddr.FillBytes(make([]byte, 32)),
+										},
+									},
+								},
+							},
+						},
+					}}, nil
+				} else {
+					return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
+				}
 			}
 			hash := sha3.Sum256(newFrame.Output)
 			pick := tries.BytesToUnbiasedMod(hash, uint64(parallelism))
@@ -256,7 +316,27 @@ func (a *TokenApplication) handleMint(
 					zap.Uint64("frame_number", currentFrameNumber),
 					zap.Int("proof_size", len(leaf)),
 				)
-				return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
+				// testnet only, this is inline for mainnet:
+				if currentFrameNumber > 1300 {
+					lockMap[string(t.Signature.PublicKey.KeyValue)] = struct{}{}
+					return []*protobufs.TokenOutput{&protobufs.TokenOutput{
+						Output: &protobufs.TokenOutput_Penalty{
+							Penalty: &protobufs.ProverPenalty{
+								Quantity: 10,
+								Account: &protobufs.AccountRef{
+									Account: &protobufs.AccountRef_ImplicitAccount{
+										ImplicitAccount: &protobufs.ImplicitAccount{
+											ImplicitType: 0,
+											Address:      altAddr.FillBytes(make([]byte, 32)),
+										},
+									},
+								},
+							},
+						},
+					}}, nil
+				} else {
+					return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
+				}
 			}
 
 			wesoProver := crypto.NewWesolowskiFrameProver(a.Logger)
@@ -289,7 +369,6 @@ func (a *TokenApplication) handleMint(
 			)
 		}
 		if verified && delete != nil && len(t.Proofs) > 3 {
-
 			ringFactor := big.NewInt(2)
 			ringFactor.Exp(ringFactor, big.NewInt(int64(ring)), nil)
 
@@ -371,6 +450,24 @@ func (a *TokenApplication) handleMint(
 					},
 				},
 			)
+			// testnet only, this is inline for mainnet:
+			if !verified && currentFrameNumber > 1300 {
+				outputs = append(outputs, &protobufs.TokenOutput{
+					Output: &protobufs.TokenOutput_Penalty{
+						Penalty: &protobufs.ProverPenalty{
+							Quantity: 10,
+							Account: &protobufs.AccountRef{
+								Account: &protobufs.AccountRef_ImplicitAccount{
+									ImplicitAccount: &protobufs.ImplicitAccount{
+										ImplicitType: 0,
+										Address:      altAddr.FillBytes(make([]byte, 32)),
+									},
+								},
+							},
+						},
+					},
+				})
+			}
 		}
 		lockMap[string(t.Signature.PublicKey.KeyValue)] = struct{}{}
 		return outputs, nil

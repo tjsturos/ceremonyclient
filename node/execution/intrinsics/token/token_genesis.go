@@ -75,12 +75,34 @@ var thirdRetroJsonBinary []byte
 //go:embed fourth_retro.json
 var fourthRetroJsonBinary []byte
 
+func RebuildPeerSeniority(clockStore store.ClockStore) {
+	// testnet:
+	txn, err := clockStore.NewTransaction()
+	if err != nil {
+		panic(err)
+	}
+
+	err = clockStore.PutPeerSeniorityMap(
+		txn,
+		p2p.GetBloomFilter(application.TOKEN_ADDRESS, 256, 3),
+		map[string]uint64{},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	if err = txn.Commit(); err != nil {
+		panic(err)
+	}
+}
+
 // Creates a genesis state for the intrinsic
 func CreateGenesisState(
 	logger *zap.Logger,
 	engineConfig *config.EngineConfig,
 	testProverKeys [][]byte,
 	inclusionProver qcrypto.InclusionProver,
+	clockStore store.ClockStore,
 	coinStore store.CoinStore,
 	network uint,
 ) (
@@ -433,6 +455,24 @@ func CreateGenesisState(
 			}
 		}
 		if err := txn.Commit(); err != nil {
+			panic(err)
+		}
+
+		txn, err = clockStore.NewTransaction()
+		if err != nil {
+			panic(err)
+		}
+
+		err = clockStore.PutPeerSeniorityMap(
+			txn,
+			p2p.GetBloomFilter(application.TOKEN_ADDRESS, 256, 3),
+			map[string]uint64{},
+		)
+		if err != nil {
+			panic(err)
+		}
+
+		if err = txn.Commit(); err != nil {
 			panic(err)
 		}
 

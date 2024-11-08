@@ -261,6 +261,11 @@ message PreCoinProof {
   AccountRef owner = 8;
 }
 
+message ProverPenalty {
+  uint64 quantity = 1;
+  AccountRef account = 2;
+}
+
 message TokenOutput {
   oneof output {
     Coin coin = 1;
@@ -272,6 +277,7 @@ message TokenOutput {
     AnnounceProverLeave leave = 7;
     AnnounceProverPause pause = 8;
     AnnounceProverResume resume = 9;
+    ProverPenalty penalty = 10;
   }
 }
 

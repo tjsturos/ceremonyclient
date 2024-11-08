@@ -3,6 +3,7 @@ package store
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/gob"
 	"math/big"
 	"sort"
 
@@ -86,6 +87,12 @@ type ClockStore interface {
 		frameNumber uint64,
 		selector []byte,
 		totalDistance *big.Int,
+	) error
+	GetPeerSeniorityMap(filter []byte) (map[string]uint64, error)
+	PutPeerSeniorityMap(
+		txn Transaction,
+		filter []byte,
+		seniorityMap map[string]uint64,
 	) error
 }
 
@@ -281,6 +288,7 @@ const CLOCK_DATA_FRAME_CANDIDATE_DATA = 0x02
 const CLOCK_DATA_FRAME_FRECENCY_DATA = 0x03
 const CLOCK_DATA_FRAME_DISTANCE_DATA = 0x04
 const CLOCK_COMPACTION_DATA = 0x05
+const CLOCK_DATA_FRAME_SENIORITY_DATA = 0x06
 const CLOCK_MASTER_FRAME_INDEX_EARLIEST = 0x10 | CLOCK_MASTER_FRAME_DATA
 const CLOCK_MASTER_FRAME_INDEX_LATEST = 0x20 | CLOCK_MASTER_FRAME_DATA
 const CLOCK_MASTER_FRAME_INDEX_PARENT = 0x30 | CLOCK_MASTER_FRAME_DATA
@@ -425,6 +433,14 @@ func clockDataTotalDistanceKey(
 	key = binary.BigEndian.AppendUint64(key, frameNumber)
 	key = append(key, filter...)
 	key = append(key, rightAlign(selector, 32)...)
+	return key
+}
+
+func clockDataSeniorityKey(
+	filter []byte,
+) []byte {
+	key := []byte{CLOCK_FRAME, CLOCK_DATA_FRAME_SENIORITY_DATA}
+	key = append(key, filter...)
 	return key
 }
 
@@ -1470,4 +1486,46 @@ func (p *PebbleClockStore) SetTotalDistance(
 	)
 
 	return errors.Wrap(err, "set total distance")
+}
+
+func (p *PebbleClockStore) GetPeerSeniorityMap(filter []byte) (
+	map[string]uint64,
+	error,
+) {
+	value, closer, err := p.db.Get(clockDataSeniorityKey(filter))
+	if err != nil {
+		if errors.Is(err, pebble.ErrNotFound) {
+			return nil, ErrNotFound
+		}
+
+		return nil, errors.Wrap(err, "get peer seniority map")
+	}
+	defer closer.Close()
+	var b bytes.Buffer
+	b.Write(value)
+	dec := gob.NewDecoder(&b)
+	var seniorityMap map[string]uint64
+	if err = dec.Decode(&seniorityMap); err != nil {
+		return nil, errors.Wrap(err, "get peer seniority map")
+	}
+
+	return seniorityMap, nil
+}
+
+func (p *PebbleClockStore) PutPeerSeniorityMap(
+	txn Transaction,
+	filter []byte,
+	seniorityMap map[string]uint64,
+) error {
+	b := new(bytes.Buffer)
+	enc := gob.NewEncoder(b)
+
+	if err := enc.Encode(&seniorityMap); err != nil {
+		return errors.Wrap(err, "put peer seniority map")
+	}
+
+	return errors.Wrap(
+		txn.Set(clockDataSeniorityKey(filter), b.Bytes()),
+		"put peer seniority map",
+	)
 }
