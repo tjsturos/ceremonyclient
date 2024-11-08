@@ -178,7 +178,7 @@ func (a *TokenApplication) handleMint(
 						zap.Uint64("frame_number", currentFrameNumber),
 					)
 					// testnet only, this is inline for mainnet:
-					if currentFrameNumber > 1300 {
+					if currentFrameNumber > 1100 {
 						lockMap[string(t.Signature.PublicKey.KeyValue)] = struct{}{}
 						return []*protobufs.TokenOutput{&protobufs.TokenOutput{
 							Output: &protobufs.TokenOutput_Penalty{
@@ -212,7 +212,7 @@ func (a *TokenApplication) handleMint(
 				zap.Uint64("frame_number", currentFrameNumber),
 			)
 			// testnet only, this is inline for mainnet:
-			if currentFrameNumber > 1300 {
+			if currentFrameNumber > 1100 {
 				lockMap[string(t.Signature.PublicKey.KeyValue)] = struct{}{}
 				return []*protobufs.TokenOutput{&protobufs.TokenOutput{
 					Output: &protobufs.TokenOutput_Penalty{
@@ -273,7 +273,7 @@ func (a *TokenApplication) handleMint(
 					zap.Uint64("frame_number", currentFrameNumber),
 				)
 				// testnet only, this is inline for mainnet:
-				if currentFrameNumber > 1300 {
+				if currentFrameNumber > 1100 {
 					lockMap[string(t.Signature.PublicKey.KeyValue)] = struct{}{}
 					return []*protobufs.TokenOutput{&protobufs.TokenOutput{
 						Output: &protobufs.TokenOutput_Penalty{
@@ -317,7 +317,7 @@ func (a *TokenApplication) handleMint(
 					zap.Int("proof_size", len(leaf)),
 				)
 				// testnet only, this is inline for mainnet:
-				if currentFrameNumber > 1300 {
+				if currentFrameNumber > 1100 {
 					lockMap[string(t.Signature.PublicKey.KeyValue)] = struct{}{}
 					return []*protobufs.TokenOutput{&protobufs.TokenOutput{
 						Output: &protobufs.TokenOutput_Penalty{
@@ -451,7 +451,7 @@ func (a *TokenApplication) handleMint(
 				},
 			)
 			// testnet only, this is inline for mainnet:
-			if !verified && currentFrameNumber > 1300 {
+			if !verified && currentFrameNumber > 1100 {
 				outputs = append(outputs, &protobufs.TokenOutput{
 					Output: &protobufs.TokenOutput_Penalty{
 						Penalty: &protobufs.ProverPenalty{
