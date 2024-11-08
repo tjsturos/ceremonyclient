@@ -203,7 +203,7 @@ func (a *TokenApplication) handleMint(
 		}
 
 		if (previousFrame != nil && newFrameNumber <= previousFrame.FrameNumber) ||
-			newFrameNumber < currentFrameNumber-1 {
+			newFrameNumber < currentFrameNumber-10 {
 			previousFrameNumber := uint64(0)
 			if previousFrame != nil {
 				previousFrameNumber = previousFrame.FrameNumber
