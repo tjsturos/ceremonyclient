@@ -125,6 +125,7 @@ type DataClockConsensusEngine struct {
 	txMessageProcessorCh           chan *pb.Message
 	infoMessageProcessorCh         chan *pb.Message
 	report                         *protobufs.SelfTestReport
+	maxFramesPerSyncPollLimit      uint64
 }
 
 var _ consensus.DataConsensusEngine = (*DataClockConsensusEngine)(nil)
@@ -220,6 +221,13 @@ func NewDataClockConsensusEngine(
 		difficulty = 160000
 	}
 
+	maxFramesPerSyncPollLimit := cfg.Engine.MaxFramesPerSyncPoll
+	if maxFramesPerSyncPollLimit == 0 {
+		maxFramesPerSyncPollLimit = 100
+	} else {
+		logger.Info("Setting manual max frames per sync poll limit", zap.Uint64("limit", maxFramesPerSyncPollLimit))
+	}
+
 	e := &DataClockConsensusEngine{
 		difficulty:       difficulty,
 		logger:           logger,
@@ -258,6 +266,7 @@ func NewDataClockConsensusEngine(
 		config:                    cfg,
 		preMidnightMint:           map[string]struct{}{},
 		beaconPeerId:              []byte(beaconPeerId),
+		maxFramesPerSyncPollLimit: maxFramesPerSyncPollLimit,
 	}
 
 	logger.Info("constructing consensus engine")

@@ -33,8 +33,8 @@ func (e *DataClockConsensusEngine) collect(
 				e.logger.Info("no peers available for sync, waiting")
 				time.Sleep(5 * time.Second)
 			} else if maxFrame > latest.FrameNumber {
-				if maxFrame-latest.FrameNumber > 100 {
-					maxFrame = latest.FrameNumber + 100
+				if maxFrame-latest.FrameNumber > e.maxFramesPerSyncPollLimit {
+					maxFrame = latest.FrameNumber + e.maxFramesPerSyncPollLimit
 				}
 				latest, err = e.sync(latest, maxFrame, peerId)
 				if err == nil {

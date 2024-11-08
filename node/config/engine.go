@@ -22,5 +22,6 @@ type EngineConfig struct {
 
 	// Values used only for testing – do not override these in production, your
 	// node will get kicked out
-	Difficulty uint32 `yaml:"difficulty"`
+	Difficulty           uint32 `yaml:"difficulty"`
+	MaxFramesPerSyncPoll uint64 `yaml:"maxFramesPerSyncPoll"`
 }
