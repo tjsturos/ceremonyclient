@@ -591,8 +591,7 @@ func (e *TokenExecutionEngine) ProcessFrame(
 			}
 			// testnet:
 			if len(o.Proof.Amount) == 32 &&
-				!bytes.Equal(o.Proof.Amount, make([]byte, 32)) &&
-				frame.FrameNumber > 1100 {
+				!bytes.Equal(o.Proof.Amount, make([]byte, 32)) {
 				addr := string(o.Proof.Owner.GetImplicitAccount().Address)
 				if _, ok := (*e.peerSeniority)[addr]; !ok {
 					(*e.peerSeniority)[addr] = peerSeniorityItem{
