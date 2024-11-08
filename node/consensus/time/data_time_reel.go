@@ -629,7 +629,7 @@ func (d *DataTimeReel) setHead(frame *protobufs.ClockFrame, distance *big.Int) {
 	)
 
 	if tries, err = d.exec(txn, frame, tries); err != nil {
-		d.logger.Debug("invalid frame execution, unwinding", zap.Error(err))
+		d.logger.Error("invalid frame execution, unwinding", zap.Error(err))
 		txn.Abort()
 		return
 	}
