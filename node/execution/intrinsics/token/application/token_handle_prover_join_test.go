@@ -165,10 +165,19 @@ func TestHandleProverJoin(t *testing.T) {
 	)
 	individualChallenge = append(individualChallenge, frame2.Output...)
 	fmt.Printf("%x\n", individualChallenge)
-	out, _ := wprover.CalculateChallengeProof(individualChallenge, 10000)
+	out1, _ := wprover.CalculateChallengeProof(individualChallenge, 10000)
+
+	individualChallenge = append([]byte{}, challenge...)
+	individualChallenge = binary.BigEndian.AppendUint32(
+		individualChallenge,
+		uint32(1),
+	)
+	individualChallenge = append(individualChallenge, frame2.Output...)
+	fmt.Printf("%x\n", individualChallenge)
+	out2, _ := wprover.CalculateChallengeProof(individualChallenge, 10000)
 
 	proofTree, payload, output := tries.PackOutputIntoPayloadAndProof(
-		[]merkletree.DataBlock{tries.NewProofLeaf(out), tries.NewProofLeaf(make([]byte, 516))},
+		[]merkletree.DataBlock{tries.NewProofLeaf(out1), tries.NewProofLeaf(out2)},
 		2,
 		frame2,
 		nil,
@@ -228,11 +237,11 @@ func TestHandleProverJoin(t *testing.T) {
 	frame3, _ := wprover.ProveDataClockFrame(frame2, [][]byte{}, []*protobufs.InclusionAggregateProof{}, bprivKey, time.Now().UnixMilli(), 10000)
 	selbi, _ = frame3.GetSelector()
 	app.ClockStore.StageDataClockFrame(selbi.FillBytes(make([]byte, 32)), frame3, txn)
-	app.ClockStore.CommitDataClockFrame(frame3.Filter, 1, selbi.FillBytes(make([]byte, 32)), app.Tries, txn, false)
+	app.ClockStore.CommitDataClockFrame(frame3.Filter, 3, selbi.FillBytes(make([]byte, 32)), app.Tries, txn, false)
 	txn.Commit()
 
 	proofTree, payload, output = tries.PackOutputIntoPayloadAndProof(
-		[]merkletree.DataBlock{tries.NewProofLeaf(out), tries.NewProofLeaf(make([]byte, 516))},
+		[]merkletree.DataBlock{tries.NewProofLeaf(out1), tries.NewProofLeaf(out2)},
 		2,
 		frame3,
 		proofTree,

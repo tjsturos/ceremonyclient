@@ -167,7 +167,7 @@ func (a *TokenApplication) handleMint(
 				previousFrame, _, err = a.ClockStore.GetDataClockFrame(
 					frame.Filter,
 					previousFrameNumber,
-					false,
+					true,
 				)
 
 				if err != nil {
@@ -182,7 +182,7 @@ func (a *TokenApplication) handleMint(
 			}
 		}
 
-		newCommitment, parallelism, newFrame, verified, err :=
+		newCommitment, parallelism, newFrameNumber, verified, err :=
 			tries.UnpackAndVerifyOutput(commitment, t.Proofs)
 		if err != nil {
 			a.Logger.Debug(
@@ -202,8 +202,8 @@ func (a *TokenApplication) handleMint(
 			)
 		}
 
-		if (previousFrame != nil && newFrame <= previousFrame.FrameNumber) ||
-			newFrame < currentFrameNumber-10 {
+		if (previousFrame != nil && newFrameNumber <= previousFrame.FrameNumber) ||
+			newFrameNumber < currentFrameNumber-1 {
 			previousFrameNumber := uint64(0)
 			if previousFrame != nil {
 				previousFrameNumber = previousFrame.FrameNumber
@@ -213,14 +213,28 @@ func (a *TokenApplication) handleMint(
 				zap.Error(err),
 				zap.String("peer_id", base58.Encode([]byte(peerId))),
 				zap.Uint64("previous_frame", previousFrameNumber),
-				zap.Uint64("new_frame", newFrame),
+				zap.Uint64("new_frame", newFrameNumber),
 				zap.Uint64("frame_number", currentFrameNumber),
 			)
 			return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
 		}
 
 		if verified && delete != nil && len(t.Proofs) > 3 {
-			hash := sha3.Sum256(previousFrame.Output)
+			newFrame, _, err := a.ClockStore.GetDataClockFrame(
+				frame.Filter,
+				newFrameNumber,
+				true,
+			)
+			if err != nil {
+				a.Logger.Debug(
+					"invalid frame",
+					zap.Error(err),
+					zap.String("peer_id", base58.Encode([]byte(peerId))),
+					zap.Uint64("frame_number", currentFrameNumber),
+				)
+				return nil, errors.Wrap(ErrInvalidStateTransition, "handle mint")
+			}
+			hash := sha3.Sum256(newFrame.Output)
 			pick := tries.BytesToUnbiasedMod(hash, uint64(parallelism))
 			challenge := []byte{}
 			challenge = append(challenge, peerId...)
@@ -300,7 +314,7 @@ func (a *TokenApplication) handleMint(
 						Proof: &protobufs.PreCoinProof{
 							Commitment: binary.BigEndian.AppendUint64(
 								append([]byte{}, newCommitment...),
-								newFrame,
+								newFrameNumber,
 							),
 							Amount:     storage.FillBytes(make([]byte, 32)),
 							Proof:      payload,
@@ -341,7 +355,7 @@ func (a *TokenApplication) handleMint(
 						Proof: &protobufs.PreCoinProof{
 							Commitment: binary.BigEndian.AppendUint64(
 								append([]byte{}, newCommitment...),
-								newFrame,
+								newFrameNumber,
 							),
 							Proof:      payload,
 							Difficulty: a.Difficulty,

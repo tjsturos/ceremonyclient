@@ -109,7 +109,9 @@ func (e *DataClockConsensusEngine) processFrame(
 		if nextFrame, err = e.prove(latestFrame); err != nil {
 			e.logger.Error("could not prove", zap.Error(err))
 			e.stateMx.Lock()
-			e.state = consensus.EngineStateCollecting
+			if e.state < consensus.EngineStateStopping {
+				e.state = consensus.EngineStateCollecting
+			}
 			e.stateMx.Unlock()
 			return latestFrame
 		}
@@ -119,7 +121,9 @@ func (e *DataClockConsensusEngine) processFrame(
 		if err = e.publishProof(nextFrame); err != nil {
 			e.logger.Error("could not publish", zap.Error(err))
 			e.stateMx.Lock()
-			e.state = consensus.EngineStateCollecting
+			if e.state < consensus.EngineStateStopping {
+				e.state = consensus.EngineStateCollecting
+			}
 			e.stateMx.Unlock()
 		}
 
